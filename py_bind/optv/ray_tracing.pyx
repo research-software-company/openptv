@@ -4,6 +4,11 @@ import numpy as np
 cdef extern from "optv/ray_tracing.h":
     void c_ray_tracing_v2  "ray_tracing_v2" (double x , double y , Exterior Ex , Interior I , Glass G , mm_np mm , double *Xb2 , double *Yb2 , double *Zb2 , double *a3 , double *b3 , double *c3)
 
+    void acorbe_print "acorbe_print" ()
+    void acorbe_print_2 "acorbe_print_2" ( double x)
+    void acorbe_print_3 "acorbe_print_3" ( Glass G)
+    void acorbe_print_4 "acorbe_print_4" ( double * x)
+
 class pExterior:
     def __init__(self):
         self.x0, self.y0, self.z0 = 0,0,0
@@ -20,7 +25,7 @@ class pmm_np:
         self.lut = 0
 
 def get_dummy_Interior():
-    return {'xh':0. , 'yh':0. , 'cc':100}
+    return {'xh':0. , 'yh':0. , 'cc':100.}
 
 
 def get_dummy_Glass():
@@ -29,7 +34,7 @@ def get_dummy_Glass():
 
 def get_dummy_Exterior():
     ret = pExterior()
-    ret.zo = 100
+    ret.z0 = 100
     ret.dm = np.array([[1.0, 0.2, -0.3], 
         [0.2, 1.0, 0.0],
         [-0.3, 0.0, 1.0]])
@@ -40,7 +45,7 @@ def get_dummy_mm_np():
     ret = pmm_np()
     ret.nlay = 3
     ret.n1 = 1.
-    ret.d2 = np.array([1.49,0.,0])
+    ret.n2 = np.array([1.49,0.,0])
     ret.d = np.array([5.,0.,0])
     ret.n3 = 1.33
     ret.lut = 1
@@ -48,25 +53,23 @@ def get_dummy_mm_np():
     return ret
 
         
-def ray_tracing(x , Ex , Interior I , Glass G, mm):
+def ray_tracing(x , Ex ,  I , G, mm):
     cdef:
        double x_, y_ , Xb2, Yb2, Zb2 , a3, b3, c3
        Exterior Ex_
-       #Interior I_
-       #Glass G_
+       Interior I_ = I
+       Glass G_ = G
        mm_np mm_
 
     Ex_.x0,Ex_.y0,Ex_.z0 = Ex.x0,Ex.y0,Ex.z0
     Ex_.omega,Ex_.phi,Ex_.kappa = Ex.omega,Ex.phi,Ex.kappa
-    cdef double [: , :] dm_view = Ex.dm
+#    cdef double [: , :] dm_view = Ex.dm
 
     for i in range(3):
         for j in range(3):
             Ex_.dm[i][j] = Ex.dm[i][j]
 
-    print Ex_.omega, Ex_.z0
-    print Ex_.dm[0][2]
-
+    
     mm_.nlay = mm.nlay
     mm_.n1 = mm.n1
     for i in range(3):
@@ -76,20 +79,40 @@ def ray_tracing(x , Ex , Interior I , Glass G, mm):
     mm_.n3 = mm.n3
     mm_.lut = mm.lut  
     
+    print mm_.lut
         
 
     x_ = x[0]
     y_ = x[1]
 
-    print y_
+    
+
+    Xb2 = 55 #test..
+    print Xb2  #OK
+    print y_ #OK
+    print G_.vec_x #Ok
+    print Ex_.omega, Ex_.z0 #
+    print Ex_.dm[0][2] #
 
 
-    c_ray_tracing_v2( x_, y_, Ex_, I, G, mm_, &Xb2 , &Yb2 , &Zb2 , &a3, &b3 , &c3 )
+    c_ray_tracing_v2( x_, y_, Ex_, I_, G_, mm_, &Xb2 , &Yb2 , &Zb2 , &a3, &b3 , &c3 )
 
-    print Xb2
+    print Xb2 #OK!
+    print "acorbe print"
+    acorbe_print()
+    acorbe_print_2(x_)
+    acorbe_print_3(G_)
+
+    cdef:
+        double xx = 20.0
+    
+    acorbe_print_4(&xx)
+    print xx
+
+    print "end"
 
 
-    return (Xb2, Yb2, Zb2), (a3, b3, c3)
+    return (Xb2, Yb2, Zb2), (a3, b3, c3) #ALL nan, probably the C function isn't even called
 
 
     
