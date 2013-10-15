@@ -78,41 +78,18 @@ def ray_tracing(x , Ex ,  I , G, mm):
         
     mm_.n3 = mm.n3
     mm_.lut = mm.lut  
-    
-    print mm_.lut
         
 
     x_ = x[0]
-    y_ = x[1]
-
-    
-
-    Xb2 = 55 #test..
-    print Xb2  #OK
-    print y_ #OK
-    print G_.vec_x #Ok
-    print Ex_.omega, Ex_.z0 #
-    print Ex_.dm[0][2] #
-
+    y_ = x[1]   
 
     c_ray_tracing_v2( x_, y_, Ex_, I_, G_, mm_, &Xb2 , &Yb2 , &Zb2 , &a3, &b3 , &c3 )
 
-    print Xb2 #OK!
-    print "acorbe print"
-    acorbe_print()
-    acorbe_print_2(x_)
-    acorbe_print_3(G_)
 
-    cdef:
-        double xx = 20.0
     
-    acorbe_print_4(&xx)
-    print xx
-
-    print "end"
 
 
-    return (Xb2, Yb2, Zb2), (a3, b3, c3) #ALL nan, probably the C function isn't even called
+    return (Xb2, Yb2, Zb2), (a3, b3, c3) #ALL OK!
 
 
     
