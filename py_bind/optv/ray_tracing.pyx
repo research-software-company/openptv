@@ -4,10 +4,7 @@ import numpy as np
 cdef extern from "optv/ray_tracing.h":
     void c_ray_tracing_v2  "ray_tracing_v2" (double x , double y , Exterior Ex , Interior I , Glass G , mm_np mm , double *Xb2 , double *Yb2 , double *Zb2 , double *a3 , double *b3 , double *c3)
 
-    void acorbe_print "acorbe_print" ()
-    void acorbe_print_2 "acorbe_print_2" ( double x)
-    void acorbe_print_3 "acorbe_print_3" ( Glass G)
-    void acorbe_print_4 "acorbe_print_4" ( double * x)
+
 
 class pExterior:
     def __init__(self):
