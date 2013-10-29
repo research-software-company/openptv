@@ -43,7 +43,7 @@ cdef class Ray_tracing:
         if ret != NULL:            
             self.par_control_par = ret
             self._owns_par_control_par = 1
-        else
+        else:
             print "An error while reading", filename, "occurred."
 
     def trace(self,x):
@@ -132,7 +132,7 @@ cdef class Ray_tracing:
     #    pass
 
 
-
+################## Classes used to force values of calibration or parameters instead of loading them from file
 
 class pExterior:
     def __init__(self):
@@ -148,6 +148,9 @@ class pmm_np:
         self.d = np.zeros(3)
         self.n3 = 0
         self.lut = 0
+
+
+################# TO BE REMOVED IN THE FINAL VERSION
 
 def get_dummy_mm_np():
     ret = pmm_np()
