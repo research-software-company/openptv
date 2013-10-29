@@ -46,13 +46,7 @@ class TestRayTracing(unittest.TestCase):
     
     def test_ray_tracing(self):
         """Testing ray tracing against data from ray_tracing.c check testing."""
-        #targs = read_targets("../../liboptv/tests/testing_fodder/sample_", 42)
-
-        #self.failUnlessEqual(len(targs), 2)
-        #self.failUnlessEqual([targ.tnr() for targ in targs], [1, 0])
-        #self.failUnlessEqual([targ.pos()[0] for targ in targs], [1127., 796.])
-        #self.failUnlessEqual([targ.pos()[1] for targ in targs], [796., 809.])
-
+        
         mm = self.get_dummy_mm_np()
 
         Ex = self.get_dummy_Exterior()
