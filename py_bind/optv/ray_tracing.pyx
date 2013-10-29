@@ -23,52 +23,6 @@ cdef extern from "optv/diagnostic.h":
     void c_diag_print_mm_np  "diag_print_mm_np"(mm_np * mm)
         
 
-
-class pExterior:
-    def __init__(self):
-        self.x0, self.y0, self.z0 = 0,0,0
-        self.omega, self.phi, self.kappa = 0,0,0
-        self.dm = np.zeros([3,3])
-
-class pmm_np:
-    def __init__(self):
-        self.nlay = 0
-        self.n1 = 0
-        self.n2 = np.zeros(3)
-        self.d = np.zeros(3)
-        self.n3 = 0
-        self.lut = 0
-
-def get_dummy_mm_np():
-    ret = pmm_np()
-    ret.nlay = 3
-    ret.n1 = 1.
-    ret.n2 = np.array([1.49,0.,0])
-    ret.d = np.array([5.,0.,0])
-    ret.n3 = 1.33
-    ret.lut = 1
-
-    return ret
-
-def get_dummy_Interior():
-    return {'xh':0. , 'yh':0. , 'cc':100.}
-
-
-def get_dummy_Glass():
-    return {'vec_x': 0.0001,'vec_y': 0.00001,'vec_z': 1.}
-
-
-def get_dummy_Exterior():
-    ret = pExterior()
-    ret.z0 = 100
-    ret.dm = np.array([[1.0, 0.2, -0.3], 
-        [0.2, 1.0, 0.0],
-        [-0.3, 0.0, 1.0]])
-
-    return ret
-
-
-
 cdef class Ray_tracing:    
     def __init__(self):
         self._owns_par_control_par = 0
@@ -124,10 +78,10 @@ cdef class Ray_tracing:
                 self.par_calibration.ext_par.dm[i][j] = Ex.dm[i][j]
 
 
-    def force_set_interior(self,In):
+    def force_set_interior(self,Interior In):
         self.par_calibration.int_par = In
 
-    def force_set_glass(self,Gl):
+    def force_set_glass(self,Glass Gl):
         self.par_calibration.glass_par = Gl
 
     def force_set_mm_np(self,mm):
@@ -158,6 +112,8 @@ cdef class Ray_tracing:
 
         if self._owns_par_control_par == 1:
             c_diag_print_mm_np(self.par_control_par[0].mm)
+        else:
+            print "Struct np_mm hasn't been allocated yet."
 
     def __dealloc__(self):
         self.dealloc_par_control_par()
@@ -174,6 +130,53 @@ cdef class Ray_tracing:
 
     #def set_parameters(exterior = None):
     #    pass
+
+
+
+
+class pExterior:
+    def __init__(self):
+        self.x0, self.y0, self.z0 = 0,0,0
+        self.omega, self.phi, self.kappa = 0,0,0
+        self.dm = np.zeros([3,3])
+
+class pmm_np:
+    def __init__(self):
+        self.nlay = 0
+        self.n1 = 0
+        self.n2 = np.zeros(3)
+        self.d = np.zeros(3)
+        self.n3 = 0
+        self.lut = 0
+
+def get_dummy_mm_np():
+    ret = pmm_np()
+    ret.nlay = 3
+    ret.n1 = 1.
+    ret.n2 = np.array([1.49,0.,0])
+    ret.d = np.array([5.,0.,0])
+    ret.n3 = 1.33
+    ret.lut = 1
+
+    return ret
+
+def get_dummy_Interior():
+    return {'xh':0. , 'yh':0. , 'cc':100.}
+
+
+def get_dummy_Glass():
+    return {'vec_x': 0.0001,'vec_y': 0.00001,'vec_z': 1.}
+
+
+def get_dummy_Exterior():
+    ret = pExterior()
+    ret.z0 = 100
+    ret.dm = np.array([[1.0, 0.2, -0.3], 
+        [0.2, 1.0, 0.0],
+        [-0.3, 0.0, 1.0]])
+
+    return ret
+
 
 
 
