@@ -29,6 +29,28 @@ void pixel_to_metric (double * x_metric
 
 }
 
+/*  wraps previous one, parameters are read directly from control_par* structure */
+void pixel_to_metric_control_par(double * x_metric
+				 , double * y_metric
+				 , double x_pixel
+				 , double y_pixel
+				 , control_par* parameters				 
+				 ){
+  pixel_to_metric(x_metric
+		  , y_metric
+		  , x_pixel
+		  , y_pixel
+		  , parameters->imx
+		  , parameters->imy
+		  , parameters->pix_x
+		  , parameters->pix_y
+		  , parameters->chfield);
+
+
+}
+
+
+
 
 
 /*  transformation detection geometric coordinates -> pixel coordinates */
