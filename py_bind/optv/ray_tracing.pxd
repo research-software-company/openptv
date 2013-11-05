@@ -37,11 +37,18 @@ cdef extern from "optv/parameters.h":
     ctypedef struct control_par:
         mm_np *mm
 
+    ctypedef struct volume_par:
+        pass
+
 cdef class Ray_tracing:
     cdef:        
         Calibration par_calibration
+        
         int _owns_par_control_par
-        control_par* par_control_par 
+        control_par* par_control_par
+
+        volume_par* par_volume_par
+        int _owns_par_volume_par
 
         
 

@@ -1,7 +1,7 @@
 from cython cimport view
 from cython.view cimport array as cvarray
 
-from libc.stdlib cimport malloc #, free
+from libc.stdlib cimport malloc , free
 
 import numpy as np
 
@@ -11,21 +11,35 @@ cdef extern from "optv/ray_tracing.h":
 
 cdef extern from "optv/calibration.h":
     int c_read_ori "read_ori" (Exterior *Ex, Interior *I, Glass *G, char *ori_file, ap_52 *addp, char *add_file, char *add_fallback)
+    Calibration* c_read_calibration "read_calibration" (char* ori_file , char* add_file , char* fallback_file)
 
 cdef extern from "optv/parameters.h":
     control_par* c_read_control_par "read_control_par"(char *filename)
     void c_free_control_par "free_control_par"(control_par *cp)
+    volume_par* c_read_volume_par "read_volume_par" (char* filename)
 
 cdef extern from "optv/diagnostic.h":
     void c_diag_print_Exterior "diag_print_Exterior"(Exterior * Ex)
     void c_diag_print_Interior "diag_print_Interior"(Interior * I)
     void c_diag_print_Glass "diag_print_Glass"(Glass * G)
     void c_diag_print_mm_np  "diag_print_mm_np"(mm_np * mm)
+
+
+cdef extern from "optv/trafo.h":
+    void c_pixel_to_metric_control_par "pixel_to_metric_control_par" (double * x_metric , double * y_metric , double x_pixel , double y_pixel , control_par* parameters )
+
+cdef extern from "optv/epi.h":
+     void c_epi_mm_2D  "epi_mm_2D" ( double* xp  , double* yp , double* zp , double x1  , double y1  , Calibration* calib , mm_np* mm , volume_par* vpar)
+	
+
+
+
         
 
 cdef class Ray_tracing:    
     def __init__(self):
         self._owns_par_control_par = 0
+        self._owns_par_volume_par = 0
 
     def read_ori(self,ori_file,add_file):
         return c_read_ori( &self.par_calibration.ext_par
@@ -46,6 +60,53 @@ cdef class Ray_tracing:
         else:
             print "An error while reading", filename, "occurred."
 
+    def read_volume_par(self,filename):
+        cdef:
+            volume_par* ret
+        ret = c_read_volume_par(filename)
+        if ret != NULL:
+            self.par_volume_par = ret
+            self._owns_par_volume_par = 1
+        else:
+            print "An error while reading", filename, "occurred."
+
+
+    def pixel_to_metric(self,x):
+        cdef:
+            double x_pixel, y_pixel, x_metric, y_metric
+
+        x_pixel,y_pixel = x[0],x[1]
+
+        c_pixel_to_metric_control_par(&x_metric
+                                      , &y_metric
+                                      , x_pixel
+                                      , y_pixel
+                                      , self.par_control_par)
+
+        return [x_metric,y_metric]
+        
+
+
+
+    def epi_mm_2D(self,x):
+        cdef:
+            double xp, yp, zp, x_, y_
+
+        x_ = x[0]
+        y_ = x[1]
+
+        c_epi_mm_2D(&xp
+            , &yp
+            , &zp
+            , x_
+            , y_
+            , &self.par_calibration
+            , self.par_control_par[0].mm
+            , self.par_volume_par)
+
+        return [xp,yp,zp]
+        
+
     def trace(self,x):
         cdef:
             double x_ ,  y_ , Xb2 , Yb2 , Zb2 , a3, b3, c3
@@ -61,7 +122,7 @@ cdef class Ray_tracing:
                           , &Xb2 , &Yb2 , &Zb2
                           , &a3, &b3 , &c3 )
 
-        return (Xb2, Yb2, Zb2), (a3, b3, c3) #ALL OK!
+        return [Xb2, Yb2, Zb2], [a3, b3, c3] #ALL OK!
 
 
     def force_set_exterior(self,Ex):
@@ -105,7 +166,9 @@ cdef class Ray_tracing:
         mm_[0].n3 = mm.n3
         mm_[0].lut = mm.lut
 
-    def describe(self):        
+    def describe(self):
+        print "WARNING: if a value has not been initialized meaningless values can appear."
+        
         c_diag_print_Exterior(&self.par_calibration.ext_par)
         c_diag_print_Interior(&self.par_calibration.int_par)
         c_diag_print_Glass(&self.par_calibration.glass_par)
