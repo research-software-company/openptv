@@ -18,6 +18,9 @@ Routines contained:		pix_crd, crd_pix, affin_trafo, affin_retour
 
 #include "trafo.h"
 
+void old_pixel_to_metric();
+void old_metric_to_pixel();
+
 /* pixel_to_metric converts pixel coordinates to metric coordinates
 Arguments:
 	xp,yp (double) pixel coordinates in pixels
@@ -29,35 +32,101 @@ Arguments:
     and it is kept only for backward compatibility. 
 */
 
-
-void pixel_to_metric (double xp, double yp, int imx, int imy, double pix_x, \
-double pix_y, double *xc, double *yc, int field){
-  switch (field)
-    {
-    case 1:  yp = 2 * yp + 1;  break;
-    case 2:  yp *= 2;  break;
-    }
+/*  transformation detection pixel coordinates -> geometric coordinates */
+void old_pixel_to_metric (double * x_metric
+		       , double * y_metric
+		       , double x_pixel
+		       , double y_pixel
+		       , int im_size_x
+		       , int im_size_y
+		       , double pix_size_x
+		       , double pix_size_y
+		       , int y_remap_mode){
   
-  *xc = (xp - imx/2.) * pix_x;
-  *yc = (imy/2. - yp) * pix_y;
+  switch (y_remap_mode){
+  case NO_REMAP:
+    break;
+
+  case DOUBLED_PLUS_ONE:  
+    y_pixel = 2. * y_pixel + 1.;  
+    break;
+    
+  case DOUBLED:  
+    y_pixel *= 2.;  
+    break;  
+  }
+  
+  *x_metric = (x_pixel - ((double)im_size_x) / 2.) * pix_size_x;
+  *y_metric = ( ((double) im_size_y)/2. - y_pixel) * pix_size_y;
+
+}
+
+/*  wraps previous one, parameters are read directly from control_par* structure */
+void pixel_to_metric(double * x_metric
+				 , double * y_metric
+				 , double x_pixel
+				 , double y_pixel
+				 , control_par* parameters				 
+				 ){
+  old_pixel_to_metric(x_metric
+		  , y_metric
+		  , x_pixel
+		  , y_pixel
+		  , parameters->imx
+		  , parameters->imy
+		  , parameters->pix_x
+		  , parameters->pix_y
+		  , parameters->chfield);
+
+
+}
+
+/* wrap metric_to_pixel */
+void metric_to_pixel(double * x_pixel
+				 , double * y_pixel
+				 , double x_metric
+				 , double y_metric
+				 , control_par* parameters				 
+				 ){
+  old_metric_to_pixel(x_pixel
+		  , y_pixel
+		  , x_metric
+		  , y_metric
+		  , parameters->imx
+		  , parameters->imy
+		  , parameters->pix_x
+		  , parameters->pix_y
+		  , parameters->chfield);
 }
 
 
-
-
-/*  transformation detection pixel coordinates -> geometric coordinates */
-/* Arguments - see above for the pixel_to_metric */
-
-void metric_to_pixel (double xc, double yc, int imx, int imy, double pix_x, \
-double pix_y, double *xp, double *yp, int field){
-  *xp = (xc/pix_x) + imx/2;
-  *yp = imy/2 - (yc/pix_y);
+/*  transformation detection geometric coordinates -> pixel coordinates */
+void old_metric_to_pixel (double * x_pixel
+		      , double * y_pixel
+		      , double x_metric
+		      , double y_metric
+		      , int im_size_x
+		      , int im_size_y
+		      , double pix_size_x
+		      , double pix_size_y
+		      , int y_remap_mode){
   
-  switch (field)
-    {
-    case 1:  *yp = (*yp-1)/2;  break;
-    case 2:  *yp /= 2;  break;
-    }
+  
+  *x_pixel = ( x_metric / pix_size_x ) + ( (double) im_size_x)/2.;
+  *y_pixel = ((double)im_size_y) /2. - (y_metric / pix_size_y);
+
+  switch (y_remap_mode){
+  case NO_REMAP:
+    break;
+
+  case DOUBLED_PLUS_ONE:  
+    *y_pixel = (*y_pixel - 1.)/2.;  
+    break;
+    
+  case DOUBLED:  
+    *y_pixel /= 2.;
+    break;  
+  }
 }
 
 /*  transformation with Brown + affine  */
