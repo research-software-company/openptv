@@ -9,7 +9,7 @@
 #include "ray_tracing.h"
 #include "trafo.h"
 
-void img_coord (double X, double Y, double Z, Exterior Ex, Interior I, Glas G, \
+void img_coord (double X, double Y, double Z, Exterior Ex, Interior I, Glass G, \
                 ap_52 ap, mm_np mm, double *x, double *y);
 void img_xy (double X, double Y, double Z, Exterior Ex, Interior I, Glass G, \
              double *x, double *y);
