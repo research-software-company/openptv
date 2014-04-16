@@ -16,7 +16,7 @@ Description:	       	computes x', y' from given Point and orientation
 Routines contained:
 
 ****************************************************************************/
-
+/*test-commit*/
 #include "imgcoord.h"
 
 void img_coord (double X, double Y, double Z, Exterior Ex, Interior I, Glass G, \
