@@ -15,6 +15,13 @@
 
 
 typedef struct {
+  int   j; 
+  int  	pnr;
+  double  tol, corr;
+} candidate_j;
+
+
+typedef struct {
   int  	pnr;
   double  tol, corr;
 } candidate;
@@ -39,7 +46,12 @@ void find_candidate_sorted (coord_2d *crd, target *pix, int num,
     int n, int nx, int ny, int sumg, candidate cand[], int *count, int icam,
     volume_par *vpar, control_par *cpar, Calibration *cal);
     
-void find_candidate_unsorted (coord_2d *crd, target *pix, int num,
+void find_candidate_j (coord_2d *crd, target *pix, int num,
+    double xa, double ya, double xb, double yb,
+    int n, int nx, int ny, int sumg, candidate_j cand[], int *count, int icam,
+    volume_par *vpar, control_par *cpar, Calibration *cal);
+    
+void find_candidate_if (coord_2d *crd, target *pix, int num,
     double xa, double ya, double xb, double yb,
     int n, int nx, int ny, int sumg, candidate cand[], int *count, int icam,
     volume_par *vpar, control_par *cpar, Calibration *cal);

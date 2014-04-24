@@ -275,8 +275,8 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
 
 
 
-void find_candidate_unsorted (coord_2d *crd, target *pix, int num, double xa, double ya, \
-double xb, double yb, int n, int nx, int ny, int sumg, candidate cand[], int *count, \
+void find_candidate_j (coord_2d *crd, target *pix, int num, double xa, double ya, \
+double xb, double yb, int n, int nx, int ny, int sumg, candidate_j cand[], int *count, \
 int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
 /*  binarized search in a x-sorted coord-set, exploits shape information  */
 /*  gives messages (in examination)  */
@@ -308,7 +308,7 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
     
   
   for (j=0; j<MAXCAND; j++){
-      cand[j].pnr = -999;  cand[j].tol = -999;  cand[j].corr = -999;
+      cand[j].pnr = -999;  cand[j].tol = -999;  cand[j].corr = -999; cand[j].j = -999;
    }
 
 
@@ -319,9 +319,7 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
   	
    /* equation of a line */	
    m = (yb-ya)/(xb-xa);  b = ya - m*xa;
-  	
-  printf (" m, b %f %f \n", m, b);
-  
+    
   
   if (xa > xb)
     {
@@ -331,8 +329,6 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
     {
       temp = ya;  ya = yb;  yb = temp;
     }
-
-  printf(" xa, xb, ya, yb %f %f %f %f \n", xa,xb,ya,yb);
 
   if ( (xb>xmin) && (xa<xmax) && (yb>ymin) && (ya<ymax)){ /* sensor area */
     
@@ -388,11 +384,12 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
 							printf("More candidates than (maxcand): %d\n",*count); 
 							return; 
 						}
+						cand[*count].j = j; /* see the comment above */
 						cand[*count].pnr = p2; /* see the comment above */
 						cand[*count].tol = d;
 						cand[*count].corr = corr;
 						(*count)++;
-						printf ("%d %3.0f/%3.1f \n", p2, corr, d*1000);
+						// printf ("%d %d %3.0f/%3.1f \n", j, p2, corr, d*1000);
 					}
 				}
 			}
@@ -404,7 +401,134 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
 
 }
 
+void find_candidate_if (coord_2d *crd, target *pix, int num, double xa, double ya, \
+double xb, double yb, int n, int nx, int ny, int sumg, candidate cand[], int *count, \
+int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
+/*  binarized search in a x-sorted coord-set, exploits shape information  */
+/*  gives messages (in examination)  */
 
+  register int	j;
+  int	       	j0, dj, p2;
+  double      	m, b, d, temp, qn, qnx, qny, qsumg, corr;
+  double       	xmin, xmax, ymin, ymax,particle_size;
+  int           dumbbell = 0;
+  double 		tol_band_width;
+  int           correspondences = 1;
+  
+  /* the minimum number of candidates to initialise the array 
+  at different versions it was 4 or 8, could be up to MAXCAND 
+  */
+  int number_candidates = 4; 
+    
+  tol_band_width = vpar->eps0;
+  
+ 
+  /* define sensor format for search interrupt */
+  xmin = (-1) * cpar->pix_x * cpar->imx/2;	xmax = cpar->pix_x * cpar->imx/2;
+  ymin = (-1) * cpar->pix_y * cpar->imy/2;	ymax = cpar->pix_y * cpar->imy/2;
+  xmin -= cal[nr].int_par.xh;	ymin -= cal[nr].int_par.yh;
+  xmax -= cal[nr].int_par.xh;	ymax -= cal[nr].int_par.yh;
+      
+  
+  correct_brown_affin (xmin, ymin, cal[nr].added_par, &xmin, &ymin);
+  correct_brown_affin (xmax, ymax, cal[nr].added_par, &xmax, &ymax);
+    
+  
+  for (j=0; j<MAXCAND; j++){
+      cand[j].pnr = -999;  cand[j].tol = -999;  cand[j].corr = -999;
+   }
+
+
+  /* line equation: y = m*x + b */
+  if (xa == xb){ /* the line is a point or a vertical line in this camera */	
+  		xb += 1e-10; /* if we use xa += 1e-10, we always switch later */
+   } 
+  	
+   /* equation of a line */	
+   m = (yb-ya)/(xb-xa);  b = ya - m*xa;
+    
+  
+  if (xa > xb)
+    {
+      temp = xa;  xa = xb;  xb = temp;
+    }
+  if (ya > yb)
+    {
+      temp = ya;  ya = yb;  yb = temp;
+    }
+
+  if ( (xb>xmin) && (xa<xmax) && (yb>ymin) && (ya<ymax)){ /* sensor area */
+    
+      /* binary search for start point of candidate search */
+      for (j0=num/2, dj=num/4; dj>1; dj/=2){
+	  	if (crd[j0].x < (xa - tol_band_width))  j0 += dj;
+	  	else  j0 -= dj;
+	  }
+      
+      j0 -= 12;  if (j0 < 0)  j0 = 0;  	/* due to truncation error we might shift to smaller x */
+
+      for (j=j0, *count=0; j<num; j++){ 	/* candidate search */
+	
+	    if (crd[j].x > xb+tol_band_width)  return;  /* finish search */
+
+	    if ((crd[j].y > ya-tol_band_width) && (crd[j].y < yb+tol_band_width)){
+	    
+			if ((crd[j].x > xa-tol_band_width) && (crd[j].x < xb+tol_band_width)){
+		
+			  d = fabs ((crd[j].y - m*crd[j].x - b) / sqrt(m*m+1));
+				  if ( d < tol_band_width ){
+					  
+					  p2 = crd[j].pnr;
+					  
+					  /* quality of each parameter is a ratio of the values of the 
+					  size n, nx, ny and sum of grey values sumg
+					  */
+					  if (n  < pix[p2].n)      	qn  = (double) n/pix[p2].n;
+					  else		       	qn  = (double) pix[p2].n/n;
+					  
+					  if (nx < pix[p2].nx)	qnx = (double) nx/pix[p2].nx;
+					  else		       	qnx = (double) pix[p2].nx/nx;
+					  
+					  if (ny < pix[p2].ny)	qny = (double) ny/pix[p2].ny;
+					  else		       	qny = (double) pix[p2].ny/ny;
+					  
+					  if (sumg < pix[p2].sumg)
+							qsumg = (double) sumg/pix[p2].sumg;
+					  else	qsumg = (double) pix[p2].sumg/sumg;
+
+
+					  /* empirical correlation coefficient
+					 from shape and brightness parameters */
+					  corr = (4*qsumg + 2*qn + qnx + qny);
+					  /* create a tendency to prefer those matches
+					     with brighter targets */
+					  corr *= ((double) (sumg + pix[p2].sumg));
+
+					if (qn >= vpar->cn && qnx >= vpar->cnx && qny >= vpar->cny && 
+						qsumg > vpar->csumg){
+			
+						if (*count >= MAXCAND){ 
+							printf("More candidates than (maxcand): %d\n",*count); 
+							return; 
+						}
+						
+						if (correspondences == 1) cand[*count].pnr = j; 
+						else cand[*count].pnr = p2; /* see the comment above */
+						
+						cand[*count].tol = d;
+						cand[*count].corr = corr;
+						(*count)++;
+						// printf ("%d %d %3.0f/%3.1f \n", j, p2, corr, d*1000);
+					}
+				}
+			}
+	    }
+	}
+      if (*count == 0)  printf ("- - -");
+    }
+  else  *count = -1;		       	       /* out of sensor area */
+
+}
 
 
 
