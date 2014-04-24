@@ -359,16 +359,38 @@ Exterior test_Ex = {
 */
 
 
-
+int n_runs = 100000*_i;
 
 
 clock_t begin, end;
 double time_spent;
 
+
+
+begin = clock();
+
+candidate test_cand[MAXCAND];
+
+    
+    for (i=0; i<n_runs; i++){
+    
+		find_candidate_if (&test_crd, test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
+		test_cand, &count, icam, &test_vpar, &test_cpar, &test_cal);
+    }
+    
+    end = clock();
+time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+
+printf("time spent on the IF loop: %f \n", time_spent);
+
+
+
+begin = clock();
+
 candidate_j test_cand_j[MAXCAND];
 
 
-    for (i=0; i<1000000; i++){
+    for (i=0; i<n_runs; i++){
     
 		find_candidate_j (&test_crd, test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
 		test_cand_j, &count, icam, &test_vpar, &test_cpar, &test_cal);
@@ -379,21 +401,6 @@ time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 
 printf("time spent on the J loop: %f \n", time_spent);
 
-begin = clock();
-
-candidate test_cand[MAXCAND];
-
-    
-    for (i=0; i<1000000; i++){
-    
-		find_candidate_if (&test_crd, test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
-		test_cand, &count, icam, &test_vpar, &test_cpar, &test_cal);
-    }
-    
-    end = clock();
-time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-
-printf("time spent on the IF loop: %f \n", time_spent);
 
 
 
@@ -430,7 +437,7 @@ Suite* fb_suite(void) {
      tcase_add_test(tc, test_epi_mm);
     tcase_add_test(tc, test_epi_mm_2D);    
     tcase_add_test(tc, test_find_candidate);
-    tcase_add_test(tc, test_find_candidate_loadtest);
+    tcase_add_loop_test(tc, test_find_candidate_loadtest,0,10);
     suite_add_tcase (s, tc);   
     return s;
 }
