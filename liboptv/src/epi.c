@@ -307,9 +307,9 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
   correct_brown_affin (xmax, ymax, cal[nr].added_par, &xmax, &ymax);
     
   
-  for (j=0; j<MAXCAND; j++){
-      cand[j].pnr = -999;  cand[j].tol = -999;  cand[j].corr = -999; cand[j].j = -999;
-   }
+//   for (j=0; j<MAXCAND; j++){
+//       cand[j].pnr = -999;  cand[j].tol = -999;  cand[j].corr = -999; cand[j].j = -999;
+//    }
 
 
   /* line equation: y = m*x + b */
@@ -434,9 +434,9 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
   correct_brown_affin (xmax, ymax, cal[nr].added_par, &xmax, &ymax);
     
   
-  for (j=0; j<MAXCAND; j++){
-      cand[j].pnr = -999;  cand[j].tol = -999;  cand[j].corr = -999;
-   }
+//   for (j=0; j<MAXCAND; j++){
+//       cand[j].pnr = -999;  cand[j].tol = -999;  cand[j].corr = -999;
+//    }
 
 
   /* line equation: y = m*x + b */
@@ -512,13 +512,13 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
 							return; 
 						}
 						
-						if (correspondences == 1) cand[*count].pnr = j; 
-						else cand[*count].pnr = p2; /* see the comment above */
+					    if (correspondences == 1) cand[*count].pnr = j; 
+						else cand[*count].pnr = p2; 
 						
 						cand[*count].tol = d;
 						cand[*count].corr = corr;
 						(*count)++;
-						// printf ("%d %d %3.0f/%3.1f \n", j, p2, corr, d*1000);
+						//printf ("%d %d %3.0f/%3.1f \n", j, p2, corr, d*1000);
 					}
 				}
 			}
