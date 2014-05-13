@@ -124,7 +124,7 @@ double multimed_r_nlay (Exterior *ex
 
 
 /* Using Exterior and Interior parameters and the Glass vector of the variable
- * window position creates the shifted points X_t,Y_t,Z_t for each position X,Y,Z
+ * window position creates the shifted (tilted) points X_t,Y_t,Z_t for each position X,Y,Z
  * and the two vectors that point to the crossing point
  */ 
 void trans_Cam_Point(Exterior ex

@@ -10,13 +10,10 @@
 #include "trafo.h"
 #include "multimed.h"
 
-void img_coord (double X, double Y, double Z, Exterior Ex, Interior I, Glass G, \
-                ap_52 ap, mm_np mm, double *x, double *y);
-void img_xy (double X, double Y, double Z, Exterior Ex, Interior I, Glass G, \
-             double *x, double *y);
-void img_xy_mm_geo (double X, double Y, double Z, Exterior Ex, Interior I, Glass G, \
-mm_np mm, double *x, double *y);
+    void img_coord (double X, double Y, double Z, Calibration cal, mm_np *mm, double *x, double *y, int i_cam, mmlut *mmLUT);
 
+    void img_xy (double X, double Y, double Z, Calibration cal, double *x, double *y);
+
+    void img_xy_mm_geo (double X, double Y, double Z, Calibration cal, mm_np *mm, double *x, double *y);
 
 #endif
-
