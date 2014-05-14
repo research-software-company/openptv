@@ -21,84 +21,90 @@ Routines contained:
 
 
 /* Calculates projection from coordinates in
- * world space to pixelcoordinates image space
+ * world space to pixelcoordinates in image space
  */
-//void img_coord (double X, double Y, double Z,	Exterior ex, Interior I, Glass G, ap_52 ap, mm_np mm, double *x, double *y, int i_cam, mmlut *mmLUT)
-void img_coord (double X, double Y, double Z, Calibration cal, mm_np mm, double *x, double *y, int i_cam, mmlut *mmLUT)
+void img_coord (double X, double Y, double Z, Calibration *cal, mm_np *mm, double *x, double *y, int i_cam, mmlut *mmLUT)
 {
     double deno, r, dx, dy;
 	Calibration *cal_t;
-    Exterior *Ex_t;
+    Exterior Ex_t;
     double X_t,Y_t,Z_t,cross_p[3],cross_c[3];
-	//double *cross_p[3],*cross_c[3];
-    /*calculate tilted positions and copy them to X_t, Y_t and Z_t*/
-	trans_Cam_Point(cal.ext_par,mm,cal.glass_par,X,Y,Z,Ex_t,&X_t,&Y_t,&Z_t,&cross_p[3],&cross_c[3]);
-    
-    //multimed_nlay_v2 (Ex_t, Ex, mm, X_t,Y_t,Z_t, &X_t,&Y_t);
-    multimed_nlay (Ex_t, mm, X_t,Y_t,Z_t, &X_t,&Y_t, i_cam, mmLUT);
-
-    back_trans_Point(X_t,Y_t,Z_t,mm, cal.glass_par,cross_p,cross_c,&X,&Y,&Z);
 	
-    X -= cal.ext_par.x0;  Y -= cal.ext_par.y0;  Z -= cal.ext_par.z0;
+    /*calculate tilted positions and copy them to X_t, Y_t and Z_t*/
+	trans_Cam_Point(cal->ext_par,*mm,cal->glass_par,X,Y,Z,&Ex_t,&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
+    
+    multimed_nlay (&Ex_t, mm, X_t,Y_t,Z_t, &X_t,&Y_t, i_cam, mmLUT);
 
-    deno = cal.ext_par.dm[0][2] * X + cal.ext_par.dm[1][2] * Y + cal.ext_par.dm[2][2] * Z;
-    *x = cal.int_par.xh - cal.int_par.cc * (cal.ext_par.dm[0][0]*X + cal.ext_par.dm[1][0]*Y + cal.ext_par.dm[2][0]*Z) / deno;
-    *y = cal.int_par.yh - cal.int_par.cc * (cal.ext_par.dm[0][1]*X + cal.ext_par.dm[1][1]*Y + cal.ext_par.dm[2][1]*Z) / deno;
+    back_trans_Point(X_t,Y_t,Z_t,*mm, cal->glass_par,cross_p,cross_c,&X,&Y,&Z);
+	
+    X -= cal->ext_par.x0;  Y -= cal->ext_par.y0;  Z -= cal->ext_par.z0;
+
+    deno = cal->ext_par.dm[0][2] * X + cal->ext_par.dm[1][2] * Y + cal->ext_par.dm[2][2] * Z;
+    *x = cal->int_par.xh - cal->int_par.cc * (cal->ext_par.dm[0][0]*X + cal->ext_par.dm[1][0]*Y + cal->ext_par.dm[2][0]*Z) / deno;
+    *y = cal->int_par.yh - cal->int_par.cc * (cal->ext_par.dm[0][1]*X + cal->ext_par.dm[1][1]*Y + cal->ext_par.dm[2][1]*Z) / deno;
 
     r = sqrt (*x * *x + *y * *y);
 	
-    dx = (*x) * (cal.added_par.k1*r*r + cal.added_par.k2*r*r*r*r + cal.added_par.k3*r*r*r*r*r*r)
-      + cal.added_par.p1 * (r*r + 2*(*x)*(*x)) + 2*cal.added_par.p2*(*x)*(*y);
-    dy = (*y) * (cal.added_par.k1*r*r + cal.added_par.k2*r*r*r*r + cal.added_par.k3*r*r*r*r*r*r)
-      + cal.added_par.p2 * (r*r + 2*(*y)*(*y)) + 2*cal.added_par.p1*(*x)*(*y);
+    dx = (*x) * (cal->added_par.k1*r*r + cal->added_par.k2*r*r*r*r + cal->added_par.k3*r*r*r*r*r*r)
+      + cal->added_par.p1 * (r*r + 2*(*x)*(*x)) + 2*cal->added_par.p2*(*x)*(*y);
+    dy = (*y) * (cal->added_par.k1*r*r + cal->added_par.k2*r*r*r*r + cal->added_par.k3*r*r*r*r*r*r)
+      + cal->added_par.p2 * (r*r + 2*(*y)*(*y)) + 2*cal->added_par.p1*(*x)*(*y);
 
     *x += dx;
     *y += dy;
 
-    *x = cal.added_par.scx * (*x) - sin(cal.added_par.she) * (*y);
-    *y = cos(cal.added_par.she) * (*y);
+    *x = cal->added_par.scx * (*x) - sin(cal->added_par.she) * (*y);
+    *y = cos(cal->added_par.she) * (*y);
 
 }
 
-void img_xy (double X, double Y, double Z, Exterior Ex, Interior I, Glass G, \
-double *x, double *y){
-
+/* Todo: Add short description
+ * 
+ */
+void img_xy (double X, double Y, double Z, Calibration *cal, double *x, double *y)
+{
   double deno;
 
-  deno = Ex.dm[0][2] * (X-Ex.x0)
-    + Ex.dm[1][2] * (Y-Ex.y0)
-    + Ex.dm[2][2] * (Z-Ex.z0);
+  deno = cal->ext_par.dm[0][2] * (X-cal->ext_par.x0)
+    + cal->ext_par.dm[1][2] * (Y-cal->ext_par.y0)
+    + cal->ext_par.dm[2][2] * (Z-cal->ext_par.z0);
 
-  *x = I.xh - I.cc *  (Ex.dm[0][0] * (X-Ex.x0)
-		       + Ex.dm[1][0] * (Y-Ex.y0)
-		       + Ex.dm[2][0] * (Z-Ex.z0)) / deno;
+  *x = cal->int_par.xh - cal->int_par.cc *  (cal->ext_par.dm[0][0] * (X-cal->ext_par.x0)
+		       + cal->ext_par.dm[1][0] * (Y-cal->ext_par.y0)
+		       + cal->ext_par.dm[2][0] * (Z-cal->ext_par.z0)) / deno;
 
-  *y = I.yh - I.cc *  (Ex.dm[0][1] * (X-Ex.x0)
-		       + Ex.dm[1][1] * (Y-Ex.y0)
-		       + Ex.dm[2][1] * (Z-Ex.z0)) / deno;
+  *y = cal->int_par.yh - cal->int_par.cc *  (cal->ext_par.dm[0][1] * (X-cal->ext_par.x0)
+		       + cal->ext_par.dm[1][1] * (Y-cal->ext_par.y0)
+		       + cal->ext_par.dm[2][1] * (Z-cal->ext_par.z0)) / deno;
 }
 
-void img_xy_mm_geo (double X, double Y, double Z, Exterior Ex, Interior I, Glass G, \
-mm_np mm, double *x, double *y){
+/* Todo: Add short description
+ * 
+ */
+void img_xy_mm_geo (double X, double Y, double Z, Calibration *cal, mm_np *mm, double *x, double *y, int i_cam, mmlut *mmLUT)
+{
 
   double deno;
   Exterior Ex_t;
   double X_t,Y_t,Z_t,cross_p[3],cross_c[3],Xh,Yh,Zh;
 
-  trans_Cam_Point(Ex,mm,G,X,Y,Z,&Ex_t,&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
-  multimed_nlay_v2 (Ex_t,Ex,mm,X_t,Y_t,Z_t,&X_t,&Y_t);
-  back_trans_Point(X_t,Y_t,Z_t,mm, G,cross_p,cross_c,&X,&Y,&Z);
+  /*calculate tilted positions and copy them to X_t, Y_t and Z_t*/
+  trans_Cam_Point(cal->ext_par,*mm,cal->glass_par,X,Y,Z,&Ex_t,&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
+  
+  multimed_nlay (&Ex_t, mm, X_t,Y_t,Z_t, &X_t,&Y_t, i_cam, mmLUT);
 
-  deno = Ex.dm[0][2] * (X-Ex.x0)
-    + Ex.dm[1][2] * (Y-Ex.y0)
-    + Ex.dm[2][2] * (Z-Ex.z0);
+  back_trans_Point(X_t,Y_t,Z_t,*mm, cal->glass_par,cross_p,cross_c,&X,&Y,&Z);
 
-  *x = - I.cc *  (Ex.dm[0][0] * (X-Ex.x0)
-		  + Ex.dm[1][0] * (Y-Ex.y0)
-		  + Ex.dm[2][0] * (Z-Ex.z0)) / deno;
+  deno = cal->ext_par.dm[0][2] * (X-cal->ext_par.x0)
+    + cal->ext_par.dm[1][2] * (Y-cal->ext_par.y0)
+    + cal->ext_par.dm[2][2] * (Z-cal->ext_par.z0);
 
-  *y = - I.cc *  (Ex.dm[0][1] * (X-Ex.x0)
-		  + Ex.dm[1][1] * (Y-Ex.y0)
-		  + Ex.dm[2][1] * (Z-Ex.z0)) / deno;
+  *x = - cal->int_par.cc *  (cal->ext_par.dm[0][0] * (X-cal->ext_par.x0)
+		  + cal->ext_par.dm[1][0] * (Y-cal->ext_par.y0)
+		  + cal->ext_par.dm[2][0] * (Z-cal->ext_par.z0)) / deno;
+
+  *y = - cal->int_par.cc *  (cal->ext_par.dm[0][1] * (X-cal->ext_par.x0)
+		  + cal->ext_par.dm[1][1] * (Y-cal->ext_par.y0)
+		  + cal->ext_par.dm[2][1] * (Z-cal->ext_par.z0)) / deno;
 }
 
