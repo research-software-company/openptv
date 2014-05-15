@@ -23,7 +23,7 @@ Routines contained:
 /* Calculates projection from coordinates in
  * world space to pixelcoordinates in image space
  */
-void img_coord (double X, double Y, double Z, Calibration *cal, mm_np *mm, double *x, double *y, int i_cam, mmlut *mmLUT)
+void img_coord (double X, double Y, double Z, Calibration *cal, mm_np *mm, int i_cam, mmlut *mmLUT, double *x, double *y)
 {
     double deno, r, dx, dy;
 	Calibration *cal_t;
@@ -81,7 +81,7 @@ void img_xy (double X, double Y, double Z, Calibration *cal, double *x, double *
 /* Todo: Add short description
  * 
  */
-void img_xy_mm_geo (double X, double Y, double Z, Calibration *cal, mm_np *mm, double *x, double *y, int i_cam, mmlut *mmLUT)
+void img_xy_mm_geo (double X, double Y, double Z, Calibration *cal, mm_np *mm, int i_cam, mmlut *mmLUT, double *x, double *y)
 {
 
   double deno;
