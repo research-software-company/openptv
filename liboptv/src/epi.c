@@ -44,13 +44,13 @@ void epi_mm (double xl, double yl, Calibration *cal1,
   Z = Zmin;   X = pos[0] + (Z-pos[2]) * v[0]/v[2];   Y = pos[1] + (Z-pos[2]) * v[1]/v[2];
   
   //img_xy_mm_geo_old (X,Y,Z, Ex2, I2,     mmp, &xa, &ya);
-  img_xy_mm_geo (X, Y, Z, cal2, mmp, i_cam, mmlut, &xa, &ya);
+  img_xy_mm_geo (X, Y, Z, cal2, &mmp, i_cam, mmlut, &xa, &ya);
 
 
   Z = Zmax;   X = pos[0] + (Z-pos[2]) * v[0]/v[2];   Y = pos[1] + (Z-pos[2]) * v[1]/v[2];
   
   //img_xy_mm_geo_old (X,Y,Z, Ex2, I2,     mmp, &xb, &yb);
-  img_xy_mm_geo (X, Y, Z, cal2, mmp, i_cam, mmlut, &xb, &yb);
+  img_xy_mm_geo (X, Y, Z, cal2, &mmp, i_cam, mmlut, &xb, &yb);
 
   /*  ==> window given by xa,ya,xb,yb  */
 
