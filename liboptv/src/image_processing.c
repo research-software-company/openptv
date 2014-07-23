@@ -302,9 +302,10 @@ void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int
 	}
 }
 
-void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
-                int imgsize, int imx, int imy){
-
+/*lowpass_n is a generic lowpass filter 
+*/
+void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, int imgsize, int imx, int imy)
+{
 	register unsigned char	*ptrl, *ptrr, *ptrz;
 	short  		       	    *buf1, *buf2, buf, *end;
 	register short	       	*ptr, *ptr1, *ptr2, *ptr3;
@@ -312,45 +313,43 @@ void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
 	register int	       	i;
 	
 	n2 = 2*n + 1;  nq = n2 * n2;
-	
-		
+			
 	buf1 = (short *) calloc (imgsize, sizeof(short));
 	if ( ! buf1)
 	{
-		printf ("calloc for buf1 --> error \n");
-		exit (1);
+		printf ("calloc for buf1 --> error \n");	exit (1);
 	}
 	
 	buf2 = (short *) calloc (imx, sizeof(short));
 	if ( ! buf2)
 	{
-		printf ("calloc for buf2 --> error \n");
-		exit (1);
+		printf ("calloc for buf2 --> error \n");	exit (1);
 	}
-
 
 	/* --------------  average over lines  --------------- */
 	end = buf1 + imgsize;  buf = 0;
-	for (ptrr = img; ptrr < img + n2; ptrr ++)  buf += *ptrr; 
+	for (ptrr = img; ptrr < img + n2; ptrr ++)  
+	{
+		buf += *ptrr;
+	}
 	*(buf1 + n) = buf;
-		 
-	
+
 	for (ptrl=img, ptr = buf1+n+1; ptr<end; ptrl++, ptr++, ptrr++)
 	{
 		buf += (*ptrr - *ptrl);  *ptr = buf; 
-	}
-	
+	}	
 	
 	/* -------------  average over columns  -------------- */
 	end = buf2 + imx;
-	for (ptr1=buf1, ptrz=img_lp+imx*n, ptr3=buf2; ptr3<end;
-		 ptr1++, ptrz++, ptr3++)
+	for (ptr1=buf1, ptrz=img_lp+imx*n, ptr3=buf2; ptr3<end; ptr1++, ptrz++, ptr3++)
 	{
-		for (k=0, ptr2=ptr1; k<n2; k++, ptr2+=imx)  *ptr3 += *ptr2;
+		for (k=0, ptr2=ptr1; k<n2; k++, ptr2+=imx)
+		{
+			*ptr3 += *ptr2;
+		}
 		*ptrz = *ptr3/nq;
 	}
-	for (i=n+1, ptr1=buf1, ptrz=img_lp+imx*(n+1), ptr2=buf1+imx*n2;
-		 i<imy-n; i++)
+	for (i=n+1, ptr1=buf1, ptrz=img_lp+imx*(n+1), ptr2=buf1+imx*n2; i<imy-n; i++)
 	{
 		for (ptr3=buf2; ptr3<end; ptr3++, ptr1++, ptrz++, ptr2++)
 		{
@@ -358,8 +357,7 @@ void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
 			*ptrz = *ptr3/nq;
 		}
 	}
-
-
+	//free allocated memory
 	free (buf1);
 	free (buf2);
 }
