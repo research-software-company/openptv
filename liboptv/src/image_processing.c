@@ -367,8 +367,8 @@ void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
 
 
 
-void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp,\
-                   int imgsize, int imx, int imy){
+void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp, int imgsize, int imx, int imy)
+{
                    
 	register unsigned char	*imgum, *ptrl, *ptrr, *ptrz;
 	int  		       	*buf1, *buf2, buf, *end;
@@ -392,7 +392,6 @@ void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp,\
 	}
 
 	buf2 = (int *) calloc (imx, sizeof(int));
-	
 	if ( ! buf2)
 	{
 		printf ("calloc for buf2 --> error \n");  exit (1);
@@ -401,16 +400,11 @@ void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp,\
 	/* set imgum = img0 (so there cannot be written to the original image) */
 	for (ptrl=imgum, ptrr=img0; ptrl<(imgum+imgsize); ptrl++, ptrr++)
 	{
-	  *ptrl = *ptrr;
-
-
+		*ptrl = *ptrr;
 	}	
 
 	/* cut off high gray values (not in general use !)
 	for (ptrz=imgum; ptrz<(imgum+imgsize); ptrz++) if (*ptrz > 160) *ptrz = 160; */
-
-
-
 
 	/* --------------  average over lines  --------------- */
 
@@ -502,8 +496,8 @@ void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp,\
 }
 
 
-void zoom (unsigned char *img, unsigned char *zoomimg, int xm, int ym, int zf, \
-int imgsize, int imx, int imy){
+void zoom (unsigned char *img, unsigned char *zoomimg, int xm, int ym, int zf, int imgsize, int imx, int imy)
+{
   int          	i0, j0, sx, sy, i1, i2, j1, j2;
   register int	i,j,k,l;
 
@@ -524,8 +518,8 @@ int imgsize, int imx, int imy){
 }
 
 
-void zoom_new (unsigned char	*img, unsigned char	*zoomimg, int xm, int ym, int zf,\
-int zimx, int zimy, int imx){
+void zoom_new (unsigned char *img, unsigned char *zoomimg, int xm, int ym, int zf, int zimx, int zimy, int imx)
+{
 	int		      	xa, ya;
 	register int	       	i;
 	register unsigned char	*ptri, *ptrz;
