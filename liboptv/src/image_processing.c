@@ -62,7 +62,7 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	        }
 	    }
 	} else { 
-	      printf("filter.par was found, reading the values \n");  
+	      printf("filter.par was found, reading the values: \n");  
 	      for (i=0, sum=0; i<3; i++){
 	          for(j=0; j<3; j++){
 		      	fscanf (fp, "%f", &m[i][j]);
@@ -71,7 +71,8 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 		       }
 		    }
 	    }
-	fclose (fp);  
+	fclose (fp); 
+	// printf("\n"); 
 	if (sum == 0) {
 	    printf("filter.par is corrupted or empty, fallback to default lowpass filter \n");
 	    for (i=0, sum=9; i<3; i++){
@@ -258,10 +259,18 @@ void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 /* Apparently lowpass_3 above is not used anymore, but it is the simplest function we can
 *  verify - it does low pass filtering as it was tested using test_lena.py from /py_bind
 *  but it has some inconsistency that was verified by comparing it with another
-*  alex_lowpass_3 version that is a copy of the lowpass from  
+*  owpass_3_cb version that is a copy of the lowpass from  
 *  Image Processing in C, 2nd Ed. by Dwayne Phillips, Listing 7.1 
+*  _cb stands for _center_borders which means that this lowpass filter places the 
+*  result at the center point (rather than the top left, as in lowpass_3) and it is
+*  this function also takes care fo the borders of the image to remain untouched. 
+*  Arguments:
+*      img, img_lp are the unsigned char array pointers to the original
+*      and the low passed images
+*      imgsize is the imx * imy the total size of the image
+*      imx is the horizontal size of the image
 */
-void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
+void lowpass_3_cb (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 {
 
 	int		X, Y;
@@ -302,16 +311,18 @@ void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int
 	}
 }
 
-/*lowpass_n is a generic lowpass filter 
-*/
-void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, int imgsize, int imx, int imy)
-{
+void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
+                int imgsize, int imx){
+
 	register unsigned char	*ptrl, *ptrr, *ptrz;
 	short  		       	    *buf1, *buf2, buf, *end;
 	register short	       	*ptr, *ptr1, *ptr2, *ptr3;
 	int    		       	     k, n2, nq;
 	register int	       	i;
-	//define size of filter window
+	int                     imy;
+	
+	imy = imgsize/imx;
+	
 	n2 = 2*n + 1;  nq = n2 * n2;
 
 	//allocate memory
@@ -575,7 +586,7 @@ void handle_imageborders(unsigned char	*img1, unsigned char *img2, int imgsize, 
 *      img1, img2 are the unsigned char array pointers 
 *      imgsize is the imx * imy the total size of the image
 */
-void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize, int imx)
+void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize)
 {
 	register unsigned char 	*ptr1, *ptr2;
 	unsigned char	       	*end;
@@ -624,8 +635,9 @@ void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_ne
 }
 
 
-/* initial commit with highpass from ehtz-ptv
-*	char	        pic_name[256];  image name
+/* highpass is moved here from segmentation.c and changed to be one of the high level
+*   image processing routines
+*   Arguments:
 *	unsigned char  *img;
 *	unsigned char  *img_hp;			highpass filtered image 
 *	int             dim_lp;	       	dimension of subtracted lowpass image 
@@ -633,23 +645,12 @@ void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_ne
 *	int    			field;	       	field to be used 
 *	int	      		nr;	       		image number for display 
 */
-void highpass (char pic_name[], unsigned char *img, unsigned char *img_hp, int dim_lp, int filter_hp, int field, int nr, int imgsize, int imx)
+void highpass (unsigned char *img, unsigned char *img_hp, int dim_lp, int filter_hp, int imgsize, int imx)
 {
-	register int			i;
-	FILE	       			*fp;
 	unsigned char			*img_lp;
-	char	       			lp_name[256], hp_name[256];
-	register unsigned char	*ptr1, *ptr2, *ptr3;
 	int		imy;
-	//temporary items: We need to discuss if we really need this write i/o here
-	int examine, tiff_flag;
-	examine = 0;
-	tiff_flag = 0;
-		
+			
 	imy = imgsize/imx;
-
-	sprintf (lp_name, "%s_lp", pic_name);
-	sprintf (hp_name, "%s_hp", pic_name);
 
 	/* allocate memory for lp image*/
 
@@ -659,20 +660,9 @@ void highpass (char pic_name[], unsigned char *img, unsigned char *img_hp, int d
 		puts ("calloc for img_lp --> error");
 		exit (1);
 	}
-
-	unsharp_mask (dim_lp, img, img_lp,imgsize,imx,imy);
-
-	/* disabled (psteinhoff)
-	if (examine == 3)
-	{
-		fp = fopen (lp_name, "w"); // save lowpass image 
-		if (tiff_flag) { write_tiff (lp_name, img_lp, imx, imy); }
-		else { fwrite (img_lp, 1, imgsize, fp); }
-		printf("low pass: %s will be deleted when quitting ptv\n", lp_name);
-		fclose (fp);
-	}
-	*/
-
+    /* create low-passed image using unsharp_mask */
+	unsharp_mask (dim_lp, img, img_lp, imgsize, imx, imy);
+	
 	/*  subtract lowpass from original  (=>   )  */
 	subtract_img (img, img_lp, img_hp, imgsize); 
 
@@ -684,16 +674,6 @@ void highpass (char pic_name[], unsigned char *img, unsigned char *img_hp, int d
 		case 2: filter_3 (img_hp, img_hp, imgsize, imx);	break;
 	}
 
-	/* save highpass image for later use */
-	/* disabled (psteinhoff)
-	if (examine == 3)
-	{  
-		fp = fopen (hp_name, "w");
-		if (tiff_flag) write_tiff (hp_name, img_hp, imx, imy);
-		else fwrite (img_hp, 1, imgsize, fp);
-		fclose (fp);
-	}
-	*/
   free (img_lp);
 }
 

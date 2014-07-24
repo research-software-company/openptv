@@ -111,7 +111,7 @@ START_TEST(test_lowpass_n)
          
          
        
-        lowpass_n (1, img, img_lp, imgsize, imx, imy);
+        lowpass_n (1, img, img_lp, imgsize, imx);
         
          /* print the output */
         printf("--------original ---------------\n"); 
@@ -140,7 +140,7 @@ END_TEST
 
 
 
-START_TEST(test_alex_lowpass_3)
+START_TEST(test_lowpass_3_cb)
 {
         unsigned char *img, *img_lp;
         int imgsize, imx, imy, i, j;
@@ -175,7 +175,7 @@ START_TEST(test_alex_lowpass_3)
         img[3+5*3] = 255;   
 
          
-        alex_lowpass_3 (img, img_lp, imgsize, imy);
+        lowpass_3_cb (img, img_lp, imgsize, imy);
         
         /* print the output */
         printf("--------original ---------------\n"); 
@@ -185,7 +185,7 @@ START_TEST(test_alex_lowpass_3)
         	} 
         	printf("\n");
         } 
-        printf("--------alex_low-passed ---------------\n");        
+        printf("--------low-passed_cb ---------------\n");        
         for (i=0;i<imy;i++){ 
             for(j=0;j<imx;j++){
         		printf("%d\t", img_lp[i*imx+j]);
@@ -667,15 +667,89 @@ START_TEST(test_filter_3)
 }
 END_TEST
 
+
+START_TEST(test_highpass)
+{
+        unsigned char *img, *img_hp;
+        int imgsize, imx, imy, i, j, dim_lp, filter_hp;
+        int hist[256];
+        
+        imx = 5;
+        imy = 5;
+        imgsize = imx*imy;
+        
+        /* Allocate the image arrays */
+           	
+        img = (unsigned char *) calloc (imgsize, 1);
+
+    	if (! img) {
+        	printf ("calloc for img --> error \n");
+        	exit (1);
+    	}
+    	
+    	img_hp = (unsigned char *) calloc (imgsize, 1);
+
+    	if (! img_hp) {
+        	printf ("calloc for img_hp --> error \n");
+        	exit (1);
+    	}
+        
+        /* Initialize the image arrays */
+        for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		img[i*imx+j] = 127; //(i+1)*(j+1)*10; 
+        	} 
+        } 
+        img[2+5*2] = 0;
+        img[1+5*1] = 181;
+        img[3+5*3] = 255;   
+        
+        /* print the output */
+        
+       printf("--------before highpass ---------------\n"); 
+       for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img[i*imx+j]);
+        	} 
+        	printf("\n");
+        } 
+        
+        dim_lp = 1;
+        filter_hp = 1;
+         
+        highpass(img, img_hp, dim_lp, filter_hp, imgsize, imx);
+        
+        printf("--------after highpass ---------------\n");        
+        for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img_hp[i*imx+j]);
+        	} 
+        	printf("\n");
+        }
+        
+        // for (i=0; i<256; i++)  printf("i, hist[i] %d %d\n",i,hist[i]);
+            
+        ck_assert_msg(img_hp[8] == 255  && 
+                      img_hp[12] == 8 && 
+                      img_hp[16] == 255 ,
+         "\n Expected 126 84 126 \n  \
+         but found %d %d %d \n", img_hp[8], img_hp[12], img_hp[16] );
+ 
+         
+}
+END_TEST
+
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("image_processing");
     TCase *tc = tcase_create ("image_processing_test");
     tcase_add_test(tc, test_lowpass_3);
     tcase_add_test(tc, test_lowpass_n);
-    tcase_add_test(tc, test_alex_lowpass_3);
+    tcase_add_test(tc, test_lowpass_3_cb);
     tcase_add_test(tc, test_histogram);
     tcase_add_test(tc, test_filter_3);
     tcase_add_test(tc, test_enhance);
+    tcase_add_test(tc, test_highpass);
     suite_add_tcase (s, tc);   
     return s;
 }
