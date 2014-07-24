@@ -311,9 +311,10 @@ void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, int imgsize, i
 	register short	       	*ptr, *ptr1, *ptr2, *ptr3;
 	int    		       	     k, n2, nq;
 	register int	       	i;
-	
+	//define size of filter window
 	n2 = 2*n + 1;  nq = n2 * n2;
-			
+
+	//allocate memory
 	buf1 = (short *) calloc (imgsize, sizeof(short));
 	if ( ! buf1)
 	{
@@ -328,7 +329,7 @@ void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, int imgsize, i
 
 	/* --------------  average over lines  --------------- */
 	end = buf1 + imgsize;  buf = 0;
-	for (ptrr = img; ptrr < img + n2; ptrr ++)  
+	for (ptrr = img; ptrr < img + n2; ptrr ++)  //psteinhoff: ToDo: Check why this loop runs only n2 elements
 	{
 		buf += *ptrr;
 	}
