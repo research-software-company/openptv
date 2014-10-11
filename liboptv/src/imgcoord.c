@@ -23,14 +23,16 @@ Routines contained:
 /* Calculates projection from coordinates in
  * world space to pixelcoordinates in image space
  */
-void img_coord (double X, double Y, double Z, Calibration *cal, mm_np mm, int i_cam, mmlut *mmLUT, double *x, double *y){
+void img_coord (double X, double Y, double Z, Calibration *cal, mm_np *mm, int i_cam, mmlut *mmLUT, double *x, double *y){
     double deno, r, dx, dy;
 	Calibration *cal_t;
     Exterior Ex_t;
     double X_t,Y_t,Z_t,cross_p[3],cross_c[3];
 	
     /*calculate tilted positions and copy them to X_t, Y_t and Z_t*/
-	trans_Cam_Point(cal->ext_par,*mm,cal->glass_par,X,Y,Z,&Ex_t,&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
+	//trans_Cam_Point(cal->ext_par,*mm,cal->glass_par,X,Y,Z,&Ex_t,&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
+	trans_Cam_Point(cal[i_cam].ext_par, *mm, cal[i_cam].glass_par, X, Y, Z, \
+          &Ex_t, &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
     
     multimed_nlay (&Ex_t, mm, X_t,Y_t,Z_t, &X_t,&Y_t, i_cam, mmLUT);
     /*
@@ -99,7 +101,9 @@ mmlut *mmLUT, double *x, double *y)
   double X_t,Y_t,Z_t,cross_p[3],cross_c[3],Xh,Yh,Zh;
 
   /*calculate tilted positions and copy them to X_t, Y_t and Z_t*/
-  trans_Cam_Point(cal->ext_par,*mm,cal->glass_par,X,Y,Z,&Ex_t,&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
+  //trans_Cam_Point(cal->ext_par,*mm,cal->glass_par,X,Y,Z,&Ex_t,&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
+  trans_Cam_Point(cal[i_cam].ext_par, *mm, cal[i_cam].glass_par, X, Y, Z, \
+          &Ex_t, &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
   
   multimed_nlay (&Ex_t, mm, X_t,Y_t,Z_t, &X_t,&Y_t, i_cam, mmLUT);
 
