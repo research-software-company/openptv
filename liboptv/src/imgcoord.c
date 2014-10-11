@@ -23,8 +23,7 @@ Routines contained:
 /* Calculates projection from coordinates in
  * world space to pixelcoordinates in image space
  */
-void img_coord (double X, double Y, double Z, Calibration *cal, mm_np *mm, int i_cam, mmlut *mmLUT, double *x, double *y)
-{
+void img_coord (double X, double Y, double Z, Calibration *cal, mm_np mm, int i_cam, mmlut *mmLUT, double *x, double *y){
     double deno, r, dx, dy;
 	Calibration *cal_t;
     Exterior Ex_t;
@@ -34,7 +33,17 @@ void img_coord (double X, double Y, double Z, Calibration *cal, mm_np *mm, int i
 	trans_Cam_Point(cal->ext_par,*mm,cal->glass_par,X,Y,Z,&Ex_t,&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
     
     multimed_nlay (&Ex_t, mm, X_t,Y_t,Z_t, &X_t,&Y_t, i_cam, mmLUT);
-
+    /*
+     void  multimed_nlay (Exterior *ex
+                   , mm_np *mm
+                   , double X
+                   , double Y
+                   , double Z
+                   , double *Xq
+                   , double *Yq
+                   , int i_cam
+                   , mmlut *mmLUT);
+    */
     back_trans_Point(X_t,Y_t,Z_t,*mm, cal->glass_par,cross_p,cross_c,&X,&Y,&Z);
 	
     X -= cal->ext_par.x0;  Y -= cal->ext_par.y0;  Z -= cal->ext_par.z0;
@@ -81,7 +90,8 @@ void img_xy (double X, double Y, double Z, Calibration *cal, double *x, double *
 /* Todo: Add short description
  * 
  */
-void img_xy_mm_geo (double X, double Y, double Z, Calibration *cal, mm_np *mm, int i_cam, mmlut *mmLUT, double *x, double *y)
+void img_xy_mm_geo (double X, double Y, double Z, Calibration *cal, mm_np *mm, int i_cam, \
+mmlut *mmLUT, double *x, double *y)
 {
 
   double deno;
