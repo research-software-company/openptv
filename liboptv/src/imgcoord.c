@@ -21,7 +21,7 @@ Routines contained:
 
 
 /* Calculates projection from coordinates in
- * world space to pixelcoordinates in image space
+ * world space to pixel coordinates in image space
  */
 void img_coord (double X, double Y, double Z, Calibration *cal, mm_np mm, int i_cam, mmlut *mmLUT, double *x, double *y){
     double deno, r, dx, dy;
@@ -68,27 +68,6 @@ void img_coord (double X, double Y, double Z, Calibration *cal, mm_np mm, int i_
     *y = cos(cal->added_par.she) * (*y);
 
 }
-
-/* Todo: Add short description
- * 
- */
-void img_xy (double X, double Y, double Z, Calibration *cal, double *x, double *y)
-{
-  double deno;
-
-  deno = cal->ext_par.dm[0][2] * (X-cal->ext_par.x0)
-    + cal->ext_par.dm[1][2] * (Y-cal->ext_par.y0)
-    + cal->ext_par.dm[2][2] * (Z-cal->ext_par.z0);
-
-  *x = cal->int_par.xh - cal->int_par.cc *  (cal->ext_par.dm[0][0] * (X-cal->ext_par.x0)
-		       + cal->ext_par.dm[1][0] * (Y-cal->ext_par.y0)
-		       + cal->ext_par.dm[2][0] * (Z-cal->ext_par.z0)) / deno;
-
-  *y = cal->int_par.yh - cal->int_par.cc *  (cal->ext_par.dm[0][1] * (X-cal->ext_par.x0)
-		       + cal->ext_par.dm[1][1] * (Y-cal->ext_par.y0)
-		       + cal->ext_par.dm[2][1] * (Z-cal->ext_par.z0)) / deno;
-}
-
 
 void img_xy_mm_geo (double X, double Y, double Z, Calibration *cal, \
 mm_np mm, int i_cam, mmlut *mmlut, double *x, double *y){
