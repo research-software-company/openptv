@@ -49,9 +49,9 @@ cdef extern from "../liboptv/include/multimed.h":
         double x, y, z
 
     ctypedef struct mmlut:
-        Origin origin;
-        int    nr, nz, rw;
-        double *data;
+        Origin origin
+        int    nr, nz, rw
+        double *data
 
 
 cdef class Ray_tracing:
