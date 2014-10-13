@@ -1,7 +1,4 @@
-# Using a copy of Alessandro ray_tracing.pxd
-
-
-cdef extern from "../liboptv/include/calibration.h":
+cdef extern from "optv/calibration.h":
     ctypedef double Dmatrix[3][3]
 
     ctypedef struct Exterior:
@@ -27,7 +24,7 @@ cdef extern from "../liboptv/include/calibration.h":
 
     
 
-cdef extern from "../liboptv/include/parameters.h":   
+cdef extern from "optv/parameters.h":   
 
     ctypedef struct mm_np:
         int  	nlay 
@@ -42,17 +39,6 @@ cdef extern from "../liboptv/include/parameters.h":
 
     ctypedef struct volume_par:
         pass
-        
-
-cdef extern from "../liboptv/include/multimed.h":
-    ctypedef struct Origin:
-        double x, y, z
-
-    ctypedef struct mmlut:
-        Origin origin;
-        int    nr, nz, rw;
-        double *data;
-
 
 cdef class Ray_tracing:
     cdef:        
@@ -63,4 +49,12 @@ cdef class Ray_tracing:
 
         volume_par* par_volume_par
         int _owns_par_volume_par
+
+        
+
+
+
+
+
+ 
 
