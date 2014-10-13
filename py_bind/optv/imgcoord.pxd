@@ -1,4 +1,4 @@
-# Using a copy of Alessandro ray_tracing.pxd
+# Using a copy of Alessandro's ray_tracing.pxd
 
 
 cdef extern from "../liboptv/include/calibration.h":

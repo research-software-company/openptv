@@ -8,7 +8,7 @@ References:
 """
 
 import unittest
-import optv.ray_tracing as rt
+import optv.imgcoord as rt
 import numpy as np
 
 class TestRayTracing(unittest.TestCase):
