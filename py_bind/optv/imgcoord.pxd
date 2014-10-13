@@ -54,7 +54,7 @@ cdef extern from "../liboptv/include/multimed.h":
         double *data
 
 
-cdef class Ray_tracing:
+cdef class ImgCoord:
     cdef:        
         Calibration par_calibration
         
@@ -63,4 +63,9 @@ cdef class Ray_tracing:
 
         volume_par* par_volume_par
         int _owns_par_volume_par
+        
+        mmlut par_mmlut
+        int _owns_mmlut
+        
+        mm_np mm
 

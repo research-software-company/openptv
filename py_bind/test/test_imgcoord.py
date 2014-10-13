@@ -8,14 +8,14 @@ References:
 """
 
 import unittest
-import optv.imgcoord as rt
+import optv.imgcoord as ic
 import numpy as np
 
-class TestRayTracing(unittest.TestCase):
+class TestImgCoord(unittest.TestCase):
 
     @staticmethod
     def get_dummy_mm_np():
-        ret = rt.pmm_np()
+        ret = ic.pmm_np()
         ret.nlay = 3
         ret.n1 = 1.
         ret.n2 = np.array([1.49,0.,0])
@@ -36,34 +36,55 @@ class TestRayTracing(unittest.TestCase):
 
     @staticmethod
     def get_dummy_Exterior():
-        ret = rt.pExterior()
+        ret = ic.pExterior()
         ret.z0 = 100
         ret.dm = np.array([[1.0, 0.2, -0.3], 
             [0.2, 1.0, 0.0],
             [-0.3, 0.0, 1.0]])
 
         return ret 
+        
+    @staticmethod
+    def get_dummy_addpar():
+        return {'k1': 0.0, 'k2': 0.0, 'k3':0.0, 'p1':0.0, 'p2': 0.0, 'scx': 1.0, 'she': 0.0}
+
+            
+    @staticmethod
+    def get_dummy_mmlut():
+        mmlut = ic.pmmlut()
+        mmlut.nr = 2
+        mmlut.nz = 2
+        mmlut.nw = 2
+        mmlut.origin.x, mmlut.origin.y, mmlut.origin.z = 0.,0.,0.
+        for i in range(mmlut.nr):
+            for j in range(mmlut.nz):
+                mmlut.data[i*mmlut.nz + j] = 1.
+                
+        return mmlut
+
     
-    def test_ray_tracing(self):
-        """Testing ray tracing against data from ray_tracing.c check testing."""
+    def test_img_coord(self):
+        """Testing img_coord against data from test_imgcoord.c check testing."""
         
-        mm = self.get_dummy_mm_np()
+        mm = self.get_dummy_mm_np()        
+        mmlut = self.get_dummy_mmlut()
+        
+        cal = ic.pCalibration()
+        cal.ext_par = self.get_dummy_Exterior()
+        cal.int_par = self.get_dummy_Interior()
+        cal.glass_par = self.get_dummy_Glass()
+        cal.added_par = self.get_dummy_addpar()
 
-        Ex = self.get_dummy_Exterior()
-
-        I = self.get_dummy_Interior()
-
-        G = self.get_dummy_Glass()
 
         
-        tracer = rt.Ray_tracing()
-        tracer.force_set_exterior(Ex)
-        tracer.force_set_interior(I)
-        tracer.force_set_glass(G)
-        tracer.force_set_mm_np(mm)
+        imgcoord = ic.ImgCoord()
+        imgcoord.force_set_calibration(cal)
+        imgcoord.force_set_only_mm_np(mm)
+        imgcoord.force_set_mmlut(mmlut)
 
-        input_X = (100.,100.00)
-        output_X, output_A = tracer.trace(input_X)
+        input_X = (100.0,100.0,0.0)
+        int_cam = 0
+        output_X = imgcoord.img_coord (input_X, int_cam)
 
         self.failUnlessAlmostEqual(
             np.max(
@@ -71,11 +92,6 @@ class TestRayTracing(unittest.TestCase):
                     np.array(output_X)-np.array((110.406944, 88.325788, 0.988076))
                 )
             ),0. , places = 5)
-        self.failUnlessAlmostEqual(
-            np.max(
-                np.abs(            
-                    np.array(output_A)-np.array((0.387960,0.310405,-0.867834))
-                )
-            ),0. , places = 5)
+
 
 
