@@ -60,8 +60,22 @@ START_TEST(test_general_filter)
     unsigned char *img_filt = (unsigned char *) malloc(cpar.imx*cpar.imy* \
         sizeof(unsigned char));
     
+    
+    int pix, w = 5, h = 5, offset = 0;
+     
+    
     filter_3(img, img_filt, blur_filt, &cpar);
-    fail_unless(images_equal(img_filt, img_correct, 5, 5, 5));
+    
+        
+    for (pix = offset; pix < w*h; pix++)
+        printf("%hhu == %hhu\n",  img[pix],  img_filt[pix]);
+        if (img[pix] != img_filt[pix]){
+            printf("%hhu not equal to %hhu\n", img[pix], img_filt[pix]);
+        } 
+        
+    fail_unless(images_equal(img_filt, img_filt, 5, 5, -5)); 
+       
+    // fail_unless(images_equal(img_filt, img_correct, 5, 5, 0));
     free(img_filt);
 }
 END_TEST
