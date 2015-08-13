@@ -68,14 +68,14 @@ START_TEST(test_general_filter)
     
         
     for (pix = offset; pix < w*h; pix++)
-        printf("%hhu == %hhu\n",  img[pix],  img_filt[pix]);
+        printf("%u == %u\n",  img[pix],  img_filt[pix]);
         if (img[pix] != img_filt[pix]){
-            printf("%hhu not equal to %hhu\n", img[pix], img_filt[pix]);
+            printf("%u not equal to %u\n", img[pix], img_filt[pix]);
         } 
         
-    fail_unless(images_equal(img_filt, img_filt, 5, 5, -5)); 
+    fail_unless(images_equal(img_filt, img_filt, 5, 5, 0)); 
        
-    // fail_unless(images_equal(img_filt, img_correct, 5, 5, 0));
+    fail_unless(images_equal(img_filt, img_correct, 5, 5, 0));
     free(img_filt);
 }
 END_TEST
