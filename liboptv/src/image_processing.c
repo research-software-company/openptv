@@ -8,6 +8,7 @@
  ***************************************************************************/
 
 #include <stdlib.h>
+#include <stdio.h>
 #include "image_processing.h"
 
 /*  This would be a function, only the original writer of these filters put a 
@@ -53,12 +54,12 @@ int filter_3(unsigned char *img, unsigned char *img_lp, filter_t filt,
 	short buf;
 	register int i, j;
     int image_size = cpar->imx * cpar->imy;
-
+    
     for (i = 0; i < 3; i++)	
         for (j = 0; j < 3; j++)
             sum += filt[i][j];
     if (sum == 0) return 0;
-    
+        
     /* start, end etc skip first/last lines and wrap around the edges. */
     end = image_size - cpar->imx - 1;
     
@@ -74,8 +75,9 @@ int filter_3(unsigned char *img, unsigned char *img_lp, filter_t filt,
         if (buf < 8)
             buf = 8;
         
-        *ptr++ = buf;
+        *ptr++ = (unsigned char) buf;
     }
+    return 1;
 }
 
 
