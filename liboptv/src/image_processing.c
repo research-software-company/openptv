@@ -277,3 +277,105 @@ void split(unsigned char *img, int half_selector, control_par *cpar) {
         *ptr = 2;
 }
 
+/* filter_3 is a 3 x 3 filter applied to the image
+ * filter has to be predefined in the 'filter.par' file in the /parameters folders
+ * default filter, if the file is not found or corrupted is [1,1,1; 1,1,1; 1,1,1]/9.
+ * Arguments:
+ * 8-bit unsigned char image array by pointer *img is an input
+ * 8-bit unsigned char image array by pointer *img_lp is an output
+ * int imgsize, imx are image size and number of columns (pixels), respectively.
+ * in this implementation, boundaries of 1 pixel thickness are untouched and copied 
+ * from the original image. the interior is filtered according to the filter.par
+ * see ../tests/check_image_processing.c for a couple of useful filters.
+ */
+void filter_3a (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
+
+	register unsigned char	*ptr, *ptr1, *ptr2, *ptr3,
+		             	    *ptr4, *ptr5, *ptr6,
+	                        *ptr7, *ptr8, *ptr9;
+	int	       	    end;
+	float	       	m[3][3], sum;
+	short	       	buf;
+	register int	i, j, X, Y, I, J;
+	FILE	       	*fp;
+	int 			imy; 
+
+	
+	/* read filter elements from parameter file */
+	fp = fopen ("filter.par","r");
+	if (fp == NULL){
+	    printf("filter.par was not found, fallback to default lowpass filter \n");
+	    for (i=0, sum=9; i<3; i++){
+	       for(j=0;j<3; j++){
+	          m[i][j] = 1.0/sum; 
+	        }
+	    }
+	} else { 
+	      printf("filter.par was found, reading the values: \n");  
+	      for (i=0, sum=0; i<3; i++){
+	          for(j=0; j<3; j++){
+		      	fscanf (fp, "%f", &m[i][j]);
+		      	// printf("%f", m[i][j]);
+		        sum += m[i][j];
+		       }
+		    }
+	    }
+	fclose (fp); 
+	// printf("\n"); 
+	if (sum == 0) {
+	    printf("filter.par is corrupted or empty, fallback to default lowpass filter \n");
+	    for (i=0, sum=9; i<3; i++){
+	        for (j=0; j<3; j++){
+	                m[i][j] = 1.0/sum; 
+	        }
+	    } 
+	}
+	
+	imy = imgsize/imx;
+	
+	/* to ensure that the boundaries are original */
+	//copy_images (img, img_lp, imgsize);
+	handle_imageborders(img, img_lp, imgsize, imx);
+	
+	for(Y=0; Y<(imy-2); Y++)  
+	{
+		for(X=0; X<(imx-2); X++)  
+		{
+	     buf = 0;
+			for(I=0; I<=2; I++)  
+			{
+				for(J=0; J<=2; J++)  
+				{
+					buf += (int)( (*(img + X + I + (Y + J)*imx )) * m[I][J]); 
+				}
+			}
+	     // buf/=9;
+	     if(buf>255)  buf = 255;
+	     if(buf<0)    buf = 0;
+
+	     *(img_lp + X+1 + (Y+1)*imx) = (unsigned char)(buf);	
+		}
+	}
+	
+	
+	/* old version, 513 is probably for 512 x 512 images, obsolete and 
+	*  replaced by the newer version similar to alex_lowpass_3 
+	
+	
+	end = imgsize - 513;
+	
+	ptr  = img_lp + 513;
+	ptr1 = img;				ptr2 = img + 1;			ptr3 = img + 2;
+	ptr4 = img + imx;		ptr5 = img + imx + 1;	ptr6 = img + imx + 2;
+	ptr7 = img + 2*imx;		ptr8 = img + 2*imx + 1;	ptr9 = img + 2*imx + 2;
+
+	for (i=513; i<end; i++)
+	{
+		buf = m[0] * *ptr1++  +  m[1] * *ptr2++  +  m[2] * *ptr3++
+			+ m[3] * *ptr4++  +  m[4] * *ptr5++  +  m[5] * *ptr6++
+			+ m[6] * *ptr7++  +  m[7] * *ptr8++  +  m[8] * *ptr9++;
+		buf /= sum;    if (buf > 255)  buf = 255;    if (buf < 8)  buf = 8;
+		*ptr++ = buf;
+	}
+	*/
+}
