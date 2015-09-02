@@ -51,15 +51,31 @@ int filter_3(unsigned char *img, unsigned char *img_lp, filter_t filt,
         *ptr7, *ptr8, *ptr9;
 	int end;
 	double sum = 0;
-	unsigned short buf;
+	// unsigned short buf;
+	// int buf;
+	double buf;
+	
 	register int i, j;
     int image_size = cpar->imx * cpar->imy;
     
-    for (i = 0; i < 3; i++)	
-        for (j = 0; j < 3; j++)
+    printf("filter: \n");
+    for (i = 0; i < 3; i++){	
+        for (j = 0; j < 3; j++){
             sum += filt[i][j];
+            printf("%3.2f ",filt[i][j]);
+        }
+    }
+    printf("\n"); 
     if (sum == 0) return 0;
-        
+    
+    printf("inside filter_3\n");
+    for (int i=0;i<cpar->imx;i++){
+        for (int j=0;j<cpar->imy;j++){
+            printf("%d ",img[i*cpar->imx+j]);
+            }
+        }
+    printf("\n");
+    
     /* start, end etc skip first/last lines and wrap around the edges. */
     end = image_size - cpar->imx - 1;
     
@@ -70,6 +86,7 @@ int filter_3(unsigned char *img, unsigned char *img_lp, filter_t filt,
             + filt[2][0] * *ptr7++ + filt[2][1] * *ptr8++ + filt[2][2] * *ptr9++;
         buf /= sum;
         
+        
         if (buf > 255)
             buf = 255;
         if (buf < 8)
@@ -77,6 +94,14 @@ int filter_3(unsigned char *img, unsigned char *img_lp, filter_t filt,
         
         *ptr++ = (unsigned char) buf;
     }
+    printf("inside filter_3\n");
+    for (int i=0;i<cpar->imx;i++){
+        for (int j=0;j<cpar->imy;j++){
+            printf("%d ",img_lp[i*cpar->imx+j]);
+            }
+        }
+    printf("\n");
+        
     return 1;
 }
 
