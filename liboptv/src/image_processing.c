@@ -51,7 +51,7 @@ int filter_3(unsigned char *img, unsigned char *img_lp, filter_t filt,
         *ptr7, *ptr8, *ptr9;
 	int end;
 	double sum = 0;
-	short buf;
+	unsigned short buf;
 	register int i, j;
     int image_size = cpar->imx * cpar->imy;
     
