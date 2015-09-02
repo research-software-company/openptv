@@ -379,3 +379,32 @@ void filter_3a (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 	}
 	*/
 }
+
+/*
+* handle_imageborders  is a simple image arithmetic function that 
+* corrects the imageborders after filtering functions like lowpass_3 or filter_3 
+* it copies the outer pixel line(s) from img1 into img2
+*  Arguments:
+*      img1, img2 are the unsigned char array pointers 
+*      imgsize is the imx * imy the total size of the image
+*/
+void handle_imageborders(unsigned char	*img1, unsigned char *img2, int imgsize, int imx)
+{
+	register unsigned char 	*ptr1, *ptr2; //do we really need to register?
+	int i,j;
+	int imy;
+
+	imy = imgsize/imx;
+	ptr1 = img1;
+	ptr2 = img2;
+
+	for(i=0; i<imy; i++)
+		for(j=0; j<imx; j++)
+		{
+			if(i==0 || i==imy || j==0 || j==imx )
+			{
+				*(ptr2 +i*imx+j) = *(ptr1 +i*imx+j);
+			}
+
+		}
+}

@@ -15,6 +15,6 @@ int fast_box_blur(int filt_span, unsigned char *src, unsigned char *dest,
     control_par *cpar);
 void split(unsigned char *img, int half_selector, control_par *cpar);
 void filter_3a (unsigned char *img, unsigned char *img_lp, int imgsize, int imx);
-
+void handle_imageborders(unsigned char	*img1, unsigned char *img2, int imgsize, int imx);
 #endif
 
