@@ -59,6 +59,12 @@ int filter_3(unsigned char *img, unsigned char *img_lp, filter_t filt,
             sum += filt[i][j];
     if (sum == 0) return 0;
     
+    /* initialize the img_lp with zeros */
+    for (i=0;i<cpar->imx;i++)
+        for(j=0;j<cpar->imy;j++)
+            img_lp[i*cpar->imx+j] = 0;
+            
+    
     /* start, end etc skip first/last lines and wrap around the edges. */
     end = image_size - cpar->imx - 1;
     
@@ -93,11 +99,17 @@ void lowpass_3(unsigned char *img, unsigned char *img_lp, control_par *cpar) {
         *ptr7, *ptr8, *ptr9;
     int end;
     short buf;
-    register int i;
+    register int i,j;
     int image_size = cpar->imx * cpar->imy;
     
     /* start, end etc skip first/last lines and wrap around the edges. */
     end = image_size - cpar->imx - 1;
+    
+    /* initialize the img_lp with zeros */
+    for (i=0;i<cpar->imx;i++)
+        for(j=0;j<cpar->imy;j++)
+            img_lp[i*cpar->imx+j] = 0;
+
     
     setup_filter_pointers(cpar->imx)
     for (i = cpar->imx + 1; i < end; i++) {
