@@ -288,42 +288,58 @@ void split(unsigned char *img, int half_selector, control_par *cpar) {
  * from the original image. the interior is filtered according to the filter.par
  * see ../tests/check_image_processing.c for a couple of useful filters.
  */
-void filter_3a (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
+void filter_3a (unsigned char *img, unsigned char *img_lp, filter_t m, 
+    control_par *cpar){
 
 	register unsigned char	*ptr, *ptr1, *ptr2, *ptr3,
 		             	    *ptr4, *ptr5, *ptr6,
 	                        *ptr7, *ptr8, *ptr9;
 	int	       	    end;
-	float	       	m[3][3], sum;
+	float	        sum;
 	short	       	buf;
 	register int	i, j, X, Y, I, J;
 	FILE	       	*fp;
 	int 			imy; 
 
 	
-	/* read filter elements from parameter file */
-	fp = fopen ("filter.par","r");
-	if (fp == NULL){
-	    printf("filter.par was not found, fallback to default lowpass filter \n");
-	    for (i=0, sum=9; i<3; i++){
-	       for(j=0;j<3; j++){
-	          m[i][j] = 1.0/sum; 
-	        }
-	    }
-	} else { 
-	      printf("filter.par was found, reading the values: \n");  
-	      for (i=0, sum=0; i<3; i++){
-	          for(j=0; j<3; j++){
-		      	fscanf (fp, "%f", &m[i][j]);
-		      	// printf("%f", m[i][j]);
-		        sum += m[i][j];
-		       }
-		    }
-	    }
-	fclose (fp); 
-	// printf("\n"); 
+// read filter elements from parameter file
+// 	fp = fopen ("filter.par","r");
+// 	if (fp == NULL){
+// 	    printf("filter.par was not found, fallback to default lowpass filter \n");
+// 	    for (i=0, sum=9; i<3; i++){
+// 	       for(j=0;j<3; j++){
+// 	          m[i][j] = 1.0/sum; 
+// 	        }
+// 	    }
+// 	} else { 
+// 	      printf("filter.par was found, reading the values: \n");  
+// 	      for (i=0, sum=0; i<3; i++){
+// 	          for(j=0; j<3; j++){
+// 		      	fscanf (fp, "%f", &m[i][j]);
+// 		      	// printf("%f", m[i][j]);
+// 		        sum += m[i][j];
+// 		       }
+// 		    }
+// 	    }
+// 	fclose (fp); 
+// 	// printf("\n"); 
+// 	if (sum == 0) {
+// 	    printf("filter.par is corrupted or empty, fallback to default lowpass filter \n");
+// 	    for (i=0, sum=9; i<3; i++){
+// 	        for (j=0; j<3; j++){
+// 	                m[i][j] = 1.0/sum; 
+// 	        }
+// 	    } 
+// 	}
+
+    int imgsize = cpar->imx * cpar->imy;
+    
+    for (i = 0; i < 3; i++)	
+        for (j = 0; j < 3; j++)
+            sum += m[i][j];
+    // if (sum == 0) return 0;
 	if (sum == 0) {
-	    printf("filter.par is corrupted or empty, fallback to default lowpass filter \n");
+	    printf("filter is corrupted or empty, fallback to default lowpass filter \n");
 	    for (i=0, sum=9; i<3; i++){
 	        for (j=0; j<3; j++){
 	                m[i][j] = 1.0/sum; 
@@ -331,29 +347,28 @@ void filter_3a (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 	    } 
 	}
 	
-	imy = imgsize/imx;
 	
 	/* to ensure that the boundaries are original */
 	//copy_images (img, img_lp, imgsize);
-	handle_imageborders(img, img_lp, imgsize, imx);
+	handle_imageborders(img, img_lp, imgsize, cpar->imx);
 	
-	for(Y=0; Y<(imy-2); Y++)  
+	for(Y=0; Y<(cpar->imy-2); Y++)  
 	{
-		for(X=0; X<(imx-2); X++)  
+		for(X=0; X<(cpar->imx-2); X++)  
 		{
 	     buf = 0;
 			for(I=0; I<=2; I++)  
 			{
 				for(J=0; J<=2; J++)  
 				{
-					buf += (int)( (*(img + X + I + (Y + J)*imx )) * m[I][J]); 
+					buf += (int)( (*(img + X + I + (Y + J)*cpar->imx )) * m[I][J]); 
 				}
 			}
 	     // buf/=9;
 	     if(buf>255)  buf = 255;
 	     if(buf<0)    buf = 0;
 
-	     *(img_lp + X+1 + (Y+1)*imx) = (unsigned char)(buf);	
+	     *(img_lp + X+1 + (Y+1)*cpar->imx) = (unsigned char)(buf);	
 		}
 	}
 	
