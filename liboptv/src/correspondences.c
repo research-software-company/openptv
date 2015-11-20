@@ -61,7 +61,8 @@ int advance_nd_iterator(int nd, int *current, int *count) {
         number of particles in correspondence, so that the first element is
         always NULL and is there for convenience only.
 */
-n_tupel **correspondences(frame *frm, Calibration **calib, volume_par *vpar) {
+n_tupel **correspondences(frame *frm, Calibration **calib, volume_par *vpar, 
+    control_par *cpar) {
     int cam, part; /* loop counters */
     double img_x, img_y; /* image center */
     coord_2d **corrected;
@@ -88,6 +89,8 @@ n_tupel **correspondences(frame *frm, Calibration **calib, volume_par *vpar) {
     int **part_used, use_corres;
     int list_len;
     
+    int is_sorted = 1; /* for find_candidate */
+    
     /* Hidden first element stores 0, to save some branches below. */
     accum_parts = (int *) malloc(frm->num_cams * sizeof(int) + 1);
     accum_parts[0] = 0;
@@ -109,10 +112,11 @@ n_tupel **correspondences(frame *frm, Calibration **calib, volume_par *vpar) {
         cam_set[cam] = 1 << cam;
         
         for (part = 0; part < frm->num_targets[cam]; part++) {
-            pixel_to_metric(
-                frm->targets[cam][part].x, frm->targets[cam][part].y,
-                imx, imy, pix_x, pix_y, 
-                &corrected[cam][part].x, &corrected[cam][part].y, chfield);
+            pixel_to_metric(&corrected[cam][part].x, 
+                            &corrected[cam][part].y,
+                            frm->targets[cam][part].x, 
+                            frm->targets[cam][part].y,
+                            cpar);
             
             img_x = corrected[cam][part].x - calib[cam]->int_par.xh;
             img_y = corrected[cam][part].y - calib[cam]->int_par.yh;
@@ -145,9 +149,7 @@ n_tupel **correspondences(frame *frm, Calibration **calib, volume_par *vpar) {
             for (part = 0; part < frm->num_targets[part_img]; part++) {
                 /* Find epipolar line on corrected image */
                 epi_mm(corrected[part_img][part].x, corrected[part_img][part].y,
-                    calib[part_img]->ext_par, calib[part_img]->int_par,
-                    calib[part_img]->glass_par, calib[epi_img]->ext_par, 
-                    calib[epi_img]->int_par, calib[epi_img]->glass_par, mmp, vpar,
+                    calib[part_img], calib[epi_img], *(cpar->mm), vpar,
                     &(epi_start[0]), &(epi_start[1]), &(epi_end[0]), &(epi_end[1]));
                 
                 /* Find candidates close to epipolar line */
@@ -155,7 +157,7 @@ n_tupel **correspondences(frame *frm, Calibration **calib, volume_par *vpar) {
                 find_candidate (corrected[epi_img], frm->targets[epi_img],
                     frm->num_targets[epi_img], epi_start[0], epi_start[1],
                     epi_end[0], epi_end[1], targ->n, targ->nx, targ->ny,
-                    targ->sumg, cand, &num_cands, epi_img, vpar);
+                    targ->sumg, cand, &num_cands, vpar, cpar, calib[epi_img], is_sorted);
                 
                 /* Copy candidate information to the adjacency matrix. */
                 if (num_cands > maxcand) num_cands = maxcand;

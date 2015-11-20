@@ -37,7 +37,8 @@ n_tupel;
 
 
 int advance_nd_iterator(int nd, int *current, int *count);
-n_tupel **correspondences(frame *frm, Calibration **calib, volume_par *vpar);
+n_tupel **correspondences(frame *frm, Calibration **calib, volume_par *vpar, 
+    control_par *cpar);
 
 void quicksort_coord2d_x (coord_2d	*crd, int num);
 void qs_coord2d_x (coord_2d	*crd, int left, int right);

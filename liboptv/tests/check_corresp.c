@@ -19,6 +19,7 @@ START_TEST(test_correspondences)
     frame frm;
     Calibration *calib[4];
     volume_par *vpar;
+    control_par *cpar;
     n_tupel **corres_lists;
     mm_np media_par = {1, 1., {1., 0., 0.}, {1., 0., 0.}, 1., 1.};
     
@@ -77,7 +78,7 @@ START_TEST(test_correspondences)
         }
     }
     vpar = read_volume_par("parameters/criteria.par");
-    corres_lists = correspondences(&frm, calib, vpar);
+    corres_lists = correspondences(&frm, calib, vpar, cpar);
     fail_unless(corres_lists[0] == NULL);
     
     for (subset_size = 2; subset_size <= num_cams; subset_size++) {
