@@ -152,7 +152,7 @@ n_tupel **correspondences(frame *frm, Calibration **calib, volume_par *vpar) {
                 
                 /* Find candidates close to epipolar line */
                 targ = &(frm->targets[part_img][corrected[part_img][part].pnr]);
-                find_candidate_plus (corrected[epi_img], frm->targets[epi_img],
+                find_candidate (corrected[epi_img], frm->targets[epi_img],
                     frm->num_targets[epi_img], epi_start[0], epi_start[1],
                     epi_end[0], epi_end[1], targ->n, targ->nx, targ->ny,
                     targ->sumg, cand, &num_cands, epi_img, vpar);
@@ -315,4 +315,34 @@ n_tupel **correspondences(frame *frm, Calibration **calib, volume_par *vpar) {
     free(subset_iter);
     
     return corres_lists;
+}
+
+void quicksort_coord2d_x (coord_2d	*crd, int num) {
+	qs_coord2d_x (crd, 0, num-1);
+}
+
+void qs_coord2d_x (coord_2d	*crd, int left, int right) {
+	register int	i, j;
+	double			xm;
+	coord_2d		temp;
+
+	i = left;	j = right;	xm = crd[(left+right)/2].x;
+
+	do
+	{
+		while (crd[i].x < xm  &&  i<right)	i++;
+		while (xm < crd[j].x  &&  j>left)	j--;
+
+		if (i <= j)
+		{
+			temp = crd[i];
+			crd[i] = crd[j];
+			crd[j] = temp;
+			i++;	j--;
+		}
+	}
+	while (i <= j);
+
+	if (left < j)	qs_coord2d_x (crd, left, j);
+	if (i < right)	qs_coord2d_x (crd, i, right);
 }

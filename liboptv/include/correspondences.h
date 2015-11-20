@@ -11,6 +11,7 @@
 #include "trafo.h"
 #include "vec_utils.h"
 #include "sortgrid.h"
+#include "epi.h"
 #include "btree.h"
 #include <stdio.h>
 
@@ -35,9 +36,12 @@ typedef struct
 n_tupel;
 
 
-void correspondences_4 (control_par *cpar)
-int advance_nd_iterator(int nd, int *current, int *count)
+int advance_nd_iterator(int nd, int *current, int *count);
 n_tupel **correspondences(frame *frm, Calibration **calib, volume_par *vpar);
+
+void quicksort_coord2d_x (coord_2d	*crd, int num);
+void qs_coord2d_x (coord_2d	*crd, int left, int right);
+
 
 #endif
 
