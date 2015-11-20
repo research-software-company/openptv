@@ -126,6 +126,7 @@ add_custom_command(TARGET check_sortgrid PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_sortgrid>/testing_fodder)
 
+<<<<<<< HEAD
 target_link_libraries(check_orientation ${LIBS})
 add_test(check_orientation ${CMAKE_CURRENT_BINARY_DIR}/check_orientation)
 
@@ -139,6 +140,18 @@ add_test(check_epi ${CMAKE_CURRENT_BINARY_DIR}/check_epi)
 add_custom_command(TARGET check_orientation PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_orientation>/testing_fodder)
+=======
+target_link_libraries(check_epi ${LIBS})
+add_test(check_epi ${CMAKE_CURRENT_BINARY_DIR}/check_epi)
+
+target_link_libraries(check_corresp ${LIBS})
+add_test(check_corresp ${CMAKE_CURRENT_BINARY_DIR}/check_corresp) 
+
+add_custom_command(TARGET check_corresp PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_corresp>/testing_fodder)
+
+>>>>>>> d810a88... updated the calls to the renewed versions of img_coord, pixel_to_metric from check_corresp
     
 target_link_libraries(check_segmentation ${LIBS})
 add_test(check_segmentation ${CMAKE_CURRENT_BINARY_DIR}/check_segmentation)
