@@ -22,6 +22,8 @@ START_TEST(test_correspondences)
     control_par *cpar;
     n_tupel **corres_lists;
     mm_np media_par = {1, 1., {1., 0., 0.}, {1., 0., 0.}, 1., 1.};
+    vec3d tmp;
+
     
     char ori_tmpl[] = "cal/sym_cam%d.tif.ori";
     char ori_name[25]; 
@@ -35,7 +37,6 @@ START_TEST(test_correspondences)
     ck_abort_msg("Known failure: j/p2 in find_candidate_plus breaks this.");
     chdir("testing_fodder/");
     init_proc_c();
-    mmp = media_par;
     
     int i,j;
     /* Four cameras on 4 quadrants looking down into a calibration target.
@@ -45,11 +46,6 @@ START_TEST(test_correspondences)
         sprintf(ori_name, ori_tmpl, cam + 1);
         calib[cam] = read_calibration(ori_name, "cal/cam1.tif.addpar", NULL);
         
-        /* Until calibration globals are removed: */
-        Ex[cam] = calib[cam]->ext_par;
-        I[cam] = calib[cam]->int_par;
-        G[cam] = calib[cam]->glass_par;
-        ap[cam] = calib[cam]->added_par;
         
         frm.num_targets[cam] = 16;
         
@@ -63,12 +59,9 @@ START_TEST(test_correspondences)
                 targ = &(frm.targets[cam][cpt_ix]);
                 targ->pnr = cpt_ix;
                 
-                img_coord(cpt_vert * 10, cpt_horz * 10, 0, 
-                    calib[cam]->ext_par, calib[cam]->int_par,
-                    calib[cam]->glass_par, calib[cam]->added_par, media_par,
-                    &(targ->x), &(targ->y));
-                metric_to_pixel(targ->x, targ->y, imx, imy, pix_x, pix_y,
-                    &(targ->x), &(targ->y));
+                vec_set(tmp, cpt_vert * 10, cpt_horz * 10, 0);
+                img_coord(tmp, calib[cam], &media_par, &(targ->x), &(targ->y));
+                metric_to_pixel(&(targ->x), &(targ->y), targ->x, targ->y, cpar);
                 
                 /* These values work in check_epi, so used here too */
                 targ->n = 25;

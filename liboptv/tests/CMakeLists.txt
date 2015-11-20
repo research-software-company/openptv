@@ -124,11 +124,16 @@ add_custom_command(TARGET check_sortgrid PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_sortgrid>/testing_fodder)
 
+target_link_libraries(check_epi ${LIBS})
+add_test(check_epi ${CMAKE_CURRENT_BINARY_DIR}/check_epi)
+
 target_link_libraries(check_corresp ${LIBS})
 add_test(check_corresp ${CMAKE_CURRENT_BINARY_DIR}/check_corresp) 
 
-target_link_libraries(check_epi ${LIBS})
-add_test(check_epi ${CMAKE_CURRENT_BINARY_DIR}/check_epi)
+add_custom_command(TARGET check_corresp PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_corresp>/testing_fodder)
+
     
 add_custom_target(verify COMMAND ${CMAKE_CTEST_COMMAND})
 add_dependencies(verify check_fb check_calibration check_parameters check_lsqadj \ 
