@@ -20,6 +20,7 @@ References:
 
 void old_pixel_to_metric();
 void old_metric_to_pixel();
+void correct_brown_affine_exact();
 
 /* pixel_to_metric converts pixel coordinates to metric coordinates
 Arguments:
