@@ -15,14 +15,4 @@ install:
 - make
 - make verify
 - sudo make install
-language: python
-python:
-  - "2.6"
-  - "2.7"
-- cd ../../pybind
-- python setup.py build_ext -I/usr/local/include -L/usr/local/lib
-- python setup.py install
-- cd tests
-script: nosetests
-
 
