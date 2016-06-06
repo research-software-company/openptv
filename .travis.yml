@@ -13,3 +13,11 @@ install:
 - cmake ../ -G "Unix Makefiles" -i
 - make
 - make verify
+- sudo make install
+- cd ../../pybind
+- python setup.py build_ext -I/usr/local/include -L/usr/local/lib
+- python setup.py install
+- cd tests
+- nosetests
+
+
