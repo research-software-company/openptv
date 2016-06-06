@@ -1,0 +1,15 @@
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y cmake
+  - sudo apt-get install -y check
+  - sudo apt-get install -y build-essential
+  - sudo apt-get install -y git
+  
+install:
+- git clone git://github.com/OpenPTV/openptv.git
+- cd openptv/liboptv
+- mkdir build
+- cd build
+- cmake ../ -G "Unix Makefiles" -i
+- make
+- make verify
