@@ -149,7 +149,7 @@ n_tupel **correspondences(frame *frm, Calibration **calib, volume_par *vpar,
             for (part = 0; part < frm->num_targets[part_img]; part++) {
                 /* Find epipolar line on corrected image */
                 epi_mm(corrected[part_img][part].x, corrected[part_img][part].y,
-                    calib[part_img], calib[epi_img], *(cpar->mm), vpar,
+                    calib[part_img], calib[epi_img], cpar->mm, vpar,
                     &(epi_start[0]), &(epi_start[1]), &(epi_end[0]), &(epi_end[1]));
                 
                 /* Find candidates close to epipolar line */
@@ -157,7 +157,8 @@ n_tupel **correspondences(frame *frm, Calibration **calib, volume_par *vpar,
                 find_candidate (corrected[epi_img], frm->targets[epi_img],
                     frm->num_targets[epi_img], epi_start[0], epi_start[1],
                     epi_end[0], epi_end[1], targ->n, targ->nx, targ->ny,
-                    targ->sumg, cand, &num_cands, vpar, cpar, calib[epi_img], is_sorted);
+                    targ->sumg, cand, vpar, cpar, calib[epi_img]);
+                    
                 
                 /* Copy candidate information to the adjacency matrix. */
                 if (num_cands > maxcand) num_cands = maxcand;
