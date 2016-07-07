@@ -13,13 +13,8 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 include_directories("../include/")
-<<<<<<< HEAD
 
-add_library (optv SHARED tracking_frame_buf.c calibration.c parameters.c lsqadj.c ray_tracing.c trafo.c vec_utils.c image_processing.c multimed.c imgcoord.c epi.c orientation.c sortgrid.c segmentation.c)
-
-=======
-add_library (optv SHARED tracking_frame_buf.c calibration.c parameters.c lsqadj.c ray_tracing.c trafo.c vec_utils.c image_processing.c multimed.c imgcoord.c epi.c sortgrid.c correspondences.c btree.c)
->>>>>>> d810a88... updated the calls to the renewed versions of img_coord, pixel_to_metric from check_corresp
+add_library (optv SHARED tracking_frame_buf.c calibration.c parameters.c lsqadj.c ray_tracing.c trafo.c vec_utils.c image_processing.c multimed.c imgcoord.c epi.c orientation.c sortgrid.c segmentation.c correspondences.c btree.c)
 
 
 if(UNIX)

@@ -46,6 +46,9 @@ add_dependencies(check_epi optv)
 add_executable(check_segmentation EXCLUDE_FROM_ALL check_segmentation.c)
 add_dependencies(check_segmentation optv)
 
+add_executable(check_corresp EXCLUDE_FROM_ALL check_corresp.c)
+add_dependencies(check_corresp optv)
+
 
 set(LIBS ${LIBS} ${CHECK_LIBRARIES} optv)
 
@@ -126,7 +129,6 @@ add_custom_command(TARGET check_sortgrid PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_sortgrid>/testing_fodder)
 
-<<<<<<< HEAD
 target_link_libraries(check_orientation ${LIBS})
 add_test(check_orientation ${CMAKE_CURRENT_BINARY_DIR}/check_orientation)
 
@@ -140,9 +142,6 @@ add_test(check_epi ${CMAKE_CURRENT_BINARY_DIR}/check_epi)
 add_custom_command(TARGET check_orientation PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_orientation>/testing_fodder)
-=======
-target_link_libraries(check_epi ${LIBS})
-add_test(check_epi ${CMAKE_CURRENT_BINARY_DIR}/check_epi)
 
 target_link_libraries(check_corresp ${LIBS})
 add_test(check_corresp ${CMAKE_CURRENT_BINARY_DIR}/check_corresp) 
@@ -151,7 +150,6 @@ add_custom_command(TARGET check_corresp PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_corresp>/testing_fodder)
 
->>>>>>> d810a88... updated the calls to the renewed versions of img_coord, pixel_to_metric from check_corresp
     
 target_link_libraries(check_segmentation ${LIBS})
 add_test(check_segmentation ${CMAKE_CURRENT_BINARY_DIR}/check_segmentation)
@@ -164,5 +162,5 @@ add_custom_command(TARGET check_segmentation PRE_BUILD
 add_custom_target(verify COMMAND ${CMAKE_CTEST_COMMAND})
 add_dependencies(verify check_fb check_calibration check_parameters check_lsqadj 
 check_ray_tracing check_trafo check_vec_utils check_image_proc check_multimed 
-check_imgcoord check_orientation check_epi check_sortgrid check_segmentation)
+check_imgcoord check_orientation check_epi check_sortgrid check_segmentation check_corresp)
 
