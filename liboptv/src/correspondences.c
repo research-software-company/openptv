@@ -20,9 +20,30 @@ Description:	       	establishment of correspondences for 2/3/4 cameras
 /*--------------- 4 camera model: consistent quadruplets -------------------*/
 /****************************************************************************/
 
-void correspondences (volume_par *vpar, control_par *cpar)
+/* correspondences() generates a list of correspondence groups. Each
+   correspondence group is the set of target numbers identifying each one
+   target in one image from the set, such that each target in the cgroup is an
+   image of the same 3D particle.
+
+   Arguments:
+   frame *frm - holds all needed image data.
+   calibration **calib - holds camera calibration information needed for getting
+       real metric target coordinates corrected from those identified in image.
+       Array of num_cams pointers to calibration objects.
+   volume_par *vpar - search volume parameters, contains the search volume for
+       epipolar lines and the measure of correspondence needed for a candidate
+       target.
+   
+   Returns:
+   n_tupel **corres_lists - a num_cams list of corres-lists, each is a list of 
+        4-item arrays containing the index of target for each particle in the
+        list in each of up to 4 images, in order. Each list is terminated by an
+        n_tupel with negative .corr and garbage p[]. The top-level array is by
+        number of particles in correspondence, so that the first element is
+        always NULL and is there for convenience only.
+*/
+n_tupel **correspondences (volume_par *vpar, control_par *cpar)
 {
-  int nmax = 1024; // this line is added for the compiler, missing global variable
   int 	i,j,k,l,m,n,o,  i1,i2,i3;
   int   count, match0=0, match4=0, match3=0, match2=0, match1=0;
   int 	p1,p2,p3,p4, p31, p41, p42;
@@ -393,5 +414,40 @@ match1_g=match1;
         free (list[i1][i2]);
 
   free (con0);
+  
+  return con; // correspondence lists
+}
+
+/* todo: Add docstring */
+
+void quicksort_coord2d_x (coord_2d	*crd, int num) {
+	qs_coord2d_x (crd, 0, num-1);
+}
+
+/* todo: Add docstring */
+void qs_coord2d_x (coord_2d	*crd, int left, int right) {
+	register int	i, j;
+	double			xm;
+	coord_2d		temp;
+
+	i = left;	j = right;	xm = crd[(left+right)/2].x;
+
+	do
+	{
+		while (crd[i].x < xm  &&  i<right)	i++;
+		while (xm < crd[j].x  &&  j>left)	j--;
+
+		if (i <= j)
+		{
+			temp = crd[i];
+			crd[i] = crd[j];
+			crd[j] = temp;
+			i++;	j--;
+		}
+	}
+	while (i <= j);
+
+	if (left < j)	qs_coord2d_x (crd, left, j);
+	if (i < right)	qs_coord2d_x (crd, i, right);
 }
 

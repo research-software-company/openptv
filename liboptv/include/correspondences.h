@@ -9,6 +9,7 @@ doubles.
 #include "epi.h"
 
 #define maxcand 200
+#define nmax 20240
 
 
 typedef struct
@@ -28,7 +29,10 @@ typedef struct
 }
 correspond;	       	/* correspondence candidates */
 
-void correspondences (volume_par *vpar, control_par *cpar);
+n_tupel **correspondences (volume_par *vpar, control_par *cpar);
+void quicksort_coord2d_x (coord_2d	*crd, int num);
+void qs_coord2d_x (coord_2d	*crd, int left, int right);
+
 
 #endif
 
