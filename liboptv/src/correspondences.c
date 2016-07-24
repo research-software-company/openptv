@@ -125,17 +125,18 @@ n_tupel **correspondences (volume_par *vpar, control_par *cpar)
 	  /* origin point in the list */
 	  p1 = i;  list[i1][i2][p1].p1 = p1;	pt1 = geo[i1][p1].pnr;
 
-	  /* search for a conjugate point in geo[i2] */
-      find_candidate_plus (geo[i2], pix[i2], num[i2],
+	  /* search for a conjugate point in geo[i2] using find_candidate from epi.c */
+      count = find_candidate (geo[i2], pix[i2], num[i2],
 			       xa12, ya12, xb12, yb12, 
 			       pix[i1][pt1].n,pix[i1][pt1].nx,pix[i1][pt1].ny,
-			       pix[i1][pt1].sumg, cand, &count, i2, vpar, cpar);
-	  /* write all corresponding candidates to the preliminary list */
+			       pix[i1][pt1].sumg, cand, vpar, cpar, cal);
+	 
+	  /* write all corresponding candidates to the preliminary , list */
 	  /* of correspondences */
 	  if (count > maxcand)	{ count = maxcand; }
 	  for (j=0; j<count; j++)
 	    {
-	      list[i1][i2][p1].p2[j] = cand[j].pnr;
+	      list[i1][i2][p1].p2[j]   = cand[j].pnr;
 	      list[i1][i2][p1].corr[j] = cand[j].corr;
 	      list[i1][i2][p1].dist[j] = cand[j].tol;
 	    }
