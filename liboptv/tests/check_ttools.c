@@ -14,13 +14,21 @@
 #define EPS 1E-5
 
 
-START_TEST(test_ttools)
+START_TEST(test_predict)
 {
-    vec3d a = {1.0, 0.0, 0.0};
-    vec3d b = {1.0, 0.0, 0.0};
+    vec2d a = {1.1, 0.6};
+    vec2d b = {2.0, -0.8};
+    vec2d result = {2.9, -2.2};
     
-    ck_assert_msg( fabs(a - a) < EPS,
-             "Was expecting a-a to be 0.0 but found %f \n", fabs(a-a));
+    vec2d c;
+    
+    predict(a,b,c);
+    
+    ck_assert_msg( fabs(c[0] - result[0]) < EPS,
+             "Was expecting 2.9 but found %f \n", fabs(c[0]));
+             
+    ck_assert_msg( fabs(c[1] - result[1]) < EPS,
+             "Was expecting -2.2 but found %f \n", fabs(c[1]));
 
 }
 END_TEST
@@ -30,8 +38,8 @@ END_TEST
 Suite* fb_suite(void) {
     Suite *s = suite_create ("ttools");
  
-    TCase *tc = tcase_create ("dummy test");
-    tcase_add_test(tc, test_ttools);
+    TCase *tc = tcase_create ("predict test");
+    tcase_add_test(tc, test_predict);
     suite_add_tcase (s, tc);   
     
 

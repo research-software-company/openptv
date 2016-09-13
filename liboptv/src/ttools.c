@@ -155,12 +155,16 @@ int candsearch_in_pixrest(target  next[], int num, double x, double y,
 }
 
 
-
-void predict (x1, y1, x2, y2, x3, y3)
-double x1, y1, x2, y2, *x3, *y3;
+/* predict is used in display loop (only) of track.c to predict the position of 
+   a particle in the next frame, using the previous and current positions
+   Arguments: 
+   vec2d a,b are vectors in 2D of the previous and current position, respectively
+   vec2d c - output of the 2D positions of the particle in the next frame.
+*/
+void predict (vec2d a, vec2d b, vec2d c)
 {
-  *x3 = 2*x2 - x1;
-  *y3 = 2*y2 - y1;
+  c[0] = 2*b[0] - a[0];
+  c[1] = 2*b[1] - a[1];
   return;
 }
 
