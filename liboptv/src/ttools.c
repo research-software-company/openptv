@@ -17,43 +17,7 @@ Routines contained:     pix_in_next, candsearch_in_pix, searchposition,
 ****************************************************************************/
 #include "ttools.h"
 
-int pix_in_next (next, num, x, y, dl, dr, du, dd, found)
-target  next[];
-int     num;
-double  x, y, dl, dr, du, dd;
-int found[POSI];
-{
-  /* search of POSI near candidates in targetlist */
 
-  int  j, j0, dj;
-  int  zaehler=0;
-  double  d, xmin, xmax, ymin, ymax;
-  double dcand[POSI];
-  int cand[POSI];
-  xmin = x - dl;  xmax = x + dr;  ymin = y - du;  ymax = y + dd;
-
-
-  /* binarized search for start point of candidate search */
-  for (j0=num/2, dj=num/4; dj>1; dj/=2)
-    {
-      if (next[j0].y < ymin) j0 += dj;
-      else j0 -= dj;
-    }
-
-  j0 -= 12;  if (j0 < 0)  j0 = 0;	       	/* due to trunc */
-  for (j=j0; j<num; j++)		       	/* candidate search */
-    {
-      if (next[j].y > ymax)  break;	       	/* finish search */
-      if (next[j].x > xmin  &&  next[j].x < xmax && next[j].y > ymin  &&  next[j].y < ymax && next[j].tnr>0)
-	{
-	  d = sqrt ((x-next[j].x)*(x-next[j].x) + (y-next[j].y)*(y-next[j].y));
-	  cand[zaehler]=next[j].tnr; dcand[zaehler]=d;
-	  zaehler++;
-	}
-    }
-
-  return (zaehler);
-}
 
 
 int candsearch_in_pix (target next[], int num, double x, double y, double dl,
@@ -200,12 +164,8 @@ double x1, y1, x2, y2, *x3, *y3;
   return;
 }
 
-void searchquader(point, xr, xl, yd, yu, tpar, cpar)
-vec3d point;
-double xr[4], xl[4], yd[4], yu[4];
-track_par *tpar;
-control_par *cpar;
-{
+void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], double yu[4], \
+track_par *tpar, control_par *cpar, Calibration *glob_cal){
   int i, pt, dim;
   vec3d mins, maxes;
   double x, y, xz, yz;

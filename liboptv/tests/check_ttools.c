@@ -16,14 +16,11 @@
 
 START_TEST(test_ttools)
 {
-    // test simple dot-product
-    double d;
-    
     vec3d a = {1.0, 0.0, 0.0};
     vec3d b = {1.0, 0.0, 0.0};
     
-    ck_assert_msg( fabs(a - b) < EPS,
-             "Was expecting a-b to be 0.0 but found %f \n", d);
+    ck_assert_msg( fabs(a - a) < EPS,
+             "Was expecting a-a to be 0.0 but found %f \n", fabs(a-a));
 
 }
 END_TEST
