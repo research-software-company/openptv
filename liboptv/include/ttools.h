@@ -18,9 +18,9 @@ typedef struct /* struct for what was found to corres */
 }
 foundpix;
 
-int candsearch_in_pix(target  next[], int num, double x, double y,
+int candsearch_in_pix(target  next[], int num_targets, double x, double y,
     double dl, double dr, double du, double dd, int p[4], control_par *cpar);
-int candsearch_in_pixrest(target  next[], int num, double x, double y,
+int candsearch_in_pixrest(target  next[], int num_targets, double x, double y,
     double dl, double dr, double du, double dd, int p[4], control_par *cpar);
 
 void sortwhatfound (foundpix item[16], int *zaehler, int num_cams);

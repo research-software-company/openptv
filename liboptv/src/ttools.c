@@ -18,16 +18,28 @@ Routines contained:     pix_in_next, candsearch_in_pix, searchposition,
 #include "ttools.h"
 
 
+/* candsearch_in_pix searches of four near candidates in target list 
+ * Arguments:
+ * target next[] array of targets (pointer, x,y, n, nx,ny, sumg, track ID)
+ * int num_targets - target array length.
+ * double cent_x, cent_y - image coordinates of search area, [pixel]
+ * double dl, dr, du, dd - respectively the left, right, up, down distance to
+ *   the search area borders from its center, [pixel]
+ * int p[] array of integer pointers 
+ * control_par *cpar array of parameters (cpar->imx,imy are needed)
+ * Returns the integer counter of the number of candidates, up to MAXCAND, otherwise
+ * will overfloat. There is no test here for the maximum, shall be one here?     
+*/
 
-
-int candsearch_in_pix (target next[], int num, double x, double y, double dl,
-    double dr, double du, double dd, int p[4], control_par *cpar) {
-  /* search of four near candidates in targetlist */
-
+int candsearch_in_pix (target next[], int num_targets, double cent_x, double cent_y, 
+double dl, double dr, double du, double dd, int p[], control_par *cpar) {
+  
   int  	  j, j0, dj, pnr = -999;
-  int  zaehler=0, p1, p2, p3, p4;
+  int  counter=0, p1, p2, p3, p4;
   double  d, dmin=1e20, xmin, xmax, ymin, ymax;
   double d1, d2, d3, d4;
+  
+  
   xmin = x - dl;  xmax = x + dr;  ymin = y - du;  ymax = y + dd;
 
   if(xmin<0.0) xmin=0.0;
@@ -37,76 +49,82 @@ int candsearch_in_pix (target next[], int num, double x, double y, double dl,
   if(ymax > cpar->imy)
     ymax = cpar->imy;
 
+/* suggest to remove this obscure limit - how one could get negative pixels? if 
+ * happens anywhere, it shall be captured there and the points shall be eliminated
+  
   if(x<0.0) x=0.0;
   if(x > cpar->imx)
     x = cpar->imx;
   if(y<0.0) y=0.0;
   if(y > cpar->imy)
     y = cpar->imy;
+*/ 
 
   p1 = p2 = p3 = p4 = -999;
   d1 = d2 = d3 = d4 = dmin;
 
-  if (x >= 0.0 && x <= cpar->imx ) { if (y >= 0.0 && y <= cpar->imy ) {
+  if (x >= 0.0 && x <= cpar->imx ) { 
+        if (y >= 0.0 && y <= cpar->imy ) {
 
-  /* binarized search for start point of candidate search */
-  for (j0=num/2, dj=num/4; dj>1; dj/=2)
-    {
-      if (next[j0].y < ymin) j0 += dj;
-      else j0 -= dj;
-    }
+      /* binarized search for start point of candidate search */
+      for (j0=num/2, dj=num/4; dj>1; dj/=2)
+        {
+          if (next[j0].y < ymin) j0 += dj;
+          else j0 -= dj;
+        }
 
-  j0 -= 12;  if (j0 < 0)  j0 = 0;	       	/* due to trunc */
-  for (j=j0; j<num; j++)		       	/* candidate search */
-    {
-      if (next[j].tnr != -1 ) {
-	if (next[j].y > ymax )  break;	       	/* finish search */
-	if (next[j].x > xmin  &&  next[j].x < xmax && next[j].y > ymin  &&  next[j].y < ymax )
-	  {
-	    d = sqrt ((x-next[j].x)*(x-next[j].x) + (y-next[j].y)*(y-next[j].y));
+      j0 -= 12;  if (j0 < 0)  j0 = 0;	       	/* due to trunc */
+      for (j=j0; j<num; j++) {	       	        /* candidate search */
+        if (next[j].tnr != -1 ) {
+            if (next[j].y > ymax )  break;	       	/* finish search */
+            if (next[j].x > xmin && next[j].x < xmax \
+            && next[j].y > ymin && next[j].y < ymax){
+                d = sqrt ((x-next[j].x)*(x-next[j].x) + \
+                          (y-next[j].y)*(y-next[j].y));
 
-	    if (d < dmin) { dmin = d; pnr = j;
-	    }
-	    if ( d < d1 )
-	      {
-		p4=p3; p3=p2; p2=p1; p1=j;
-		d4=d3; d3=d2; d2=d1; d1=d;
-	      }
-	    else if ( d1 < d &&  d < d2 )
-	      {
-		p4=p3; p3=p2; p2=j;
-		d4=d3; d3=d2; d2=d;
-	      }
-	    else if ( d2 < d && d < d3 )
-	      {
-		p4=p3; p3=j;
-		d4=d3; d3=d;
-	      }
-	    else if ( d3 < d && d < d4 )
-	      {
-		p4=j;
-		d4=d;
-	      }
-	  }
+                if (d < dmin) { 
+                   dmin = d; pnr = j;
+                }
+                
+                if ( d < d1 ) {
+                   p4=p3; p3=p2; p2=p1; p1=j;
+                   d4=d3; d3=d2; d2=d1; d1=d;
+                  }
+                else if ( d1 < d &&  d < d2 ){
+                   p4=p3; p3=p2; p2=j;
+                   d4=d3; d3=d2; d2=d;
+                }
+                else if ( d2 < d && d < d3 ){
+                   p4=p3; p3=j;
+                   d4=d3; d3=d;
+                }
+                else if ( d3 < d && d < d4 ){
+                   p4=j;
+                   d4=d;
+                }
+              }
+        }
       }
-    }
 
-  p[0]=p1;
-  p[1]=p2;
-  p[2]=p3;
-  p[3]=p4;
-  for (j=0; j<4; j++) if ( p[j] != -999 ) {zaehler++; }
-  } }
-  return (zaehler);
+      p[0]=p1;
+      p[1]=p2;
+      p[2]=p3;
+      p[3]=p4;
+      
+      for (j=0; j<4; j++) if ( p[j] != -999 ) { counter++; }
+      } /* if x is within the image boundaries */
+    }   /* if y is within the image boundaries */
+  return (counter);
 }
 
 
-int candsearch_in_pixrest(target  next[], int num, double x, double y,
+
+
+int candsearch_in_pixrest(target  next[], int num_targets, double x, double y,
     double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
-  /* search of four near candidates in targetlist */
 
   int  	  j, j0, dj;
-  int  zaehler=0, p1, p2, p3, p4;
+  int  counter=0, p1, p2, p3, p4;
   double  d, dmin=1e20, xmin, xmax, ymin, ymax;
   xmin = x - dl;  xmax = x + dr;  ymin = y - du;  ymax = y + dd;
 
@@ -150,8 +168,8 @@ int candsearch_in_pixrest(target  next[], int num, double x, double y,
   p[1]=p2;
   p[2]=p3;
   p[3]=p4;
-  for (j=0; j<4; j++) if ( p[j] != -999 ) {zaehler++; }
-  return (zaehler);
+  for (j=0; j<4; j++) if ( p[j] != -999 ) {counter++; }
+  return (counter);
 }
 
 
@@ -224,7 +242,7 @@ track_par *tpar, control_par *cpar, Calibration *glob_cal){
 
 
 
-void sortwhatfound (foundpix item[16], int *zaehler, int num_cams)
+void sortwhatfound (foundpix item[16], int *counter, int num_cams)
 {
   int i,j,m, different;
   foundpix temp;
@@ -273,7 +291,7 @@ void sortwhatfound (foundpix item[16], int *zaehler, int num_cams)
 	}
     }
   for (i=0; i<16; ++i) if(item[i].freq != 0) different++;
-  *zaehler=different;
+  *counter=different;
 
 }
 
