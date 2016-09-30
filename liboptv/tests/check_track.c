@@ -1,6 +1,6 @@
 /*  Unit tests for the tracking. Uses the Check
     framework: http://check.sourceforge.net/
-    
+
     To run it, type "make verify" when in the top C directory, src_c/
     If that doesn't run the tests, use the Check tutorial:
     http://check.sourceforge.net/doc/check_html/check_3.html
@@ -12,11 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "parameters.h"
-#include "calibration.h"
-#include "lsqadj.h"
-#include "ray_tracing.h"
-#include "trafo.h"
+#include "track.h"
 
 #define EPS 1E-5
 
@@ -26,14 +22,14 @@ START_TEST(test_predict)
     vec2d a = {1.1, 0.6};
     vec2d b = {2.0, -0.8};
     vec2d result = {2.9, -2.2};
-    
+
     vec2d c;
-    
+
     predict(a,b,c);
-    
+
     ck_assert_msg( fabs(c[0] - result[0]) < EPS,
              "Was expecting 2.9 but found %f \n", fabs(c[0]));
-             
+
     ck_assert_msg( fabs(c[1] - result[1]) < EPS,
              "Was expecting -2.2 but found %f \n", fabs(c[1]));
 
@@ -44,7 +40,7 @@ START_TEST(test_candsearch_in_pix)
 {
     double cent_x, cent_y, dl, dr, du, dd;
     int p[4], counter = 0;
-    
+
     target test_pix[] = {
         {0, 0.0, -0.2, 5, 1, 2, 10, -999},
         {6, 0.2, 0.0, 10, 8, 1, 20, -999},
@@ -55,16 +51,16 @@ START_TEST(test_candsearch_in_pix)
         {5, 10.4, 0.1, 10, 3, 3, 70, -999}
     };
     int num_targets = 7;
-    
+
     /* trivial case, search around your place */
     cent_x = cent_y = dl = dr = du = dd = 0;
-    
+
     /* prepare test control parameters, basically for pix_x  */
     int cam;
     char img_format[] = "cam%d";
     char cal_format[] = "cal/cam%d.tif";
     control_par *test_cpar;
-    
+
     test_cpar = new_control_par(4);
     for (cam = 0; cam < 4; cam++) {
         sprintf(test_cpar->img_base_name[cam], img_format, cam + 1);
@@ -83,11 +79,11 @@ START_TEST(test_candsearch_in_pix)
     test_cpar->mm->n3 = 1.33;
     test_cpar->mm->d[0] = 5;
 
-    
+
     counter = candsearch_in_pix (test_pix, num_targets, cent_x, cent_y, \
                                  dl, dr, du, dd, p, test_cpar);
     fail_unless(counter == 1);
-    
+
 }
 END_TEST
 
@@ -95,15 +91,15 @@ END_TEST
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("ttools");
- 
+
     TCase *tc = tcase_create ("predict test");
     tcase_add_test(tc, test_predict);
     suite_add_tcase (s, tc);
-    
+
     tc = tcase_create ("candsearch_in_pix");
-    tcase_add_test(tc, test_candsearch_in_pix);     
-    suite_add_tcase (s, tc);   
-    
+    tcase_add_test(tc, test_candsearch_in_pix);
+    suite_add_tcase (s, tc);
+
     return s;
 }
 
@@ -117,4 +113,3 @@ int main(void) {
     srunner_free (sr);
     return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
-
