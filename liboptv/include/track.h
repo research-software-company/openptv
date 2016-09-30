@@ -1,16 +1,9 @@
-/* Forward declarations for tracking-specific helper functions from ttools.c */
+/* Definitions for tracking routines. */
 
-#ifndef TTOOLS_H
-#define TTOOLS_H
+#ifndef TRACK_H
+#define TRACK_H
 
-#include <optv/parameters.h>
-#include <optv/vec_utils.h>
-#include <optv/imgcoord.h>
-#include <optv/vec_utils.h>
-#include <optv/parameters.h>
-#include <optv/trafo.h>
-#include <optv/vec_utils.h>
-#include <optv/orientation.h>
+#include "tracking_run.h"
 
 typedef struct /* struct for what was found to corres */
 {
@@ -29,5 +22,10 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], double 
 track_par *tpar, control_par *cpar, Calibration *glob_cal);
 
 void predict(vec2d a, vec2d b, vec2d c);
+
+tracking_run* trackcorr_c_init();
+void trackcorr_c_loop (tracking_run *run_info, int step, int display);
+void trackcorr_c_finish(tracking_run *run_info, int step);
+void trackback_c();
 
 #endif
