@@ -1,16 +1,22 @@
-/*  Unit tests for the vector utilities. Uses the Check
+/*  Unit tests for the tracking. Uses the Check
     framework: http://check.sourceforge.net/
     
-    To run it, type "make check" when in the top C directory, src_c/
+    To run it, type "make verify" when in the top C directory, src_c/
     If that doesn't run the tests, use the Check tutorial:
     http://check.sourceforge.net/doc/check_html/check_3.html
 */
+
+/* Unit tests for ray tracing. */
 
 #include <check.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "ttools.h"
+#include "parameters.h"
+#include "calibration.h"
+#include "lsqadj.h"
+#include "ray_tracing.h"
+#include "trafo.h"
 
 #define EPS 1E-5
 
@@ -82,7 +88,6 @@ START_TEST(test_candsearch_in_pix)
                                  dl, dr, du, dd, p, test_cpar);
     fail_unless(counter == 1);
     
-
 }
 END_TEST
 
@@ -99,7 +104,6 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_candsearch_in_pix);     
     suite_add_tcase (s, tc);   
     
-
     return s;
 }
 
@@ -107,7 +111,8 @@ int main(void) {
     int number_failed;
     Suite *s = fb_suite ();
     SRunner *sr = srunner_create (s);
-    srunner_run_all (sr, CK_ENV);
+    // srunner_run_all (sr, CK_ENV);
+    srunner_run_all (sr, CK_VERBOSE);
     number_failed = srunner_ntests_failed (sr);
     srunner_free (sr);
     return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;

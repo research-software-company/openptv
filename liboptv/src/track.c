@@ -33,7 +33,6 @@ Routines contained:    	trackcorr_c
 
 
 
-
 /* Global variables marked extern in 'globals.h' and not defined elsewhere: */
 int intx0_tr[4][10000], inty0_tr[4][10000], intx1_tr[4][10000],\
     inty1_tr[4][10000], intx2_tr[4][10000], inty2_tr[4][10000], \
@@ -55,7 +54,15 @@ link.
 #define MAX_TARGETS 20000
 #define MAX_CANDS 4
 
-tracking_run* trackcorr_c_init() {
+/* trackcorr_c_init - initializes the tracking frame buffer with the parameters
+   from sequence, track, criteria and ptv.par files
+   Arguments:
+   Calibration *cal - pointer to the calibration data of all the cameras
+   
+   returns: tracking_run type of a structure
+*/
+
+tracking_run* trackcorr_c_init(Calibration *cal) {
     int step;
     tracking_run *ret;
     
@@ -82,7 +89,7 @@ tracking_run* trackcorr_c_init() {
         (ret->tpar->dvzmin - ret->tpar->dvzmax));
     volumedimension (&(ret->vpar->X_lay[1]), &(ret->vpar->X_lay[0]), &(ret->ymax), 
         &(ret->ymin), &(ret->vpar->Zmax_lay[1]), &(ret->vpar->Zmin_lay[0]), 
-        ret->vpar, ret->cpar, glob_cal);
+        ret->vpar, ret->cpar, cal);
 
     // Denis - globals below are used in trackcorr_finish
     npart=0;
@@ -1339,4 +1346,3 @@ void sortwhatfound (foundpix item[16], int *counter, int num_cams)
   *counter=different;
 
 }
-
