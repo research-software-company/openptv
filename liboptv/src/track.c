@@ -21,7 +21,6 @@ Routines contained:    	trackcorr_c
 [1] http://en.wikipedia.org/wiki/Gradian
 */
 
-#include "ptv.h"
 #include <optv/tracking_frame_buf.h>
 #include <optv/parameters.h>
 #include <optv/trafo.h>
@@ -29,7 +28,7 @@ Routines contained:    	trackcorr_c
 #include <optv/multimed.h>
 #include "track.h"
 #include <optv/vec_utils.h>
-#include "tools.h"
+#include <optv/tools.h>
 
 
 
@@ -40,6 +39,7 @@ int intx0_tr[4][10000], inty0_tr[4][10000], intx1_tr[4][10000],\
 int seq_step_shake;
 double pnr3_tr[4][10000];
 double npart, nlinks;
+
 
 /* The buffer space required for this algorithm: 
 
@@ -234,7 +234,7 @@ void angle_acc(vec3d start, vec3d pred, vec3d cand, double *angle, double *acc)
     }
 }
 
-void trackcorr_c_loop (tracking_run *run_info, int step, int display)
+void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibration *cal)
 {
    /* sequence loop */
     char  val[256], buf[256];
@@ -245,11 +245,14 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display)
     int intx2, inty2;
     int quali=0;
     vec3d diff_pos, X[7]; /* 7 reference points used in the algorithm, TODO: check if can reuse some */
-    double x1[4], y1[4], x2[4], y2[4], angle, acc, angle0, acc0,  dl;
+    double angle, acc, angle0, acc0,  dl;
     double xr[4], xl[4], yd[4], yu[4], angle1, acc1;
-    double xp[4], yp[4], xc[4], yc[4], xn[4], yn[4];
+    vec2d p[4], c[4], n[4]; // would replace xp,yp and xc,yc and xn,yn by p[i][0],p[i][1]
+    vec2d v1[4], v2[4];     // replaced x1[4], y1[4], x2[4], y2[4] by v1[j][0], v1[j][1]
     double rr;
     int flag_m_tr=0;
+    int    	zoom_x[4], zoom_y[4], zoom_f[4];  /* zoom parameters */
+
     
     /* Shortcuts to inside current frame */
     P *curr_path_inf, *ref_path_inf;
@@ -301,19 +304,19 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display)
             search_volume_center_moving(ref_path_inf->x, curr_path_inf->x, X[2]);
             
 	        for (j = 0; j < fb->num_cams; j++) {
-                img_coord(X[2], &glob_cal[j], cpar->mm, &xn[j], &yn[j]);
-		        metric_to_pixel(&x1[j], &y1[j], xn[j], yn[j], cpar);
+                img_coord(X[2], &cal[j], cpar->mm, &n[j][0], &n[j][1]);
+		        metric_to_pixel(&v1[j][0][0], &v1[j][0][1], n[j][0], n[j][1], cpar);
 	        }
 	    } else {  
             vec_copy(X[2], X[1]);
 	        for (j=0; j < fb->num_cams; j++) {
 	            if (curr_corres->p[j] == -1) {
-                    img_coord(X[2], &glob_cal[j], cpar->mm, &xn[j], &yn[j]);
-                    metric_to_pixel(&x1[j], &y1[j], xn[j], yn[j], cpar);
+                    img_coord(X[2], &cal[j], cpar->mm, &n[j][0], &n[j][1]);
+                    metric_to_pixel(&v1[j][0], &v1[j][1], n[j][0], n[j][1], cpar);
 	            } else {
                     _ix = curr_corres->p[j];
-                    x1[j] = curr_targets[j][_ix].x;
-                    y1[j] = curr_targets[j][_ix].y;
+                    v1[j][0] = curr_targets[j][_ix].x;
+                    v1[j][1] = curr_targets[j][_ix].y;
                 }
             }
 	    } 
@@ -324,7 +327,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display)
 	    /* search in pix for candidates in next time step */
 	    for (j = 0; j < fb->num_cams; j++) {
             register_closest_neighbs(fb->buf[2]->targets[j],
-                fb->buf[2]->num_targets[j], j, x1[j], y1[j],
+                fb->buf[2]->num_targets[j], j, v1[j][0], v1[j][1],
                 xl[j], xr[j], yu[j], yd[j], &p16[j*MAX_CANDS], cpar);
 	    }
         
@@ -356,14 +359,14 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display)
             searchquader(X[5], xr, xl, yd, yu, tpar, cpar);
 
 	        for (j = 0; j < fb->num_cams; j++) {
-                img_coord(X[5], &glob_cal[j], cpar->mm, &xn[j], &yn[j]);
-		        metric_to_pixel(&x2[j], &y2[j], xn[j], yn[j], cpar);
+                img_coord(X[5], &cal[j], cpar->mm, &n[j][0], &n[j][1]);
+		        metric_to_pixel(&v2[j][0], &v2[j][1], n[j][0], n[j][1], cpar);
 	        }
 
 	        /* search for candidates in next time step */
 	        for (j=0; j < fb->num_cams; j++) {
 	            zaehler2 = candsearch_in_pix (fb->buf[3]->targets[j], 
-                    fb->buf[3]->num_targets[j], x1[j], y1[j],
+                    fb->buf[3]->num_targets[j], v1[j][0], v1[j][1],
 					xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
 
 		        for(k = 0; k < 4; k++) {
@@ -419,12 +422,12 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display)
 	        /* creating new particle position */
 	        /* *************************************************************** */
 	        for (j = 0;j < fb->num_cams; j++) {
-                img_coord(X[5], &glob_cal[j], cpar->mm, &xn[j], &yn[j]);
-		        metric_to_pixel(&xn[j], &yn[j], xn[j], yn[j], cpar);
+                img_coord(X[5], &cal[j], cpar->mm, &n[j][0], &n[j][1]);
+		        metric_to_pixel(&n[j][0], &n[j][1], n[j][0], n[j][1], cpar);
 	        }
 
 	        /* reset img coord because of num_cams < 4 */
-	        for (j=0;j < fb->num_cams; j++) { x2[j]=-1e10; y2[j]=-1e10; }
+	        for (j=0;j < fb->num_cams; j++) { v2[j][0]=-1e10; v2[j][1]=-1e10; }
 
 	        /* search for unused candidates in next time step */
 	        for (j = 0;j < fb->num_cams; j++) {
@@ -432,19 +435,19 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display)
 		        xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
 
 	            zaehler2 = candsearch_in_pixrest (fb->buf[3]->targets[j], 
-                    fb->buf[3]->num_targets[j], xn[j], yn[j],
+                    fb->buf[3]->num_targets[j], n[j][0], n[j][1],
 					xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
 		        if(zaehler2>0 ) {
                     _ix = philf[j][0];
-		            x2[j] = fb->buf[3]->targets[j][_ix].x;
-                    y2[j] = fb->buf[3]->targets[j][_ix].y;
+		            v2[j][0] = fb->buf[3]->targets[j][_ix].x;
+                    v2[j][1] = fb->buf[3]->targets[j][_ix].y;
 		        }
 		    }
 	        quali=0;
 
 	        for (j = 0; j < fb->num_cams; j++) {
-		        if (x2[j] != -1e10 && y2[j] != -1e10) {
-		        pixel_to_metric(&x2[j],&y2[j], x2[j],y2[j], cpar); 
+		        if (v2[j][0] != -1e10 && v2[j][1] != -1e10) {
+		        pixel_to_metric(&v2[j][0],&v2[j][1], v2[j][0],v2[j][1], cpar); 
                 quali++;
 		        }
 		    }
@@ -453,9 +456,12 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display)
                 vec_copy(X[4], X[5]);
 		        invol=0; 
 
-		        det_lsq_3d (glob_cal, *(cpar->mm), x2[0], y2[0], x2[1], y2[1], 
-                    x2[2], y2[2], x2[3], y2[3],
-                    &(X[4][0]), &(X[4][1]), &(X[4][2]), fb->num_cams);
+		        det_lsq_3d (cal, *(cpar->mm), \
+		                    v2[0][0], v2[0][1], \
+		                    v2[1][0], v2[1][1], \
+                            v2[2][0], v2[2][1], \
+                            v2[3][0], v2[3][1], \
+                            &(X[4][0]), &(X[4][1]), &(X[4][2]), fb->num_cams);
 
 		        /* volume check */
                 if ( vpar->X_lay[0] < X[4][0] && X[4][0] < vpar->X_lay[1] &&
@@ -532,10 +538,10 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display)
 	    if (tpar->add) {
 	        if ( curr_path_inf->inlist == 0 && curr_path_inf->prev >= 0 ) {
                 for (j = 0; j < fb->num_cams; j++) {
-                    img_coord(X[2], &glob_cal[j], cpar->mm, &xn[j], &yn[j]);
-		            metric_to_pixel(&xn[j], &yn[j], xn[j], yn[j], cpar);
-		            x2[j]=-1e10;
-                    y2[j]=-1e10;
+                    img_coord(X[2], &cal[j], cpar->mm, &n[j][0], &n[j][1]);
+		            metric_to_pixel(&n[j][0], &n[j][1], n[j][0], n[j][1], cpar);
+		            v2[j][0]=-1e10;
+                    v2[j][1]=-1e10;
                 } 
 
     		    /* search for unused candidates in next time step */
@@ -543,19 +549,19 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display)
 		            /*use fix distance to define xl, xr, yu, yd instead of searchquader */
 		            xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
 	                zaehler2 = candsearch_in_pixrest (fb->buf[2]->targets[j], 
-                        fb->buf[2]->num_targets[j], xn[j], yn[j],
+                        fb->buf[2]->num_targets[j], n[j][0], n[j][1],
 					    xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
 		            if(zaehler2 > 0) {
                         _ix = philf[j][0];
-	    	            x2[j] = fb->buf[2]->targets[j][_ix].x;
-                        y2[j] = fb->buf[2]->targets[j][_ix].y;
+	    	            v2[j][0] = fb->buf[2]->targets[j][_ix].x;
+                        v2[j][1] = fb->buf[2]->targets[j][_ix].y;
 		            }
 		        }
 		        quali=0;
 
 		        for (j = 0; j < fb->num_cams; j++) {
-		            if (x2[j] !=-1e10 && y2[j] != -1e10) {
-		                pixel_to_metric(&x2[j], &y2[j], x2[j], y2[j], cpar);
+		            if (v2[j][0] !=-1e10 && v2[j][1] != -1e10) {
+		                pixel_to_metric(&v2[j][0], &v2[j][1], v2[j][0], v2[j][1], cpar);
                         quali++;
 		            }
 		        }
@@ -564,9 +570,13 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display)
                     vec_copy(X[3], X[2]);
 		            invol=0; 
     
-	    	        det_lsq_3d (glob_cal, *(cpar->mm),
-                        x2[0], y2[0], x2[1], y2[1], x2[2], y2[2], x2[3], y2[3],
-                        &(X[3][0]), &(X[3][1]), &(X[3][2]), fb->num_cams);
+	    	        det_lsq_3d (cal, *(cpar->mm),
+                        v2[0][0], v2[0][1], \
+                        v2[1][0], v2[1][1], \
+                        v2[2][0], v2[2][1], \
+                        v2[3][0], v2[3][1], \
+                        &(X[3][0]), &(X[3][1]), &(X[3][2]), \
+                        fb->num_cams);
 
 		            /* in volume check */
 		            if ( vpar->X_lay[0] < X[3][0] && X[3][0] < vpar->X_lay[1] &&
@@ -668,30 +678,30 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display)
             ref_corres = &(fb->buf[2]->correspond[curr_path_inf->next]);
             
             if (curr_path_inf->next != -2 ) {
-                strcpy(buf,"");
-                sprintf(buf ,"green");
+                
+                // sprintf(buf ,"green"); all the display is in Python
 	
                 for (j = 0; j < fb->num_cams; j++) {
                     if (curr_corres->p[j] > 0 && ref_corres->p[j] > 0) {
                         flag_m_tr=1;  
-                        xp[j] = curr_targets[j][curr_corres->p[j]].x;
-               		    yp[j] = curr_targets[j][curr_corres->p[j]].y;
-               		    xc[j] = fb->buf[2]->targets[j][ref_corres->p[j]].x;
-               		    yc[j] = fb->buf[2]->targets[j][ref_corres->p[j]].y;
-               		    predict (xp[j], yp[j], xc[j], yc[j], &xn[j], &yn[j]);
+                        p[j][0] = curr_targets[j][curr_corres->p[j]].x;
+               		    p[j][1] = curr_targets[j][curr_corres->p[j]].y;
+               		    c[j][0] = fb->buf[2]->targets[j][ref_corres->p[j]].x;
+               		    c[j][1] = fb->buf[2]->targets[j][ref_corres->p[j]].y;
+               		    
+               		    predict (p[j], c[j], n[j]);
                         
-               		    if ( ( fabs(xp[j]-zoom_x[j]) < cpar->imx/(2*zoom_f[j]))
-                            && (fabs(yp[j]-zoom_y[j]) < cpar->imy/(2*zoom_f[j])))
+               		    if ( ( fabs(p[j][0]-zoom_x[j]) < cpar->imx/(2*zoom_f[j]))
+                            && (fabs(p[j][1]-zoom_y[j]) < cpar->imy/(2*zoom_f[j])))
                         {
-	                        strcpy(val,"");
-                           	sprintf(val ,"orange");
+                           	// sprintf(val ,"orange"); all the display is in Python
 
-                        	intx0 = (int)(cpar->imx/2 + zoom_f[j]*(xp[j] - zoom_x[j]));
-	                        inty0 = (int)(cpar->imy/2 + zoom_f[j]*(yp[j] - zoom_y[j]));
-                            intx1 = (int)(cpar->imx/2 + zoom_f[j]*(xc[j] - zoom_x[j]));
-	                        inty1 = (int)(cpar->imy/2 + zoom_f[j]*(yc[j] - zoom_y[j]));
-	                        intx2 = (int)(cpar->imx/2 + zoom_f[j]*(xn[j] - zoom_x[j]));
-	                        inty2 = (int)(cpar->imy/2 + zoom_f[j]*(yn[j] - zoom_y[j]));
+                        	intx0 = (int)(cpar->imx/2 + zoom_f[j]*(p[j][0] - zoom_x[j]));
+	                        inty0 = (int)(cpar->imy/2 + zoom_f[j]*(p[j][1] - zoom_y[j]));
+                            intx1 = (int)(cpar->imx/2 + zoom_f[j]*(c[j][0] - zoom_x[j]));
+	                        inty1 = (int)(cpar->imy/2 + zoom_f[j]*(c[j][1] - zoom_y[j]));
+	                        intx2 = (int)(cpar->imx/2 + zoom_f[j]*(n[j][0] - zoom_x[j]));
+	                        inty2 = (int)(cpar->imy/2 + zoom_f[j]*(n[j][1] - zoom_y[j]));
 
 	                        intx0_tr[j][m1_tr]=intx0;
 	                        inty0_tr[j][m1_tr]=inty0;
@@ -744,7 +754,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display)
     }
 } /* end of sequence loop */
 
-void trackcorr_c_finish(tracking_run *run_info, int step)
+void trackcorr_c_finish(tracking_run *run_info, int step, int display)
 {
   int range = run_info->seq_par->last - run_info->seq_par->first;
   
@@ -764,17 +774,18 @@ void trackcorr_c_finish(tracking_run *run_info, int step)
 }
 
 /*     track backwards */
-void trackback_c ()
+void trackback_c (tracking_run *run_info, int step, int display, Calibration *cal)
 {
     char  buf[256];
-    int i, j, h, k, step, invol=0;
+    int i, j, h, k, invol=0;
     int zaehler1, philf[4][MAX_CANDS];
     int count1=0, count2=0, zusatz=0;
     int quali=0;
-    double x2[4], y2[4], angle, acc, lmax, dl;
+    double  angle, acc, lmax, dl;
     double xr[4], xl[4], yd[4], yu[4];
     vec3d diff_pos, X[7]; /* 7 reference points used in the algorithm, TODO: check if can reuse some */
-    double xn[4], yn[4];
+    // double xn[4], yn[4];
+    vec2d n[4], v2[4]; // replaces xn,yn, x2[4], y2[4],
     double rr, Ymin=0, Ymax=0;
     double npart=0, nlinks=0;
     foundpix *w, p16[4*MAX_CANDS];
@@ -813,7 +824,7 @@ void trackback_c ()
     lmax = norm((tpar->dvxmin - tpar->dvxmax), (tpar->dvymin - tpar->dvymax),
 	    (tpar->dvzmin - tpar->dvzmax));
     volumedimension (&(vpar->X_lay[1]), &(vpar->X_lay[0]), &Ymax,
-        &Ymin, &(vpar->Zmax_lay[1]), &(vpar->Zmin_lay[0]), vpar, cpar, glob_cal);
+        &Ymin, &(vpar->Zmax_lay[1]), &(vpar->Zmin_lay[0]), vpar, cpar, cal);
 
     /* sequence loop */
     for (step = seq_par->last - 1; step > seq_par->first; step--) {
@@ -840,16 +851,17 @@ void trackback_c ()
             search_volume_center_moving(ref_path_inf->x, curr_path_inf->x, X[2]);
 
             for (j=0; j < fb->num_cams; j++) {   
-                img_coord(X[2], &glob_cal[j], cpar->mm, &xn[j], &yn[j]);
-                metric_to_pixel(&xn[j], &yn[j], xn[j], yn[j], cpar);
+                img_coord(X[2], &cal[j], cpar->mm, &n[j][0], &n[j][1]);
+                metric_to_pixel(&n[j][0], &n[j][1], n[j][0], n[j][1], cpar);
             }
 
             /* calculate searchquader and reprojection in image space */
-            searchquader(X[2], xr, xl, yd, yu, tpar, cpar);
+            searchquader(X[2], xr, xl, yd, yu, tpar, cpar, cal);
+            
 
             for (j = 0; j < fb->num_cams; j++) {
                 zaehler1 = candsearch_in_pix (
-                    fb->buf[2]->targets[j], fb->buf[2]->num_targets[j], xn[j], yn[j],
+                    fb->buf[2]->targets[j], fb->buf[2]->num_targets[j], n[j][0], n[j][1],
                     xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
 
                 for(k=0; k<4; k++) {
@@ -866,7 +878,7 @@ void trackback_c ()
             /* search in pix for candidates in next time step */
             //for (j = 0; j < fb->num_cams; j++) { 
             //    register_closest_neighbs(fb->buf[2]->targets[j],
-            //        fb->buf[2]->num_targets[j], j, xn[j], yn[j],
+            //        fb->buf[2]->num_targets[j], j, n[j][0], n[j][1],
             //        xl[j], xr[j], yu[j], yd[j], &p16[j*MAX_CANDS]);
             //}
 
@@ -904,7 +916,7 @@ void trackback_c ()
             quali=0;
 
             /* reset img coord because num_cams < 4 */
-            for (j=0;j<4;j++) { x2[j]=-1e10; y2[j]=-1e10;}
+            for (j=0;j<4;j++) { v2[j][0]=-1e10; v2[j][1]=-1e10;}
 
             /* if old wasn't found try to create new particle position from rest */
             if (tpar->add) {
@@ -914,18 +926,18 @@ void trackback_c ()
                         xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
 
                         zaehler1 = candsearch_in_pixrest (fb->buf[2]->targets[j], 
-                            fb->buf[2]->num_targets[j], xn[j], yn[j],
+                            fb->buf[2]->num_targets[j], n[j][0], n[j][1],
                             xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
                         if(zaehler1 > 0) {
                             _ix = philf[j][0];
-                            x2[j] = fb->buf[2]->targets[j][_ix].x;
-                            y2[j] = fb->buf[2]->targets[j][_ix].y;
+                            v2[j][0] = fb->buf[2]->targets[j][_ix].x;
+                            v2[j][1] = fb->buf[2]->targets[j][_ix].y;
                         }
                     }
 
                     for (j = 0; j < fb->num_cams; j++) {
-                        if (x2[j] !=-1e10 && y2[j] != -1e10) {
-                            pixel_to_metric(&x2[j], &y2[j], x2[j],y2[j], cpar); 
+                        if (v2[j][0] !=-1e10 && v2[j][1] != -1e10) {
+                            pixel_to_metric(&v2[j][0], &v2[j][1], v2[j][0],v2[j][1], cpar); 
                             quali++;
                         }
                     }
@@ -934,9 +946,13 @@ void trackback_c ()
                         vec_copy(X[3], X[2]);
                         invol=0;
 
-                        det_lsq_3d (glob_cal, *(cpar->mm),
-                            x2[0], y2[0], x2[1], y2[1], x2[2], y2[2], x2[3], y2[3],
-                            &(X[3][0]), &(X[3][1]), &(X[3][2]), fb->num_cams);
+                        det_lsq_3d (cal, *(cpar->mm),
+                            v2[0][0], v2[0][1], \
+                            v2[1][0], v2[1][1], \
+                            v2[2][0], v2[2][1], \
+                            v2[3][0], v2[3][1],
+                            &(X[3][0]), &(X[3][1]), &(X[3][2]), \
+                            fb->num_cams);
 
                         /* volume check */
                         if ( vpar->X_lay[0] < X[3][0] && X[3][0] < vpar->X_lay[1] &&
@@ -1239,7 +1255,7 @@ void predict (vec2d a, vec2d b, vec2d c)
 }
 
 void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], double yu[4], \
-track_par *tpar, control_par *cpar, Calibration *glob_cal){
+track_par *tpar, control_par *cpar, Calibration *cal){
   int i, pt, dim;
   vec3d mins, maxes;
   double x, y, xz, yz;
@@ -1266,11 +1282,11 @@ track_par *tpar, control_par *cpar, Calibration *glob_cal){
       yd[i]=0;
       yu[i] = cpar->imy;
       
-      img_coord (point, &(glob_cal[i]), cpar->mm, &xz, &yz);
+      img_coord (point, &(cal[i]), cpar->mm, &xz, &yz);
       metric_to_pixel (&xz, &yz, xz, yz, cpar);
       
       for (pt = 0; pt < 8; pt++) {
-        img_coord (quader[pt], &(glob_cal[i]), cpar->mm, &x, &y);
+        img_coord (quader[pt], &(cal[i]), cpar->mm, &x, &y);
 	    metric_to_pixel (&x, &y, x, y, cpar);
 
 	    if (x <xl[i] ) xl[i]=x;
