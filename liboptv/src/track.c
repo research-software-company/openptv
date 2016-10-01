@@ -24,8 +24,6 @@ Routines contained:    	trackcorr_c
 #include "tracking_run.h"
 #include "track.h"
 
-void sort(int n, float a[], int b[]);
-
 
 
 /* Global variables marked extern in 'globals.h' and not defined elsewhere: */
@@ -235,7 +233,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
    /* sequence loop */
     char  val[256], buf[256];
     int j, h, k, mm, kk, invol=0;
-    int zaehler1, zaehler2, philf[4][MAX_CANDS];
+    int counter1, counter2, philf[4][MAX_CANDS];
     int count1=0, count2=0, count3=0, zusatz=0;
     int intx0, intx1, inty0, inty1;
     int intx2, inty2;
@@ -328,15 +326,15 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 	    }
 
 	    /* fill and sort candidate struct */
-	    sortwhatfound(p16, &zaehler1, fb->num_cams);
-	    w = (foundpix *) calloc (zaehler1, sizeof (foundpix));
+	    sortwhatfound(p16, &counter1, fb->num_cams);
+	    w = (foundpix *) calloc (counter1, sizeof (foundpix));
 
-	    if (zaehler1 > 0) count2++;
-        copy_foundpix_array(w, p16, zaehler1, fb->num_cams);
+	    if (counter1 > 0) count2++;
+        copy_foundpix_array(w, p16, counter1, fb->num_cams);
 	    /*end of candidate struct */
 
 	    /* check for what was found */
-	    for (mm=0; mm<zaehler1;mm++) { /* zaehler1-loop */
+	    for (mm=0; mm<counter1;mm++) { /* counter1-loop */
 	        /* search for found corr of current the corr in next
 		    with predicted location */
 
@@ -361,7 +359,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
 	        /* search for candidates in next time step */
 	        for (j=0; j < fb->num_cams; j++) {
-	            zaehler2 = candsearch_in_pix (fb->buf[3]->targets[j],
+	            counter2 = candsearch_in_pix (fb->buf[3]->targets[j],
                     fb->buf[3]->num_targets[j], v1[j][0], v1[j][1],
 					xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
 
@@ -380,14 +378,14 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 	        /* end of search in pix */
 
 	        /* fill and sort candidate struct */
-	        sortwhatfound(p16, &zaehler2, fb->num_cams);
-	        wn = (foundpix *) calloc (zaehler2, sizeof (foundpix));
-	        if (zaehler2 > 0) count3++;
-            copy_foundpix_array(wn, p16, zaehler2, fb->num_cams);
+	        sortwhatfound(p16, &counter2, fb->num_cams);
+	        wn = (foundpix *) calloc (counter2, sizeof (foundpix));
+	        if (counter2 > 0) count3++;
+            copy_foundpix_array(wn, p16, counter2, fb->num_cams);
 
 	        /*end of candidate struct */
 	        /* ************************************************ */
-	        for (kk=0; kk < zaehler2; kk++)  { /* zaehler2-loop */
+	        for (kk=0; kk < counter2; kk++)  { /* counter2-loop */
                 ref_path_inf = &(fb->buf[3]->path_info[wn[kk].ftnr]);
                 vec_copy(X[4], ref_path_inf->x);
 
@@ -413,7 +411,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                         register_link_candidate(curr_path_inf, rr, w[mm].ftnr);
                     }
 		        }
-	        }   /* end of zaehler2-loop */
+	        }   /* end of counter2-loop */
 
 	        /* creating new particle position */
 	        /* *************************************************************** */
@@ -430,10 +428,10 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 		        /* use fix distance to define xl, xr, yu, yd instead of searchquader */
 		        xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
 
-	            zaehler2 = candsearch_in_pix (fb->buf[3]->targets[j],
+	            counter2 = candsearch_in_pix (fb->buf[3]->targets[j],
                     fb->buf[3]->num_targets[j], n[j][0], n[j][1],
 					xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
-		        if(zaehler2>0 ) {
+		        if(counter2>0 ) {
                     _ix = philf[j][0];
 		            v2[j][0] = fb->buf[3]->targets[j][_ix].x;
                     v2[j][1] = fb->buf[3]->targets[j][_ix].y;
@@ -524,7 +522,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 	        }
 
 	        free(wn);
-        } /* end of zaehler1-loop */
+        } /* end of counter1-loop */
 
 	    /* begin of inlist still zero */
 	    if (tpar->add) {
@@ -540,10 +538,10 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 		        for (j = 0; j < fb->num_cams; j++) {
 		            /*use fix distance to define xl, xr, yu, yd instead of searchquader */
 		            xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
-	                zaehler2 = candsearch_in_pix (fb->buf[2]->targets[j],
+	                counter2 = candsearch_in_pix (fb->buf[2]->targets[j],
                         fb->buf[2]->num_targets[j], n[j][0], n[j][1],
 					    xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
-		            if(zaehler2 > 0) {
+		            if(counter2 > 0) {
                         _ix = philf[j][0];
 	    	            v2[j][0] = fb->buf[2]->targets[j][_ix].x;
                         v2[j][1] = fb->buf[2]->targets[j][_ix].y;
@@ -766,7 +764,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration *ca
 {
     char  buf[256];
     int i, j, h, k, invol=0;
-    int zaehler1, philf[4][MAX_CANDS];
+    int counter1, philf[4][MAX_CANDS];
     int count1=0, count2=0, zusatz=0;
     int quali=0;
     double  angle, acc, lmax, dl;
@@ -848,12 +846,12 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration *ca
 
 
             for (j = 0; j < fb->num_cams; j++) {
-                zaehler1 = candsearch_in_pix (
+                counter1 = candsearch_in_pix (
                     fb->buf[2]->targets[j], fb->buf[2]->num_targets[j], n[j][0], n[j][1],
                     xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
 
                 for(k=0; k<4; k++) {
-                    if( zaehler1>0) {
+                    if( counter1>0) {
                         if (philf[j][k] == -999){
                             p16[j*4+k].ftnr=-1;
                         } else {
@@ -871,14 +869,14 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration *ca
             //}
 
             /* fill and sort candidate struct */
-            sortwhatfound(p16, &zaehler1, fb->num_cams);
-            w = (foundpix *) calloc (zaehler1, sizeof (foundpix));
+            sortwhatfound(p16, &counter1, fb->num_cams);
+            w = (foundpix *) calloc (counter1, sizeof (foundpix));
 
             /*end of candidate struct */
-            if (zaehler1 > 0) count2++;
-            copy_foundpix_array(w, p16, zaehler1, fb->num_cams);
+            if (counter1 > 0) count2++;
+            copy_foundpix_array(w, p16, counter1, fb->num_cams);
 
-            for (i = 0; i < zaehler1; i++) {
+            for (i = 0; i < counter1; i++) {
                 ref_path_inf = &(fb->buf[2]->path_info[w[i].ftnr]);
                 vec_copy(X[3], ref_path_inf->x);
 
@@ -913,10 +911,10 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration *ca
                         /* use fix distance to define xl, xr, yu, yd instead of searchquader */
                         xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
 
-                        zaehler1 = candsearch_in_pix (fb->buf[2]->targets[j],
+                        counter1 = candsearch_in_pix (fb->buf[2]->targets[j],
                             fb->buf[2]->num_targets[j], n[j][0], n[j][1],
                             xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
-                        if(zaehler1 > 0) {
+                        if(counter1 > 0) {
                             _ix = philf[j][0];
                             v2[j][0] = fb->buf[2]->targets[j][_ix].x;
                             v2[j][1] = fb->buf[2]->targets[j][_ix].y;
@@ -1285,8 +1283,8 @@ void sortwhatfound (foundpix item[16], int *counter, int num_cams)
 
 /* sorts a float array a and an integer array b both of length n
  * Arguments:
- *  float array a
- *  integer array b
+ *  float array a (returned sorted in the ascending order)
+ *  integer array b (returned sorted according to float array a)
  *  int n (length of a)
 */
 void sort(int n, float a[], int b[]){
