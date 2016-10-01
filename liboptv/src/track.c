@@ -234,8 +234,11 @@ void angle_acc(vec3d start, vec3d pred, vec3d cand, double *angle, double *acc)
 
     *acc = vec_diff_norm(v0, v1);
 
+
     if ((v0[0] == -v1[0]) && (v0[1] == -v1[1]) && (v0[2] == -v1[2])) {
         *angle = 200;
+    } else if ((v0[0] == v1[0]) && (v0[1] == v1[1]) && (v0[2] == v1[2])) {
+        *angle = 0; // otherwise it returns NaN
     } else {
         *angle = (200./M_PI) * acos(vec_dot(v0, v1) / vec_norm(v0) \
             / vec_norm(v1));

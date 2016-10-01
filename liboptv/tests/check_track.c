@@ -84,6 +84,37 @@ START_TEST(test_pos3d_in_bounds)
 }
 END_TEST
 
+START_TEST(test_angle_acc)
+{
+    vec3d start = {0.0, 0.0, 0.0};
+    vec3d pred  = {1.0, 1.0, 1.0};
+    vec3d cand  = {1.1, 1.0, 1.0};
+
+    double angle, acc;
+
+    angle_acc(start, pred, cand, &angle, &acc);
+    ck_assert_msg( fabs(angle - 2.902234) < EPS,
+             "Was expecting 2.902234 but found %f \n", angle);
+
+    ck_assert_msg( fabs(acc - 0.1) < EPS,
+             "Was expecting 0.1 but found %f \n", acc);
+
+
+    angle_acc(start, pred, pred, &angle, &acc);
+    ck_assert_msg( fabs(acc) < EPS,
+                      "Was expecting 0.0 but found %f \n", acc);
+    ck_assert_msg( fabs(angle) < EPS,
+                 "Was expecting 0.0 but found %f \n", angle);
+
+    vec_scalar_mul(pred,-1,cand);
+    angle_acc(start, pred, cand, &angle, &acc);
+
+     ck_assert_msg( fabs(angle - 200.0) < EPS,
+                    "Was expecting 200.0 but found %f \n", angle);
+
+}
+END_TEST
+
 
 
 
@@ -232,6 +263,10 @@ Suite* fb_suite(void) {
 
     tc = tcase_create ("pos3d_in_bounds");
     tcase_add_test(tc, test_pos3d_in_bounds);
+    suite_add_tcase (s, tc);
+
+    tc = tcase_create ("angle_acc");
+    tcase_add_test(tc, test_angle_acc);
     suite_add_tcase (s, tc);
 
     tc = tcase_create ("candsearch_in_pix");
