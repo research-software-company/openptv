@@ -1070,10 +1070,10 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration *ca
 }
 
 
-/* candsearch_in_pix searches of four near candidates in target list
+/* candsearch_in_pix searches of four (4) near candidates in target list
  * Arguments:
  * target next[] array of targets (pointer, x,y, n, nx,ny, sumg, track ID),
- * has to be y sorted ?!!
+ * has to be y sorted ?!! this is not tested in the function. 
  * int num_targets - target array length.
  * double cent_x, cent_y - image coordinates of the position of a particle [pixel]
  * double dl, dr, du, dd - respectively the left, right, up, down distance to
