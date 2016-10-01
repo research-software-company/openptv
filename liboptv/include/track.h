@@ -29,6 +29,7 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
 void predict(vec2d a, vec2d b, vec2d c);
 void det_lsq_3d (Calibration *cals, mm_np mm, vec2d v[], double *Xp, \
     double *Yp, double *Zp, int num_cams);
+void sort(int n, float a[], int b[]);
 
 tracking_run* trackcorr_c_init();
 void trackcorr_c_loop (tracking_run *run_info, int step, int display, \

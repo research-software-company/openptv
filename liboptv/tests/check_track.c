@@ -130,6 +130,33 @@ START_TEST(test_sort)
 }
 END_TEST
 
+START_TEST(test_copy_foundpix_array)
+{
+    foundpix src[] = {  {1,1,{1,0}},
+                        {2,5,{1,1}}
+                    };
+    foundpix *dest;
+    int arr_len = 2;
+    int num_cams = 2;
+
+    dest = (foundpix *) calloc (arr_len, sizeof (foundpix));
+    copy_foundpix_array(dest, src, 2, 2);
+
+    ck_assert_msg( dest[1].ftnr == 2 ,
+             "Was expecting dest[1].ftnr == 2 but found %d \n", dest[1].ftnr);
+
+    printf(" destination foundpix array\n");
+    for (int i=0; i<arr_len; i++){
+        printf("ftnr = %d freq=%d whichcam = %d %d\n", dest[i].ftnr, dest[i].freq, \
+        dest[i].whichcam[0],dest[i].whichcam[1]);
+    }
+
+
+}
+END_TEST
+
+
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("ttools");
 
@@ -143,6 +170,10 @@ Suite* fb_suite(void) {
 
     tc = tcase_create ("sort");
     tcase_add_test(tc, test_sort);
+    suite_add_tcase (s, tc);
+
+    tc = tcase_create ("copy_foundpix_array");
+    tcase_add_test(tc, test_copy_foundpix_array);
     suite_add_tcase (s, tc);
 
     return s;

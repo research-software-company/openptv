@@ -24,8 +24,6 @@ Routines contained:    	trackcorr_c
 #include "tracking_run.h"
 #include "track.h"
 
-void sort(int n, float a[], int b[]);
-
 
 
 /* Global variables marked extern in 'globals.h' and not defined elsewhere: */
@@ -1285,8 +1283,8 @@ void sortwhatfound (foundpix item[16], int *counter, int num_cams)
 
 /* sorts a float array a and an integer array b both of length n
  * Arguments:
- *  float array a
- *  integer array b
+ *  float array a (returned sorted in the ascending order)
+ *  integer array b (returned sorted according to float array a)
  *  int n (length of a)
 */
 void sort(int n, float a[], int b[]){
