@@ -108,7 +108,27 @@ START_TEST(test_candsearch_in_pix)
 }
 END_TEST
 
+START_TEST(test_sort)
+{
+    float test_array[] = {1.0, 2200.2, 0.3, -0.8, 100.0};
+    int ix_array[] = {0,5,13,2,124};
+    int len_array = 5;
 
+    sort(len_array,test_array,ix_array);
+
+    ck_assert_msg( fabs(test_array[0] + 0.8) < EPS,
+             "Was expecting -0.8 but found %f \n", fabs(test_array[0]));
+
+    ck_assert_msg( ix_array[len_array-1] != 1,
+             "Was expecting 1 but found %f \n", ix_array[len_array-1]);
+
+    printf("Sorted array:\n");
+    for (int i=0;i<len_array;i++){
+        printf("test_array[%d]=%f\n",ix_array[i],test_array[i]);
+    }
+
+}
+END_TEST
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("ttools");
@@ -119,6 +139,10 @@ Suite* fb_suite(void) {
 
     tc = tcase_create ("candsearch_in_pix");
     tcase_add_test(tc, test_candsearch_in_pix);
+    suite_add_tcase (s, tc);
+
+    tc = tcase_create ("sort");
+    tcase_add_test(tc, test_sort);
     suite_add_tcase (s, tc);
 
     return s;

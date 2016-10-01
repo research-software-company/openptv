@@ -430,7 +430,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 		        /* use fix distance to define xl, xr, yu, yd instead of searchquader */
 		        xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
 
-	            zaehler2 = candsearch_in_pixrest (fb->buf[3]->targets[j],
+	            zaehler2 = candsearch_in_pix (fb->buf[3]->targets[j],
                     fb->buf[3]->num_targets[j], n[j][0], n[j][1],
 					xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
 		        if(zaehler2>0 ) {
@@ -540,7 +540,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 		        for (j = 0; j < fb->num_cams; j++) {
 		            /*use fix distance to define xl, xr, yu, yd instead of searchquader */
 		            xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
-	                zaehler2 = candsearch_in_pixrest (fb->buf[2]->targets[j],
+	                zaehler2 = candsearch_in_pix (fb->buf[2]->targets[j],
                         fb->buf[2]->num_targets[j], n[j][0], n[j][1],
 					    xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
 		            if(zaehler2 > 0) {
@@ -913,7 +913,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration *ca
                         /* use fix distance to define xl, xr, yu, yd instead of searchquader */
                         xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
 
-                        zaehler1 = candsearch_in_pixrest (fb->buf[2]->targets[j],
+                        zaehler1 = candsearch_in_pix (fb->buf[2]->targets[j],
                             fb->buf[2]->num_targets[j], n[j][0], n[j][1],
                             xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
                         if(zaehler1 > 0) {
@@ -1073,7 +1073,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration *ca
 /* candsearch_in_pix searches of four (4) near candidates in target list
  * Arguments:
  * target next[] array of targets (pointer, x,y, n, nx,ny, sumg, track ID),
- * has to be y sorted ?!! this is not tested in the function. 
+ * has to be y sorted ?!! this is not tested in the function.
  * int num_targets - target array length.
  * double cent_x, cent_y - image coordinates of the position of a particle [pixel]
  * double dl, dr, du, dd - respectively the left, right, up, down distance to
@@ -1159,59 +1159,6 @@ double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
 }
 
 
-
-
-int candsearch_in_pixrest(target  next[], int num_targets, double x, double y,
-    double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
-
-  int  	  j, j0, dj;
-  int  counter=0, p1, p2, p3, p4;
-  double  d, dmin=1e20, xmin, xmax, ymin, ymax;
-  xmin = x - dl;  xmax = x + dr;  ymin = y - du;  ymax = y + dd;
-
-  if(xmin<0.0) xmin=0.0;
-  if(xmax > cpar->imx)
-    xmax = cpar->imx;
-  if(ymin<0.0) ymin=0.0;
-  if(ymax > cpar->imy)
-    ymax = cpar->imy;
-
-  if(x<0.0) x=0.0;
-  if(x > cpar->imx)
-    x = cpar->imx;
-  if(y<0.0) y=0.0;
-  if(y > cpar->imy)
-    y = cpar->imy;
-
-  p1 = p2 = p3 = p4 = -999;
-
-  /* binarized search for start point of candidate search */
-  for (j0=num_targets/2, dj=num_targets/4; dj>1; dj/=2)
-    {
-      if (next[j0].y < ymin) j0 += dj;
-      else j0 -= dj;
-    }
-
-  j0 -= 12;  if (j0 < 0)  j0 = 0;	       	/* due to trunc */
-  for (j=j0; j<num_targets; j++)		       	/* candidate search */
-    {
-      if (next[j].tnr == -1 ) {
-	if (next[j].y > ymax )  break;	       	/* finish search */
-	if (next[j].x > xmin  &&  next[j].x < xmax && next[j].y > ymin  &&  next[j].y < ymax )
-	  {
-	    d = sqrt ((x-next[j].x)*(x-next[j].x) + (y-next[j].y)*(y-next[j].y));
-	    if (d < dmin) { dmin = d; p1 = j; }
-	  }
-      }
-    }
-
-  p[0]=p1;
-  p[1]=p2;
-  p[2]=p3;
-  p[3]=p4;
-  for (j=0; j<4; j++) if ( p[j] != -999 ) {counter++; }
-  return (counter);
-}
 
 
 /* predict is used in display loop (only) of track.c to predict the position of
