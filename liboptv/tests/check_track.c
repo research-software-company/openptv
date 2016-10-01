@@ -140,6 +140,17 @@ START_TEST(test_copy_foundpix_array)
     int num_cams = 2;
 
     dest = (foundpix *) calloc (arr_len, sizeof (foundpix));
+
+    reset_foundpix_array(dest, arr_len, num_cams);
+    ck_assert_msg( dest[1].ftnr == -1 ,
+             "Was expecting dest[1].ftnr == -1 but found %d \n", dest[1].ftnr);
+    ck_assert_msg( dest[0].freq == 0 ,
+              "Was expecting dest.freq == 0 but found %d \n", dest[0].freq);
+    ck_assert_msg( dest[1].whichcam[0] == 0 ,
+                       "Was expecting 0 but found %d \n", dest[1].whichcam[0]);
+
+
+
     copy_foundpix_array(dest, src, 2, 2);
 
     ck_assert_msg( dest[1].ftnr == 2 ,
