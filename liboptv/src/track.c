@@ -245,7 +245,7 @@ void angle_acc(vec3d start, vec3d pred, vec3d cand, double *angle, double *acc)
     }
 }
 
-void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibration *cal)
+void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibration **cal)
 {
    /* sequence loop */
     char  val[256], buf[256];
@@ -777,7 +777,7 @@ void trackcorr_c_finish(tracking_run *run_info, int step, int display)
 }
 
 /*     track backwards */
-void trackback_c (tracking_run *run_info, int step, int display, Calibration *cal)
+void trackback_c (tracking_run *run_info, int step, int display, Calibration **cal)
 {
     char  buf[256];
     int i, j, h, k, invol=0;
@@ -1176,13 +1176,26 @@ double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
 
 
 
+/* searchquader defines the search region, using tracking parameters
+ * dvxmin, ... dvzmax (but within the image boundaries), per camera
+ * Arguments:
+ * vec3d point position in physical space
+ * track_par *tpar set of tracking parameters
+ * control_par *cpar set of control parameters for the num_cams
+ * Calibration *cal calibration per camera to find a projection of a 3D vertex
+ * of a cuboid in the image space.
+ * Returns the arrays xr,xl,yd,yu (right, left, down, up) per camera
+ * for the search of a quader (cuboid).
+*/
 
-void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], double yu[4], \
-track_par *tpar, control_par *cpar, Calibration *cal){
+void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
+    double yu[4], track_par *tpar, control_par *cpar, Calibration **cal){
   int i, pt, dim;
   vec3d mins, maxes;
   double x, y, xz, yz;
   vec3d quader[8], pos;
+
+
 
   vec_set(mins, tpar->dvxmin, tpar->dvymin, tpar->dvzmin);
   vec_set(maxes, tpar->dvxmax, tpar->dvymax, tpar->dvzmax);
@@ -1195,8 +1208,11 @@ track_par *tpar, control_par *cpar, Calibration *cal){
         } else {
             quader[pt][dim] += mins[dim];
         }
+        // printf("quader[%d][%d]=%f \n", pt,dim,quader[pt][dim]);
     }
   }
+
+
 
   /* calculation of search area in each camera */
   for (i = 0; i < cpar->num_cams; i++) {
@@ -1205,11 +1221,11 @@ track_par *tpar, control_par *cpar, Calibration *cal){
       yd[i]=0;
       yu[i] = cpar->imy;
 
-      img_coord (point, &(cal[i]), cpar->mm, &xz, &yz);
+      img_coord (point, cal[i], cpar->mm, &xz, &yz);
       metric_to_pixel (&xz, &yz, xz, yz, cpar);
 
       for (pt = 0; pt < 8; pt++) {
-        img_coord (quader[pt], &(cal[i]), cpar->mm, &x, &y);
+        img_coord (quader[pt], cal[i], cpar->mm, &x, &y);
 	    metric_to_pixel (&x, &y, x, y, cpar);
 
 	    if (x <xl[i] ) xl[i]=x;
@@ -1223,6 +1239,8 @@ track_par *tpar, control_par *cpar, Calibration *cal){
         xr[i] = cpar->imx;
       if (yd[i] > cpar->imy)
         yd[i] = cpar->imy;
+
+
 
       xr[i]=xr[i]-xz;
       xl[i]=xz-xl[i];

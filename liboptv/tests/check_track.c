@@ -13,8 +13,40 @@
 #include <stdio.h>
 #include <math.h>
 #include "track.h"
+#include "calibration.h"
 
 #define EPS 1E-5
+
+/* Tests of correspondence components and full process using dummy data */
+
+void read_all_calibration(Calibration *calib[4], control_par *cpar) {
+    char ori_tmpl[] = "testing_fodder/cal/sym_cam%d.tif.ori";
+    char added_name[] = "testing_fodder/cal/cam1.tif.addpar";
+    char ori_name[40];
+    int cam;
+
+    for (cam = 0; cam < cpar->num_cams; cam++) {
+        sprintf(ori_name, ori_tmpl, cam + 1);
+        calib[cam] = read_calibration(ori_name, added_name, NULL);
+    }
+}
+
+Calibration test_cal(void) {
+    Exterior correct_ext = {
+        105.2632, 102.7458, 403.8822,
+        -0.2383291, 0.2442810, 0.0552577,
+        {{0.9688305, -0.0535899, 0.2418587},
+        {-0.0033422, 0.9734041, 0.2290704},
+        {-0.2477021, -0.2227387, 0.9428845}}};
+    Interior correct_int = {-2.4742, 3.2567, 100.0000};
+    Glass correct_glass = {0.0001, 0.00001, 150.0};
+    ap_52 correct_addp = {0., 0., 0., 0., 0., 1., 0.};
+    Calibration correct_cal = {correct_ext, correct_int, correct_glass,
+        correct_addp};
+    rotation_matrix(&correct_cal.ext_par);
+
+    return correct_cal;
+}
 
 
 START_TEST(test_predict)
@@ -249,6 +281,49 @@ START_TEST(test_copy_foundpix_array)
 END_TEST
 
 
+START_TEST(test_searchquader)
+{
+    vec3d point = {0.0, 0.0, 0.0};
+    double xr[4], xl[4], yd[4], yu[4];
+    Calibration *calib[4];
+    control_par *cpar;
+    int cam, matched;
+
+    Calibration cal;
+
+    cal = test_cal();
+
+    fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
+
+    /* see check_correspondences for explanations */
+    cpar->mm->n2[0] = 1.0001;
+    cpar->mm->n3 = 1.0001;
+
+    printf (" number of cameras in searchquader test: %d \n",cpar->num_cams);
+
+    track_par tpar[] = {
+        0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1.
+    };
+
+    read_all_calibration(calib, cpar);
+
+    searchquader(point, xr, xl, yd, yu, tpar, cpar, calib);
+
+    // printf("searchquader returned:\n");
+    // for (int i=0; i<cpar->num_cams;i++){
+    //     printf("%f %f %f %f\n",xr[i],xl[i],yd[i],yu[i]);
+    // }
+    ck_assert_msg( fabs(xr[0] - 47.060202)<EPS ,
+             "Was expecting 47.06 but found %d \n", xr[0]);
+    ck_assert_msg( fabs(yu[3] - 33.512680)<EPS ,
+                      "Was expecting 33.512680 but found %d \n", yu[3]);
+
+}
+END_TEST
+
+
+
+
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("ttools");
@@ -279,6 +354,10 @@ Suite* fb_suite(void) {
 
     tc = tcase_create ("copy_foundpix_array");
     tcase_add_test(tc, test_copy_foundpix_array);
+    suite_add_tcase (s, tc);
+
+    tc = tcase_create ("searchquader");
+    tcase_add_test(tc, test_searchquader);
     suite_add_tcase (s, tc);
 
     return s;
