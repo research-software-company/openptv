@@ -154,7 +154,7 @@ void register_closest_neighbs(target *targets, int num_targets, int cam,
 {
     int cand, all_cands[MAX_CANDS];
 
-    candsearch_in_pix (targets, num_targets, cent_x, cent_y, dl, dr,
+    cand = candsearch_in_pix (targets, num_targets, cent_x, cent_y, dl, dr,
         du, dd, all_cands, cpar);
 
     for (cand = 0; cand < MAX_CANDS; cand++) {
@@ -1072,7 +1072,8 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration *ca
 
 /* candsearch_in_pix searches of four near candidates in target list
  * Arguments:
- * target next[] array of targets (pointer, x,y, n, nx,ny, sumg, track ID)
+ * target next[] array of targets (pointer, x,y, n, nx,ny, sumg, track ID),
+ * has to be y sorted ?!!
  * int num_targets - target array length.
  * double cent_x, cent_y - image coordinates of the position of a particle [pixel]
  * double dl, dr, du, dd - respectively the left, right, up, down distance to
@@ -1090,7 +1091,6 @@ double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
   double  d, dmin=1e20, xmin, xmax, ymin, ymax;
   double d1, d2, d3, d4;
 
-
   xmin = cent_x - dl;  xmax = cent_x + dr;  ymin = cent_y - du;  ymax = cent_y + dd;
 
   if(xmin<0.0) xmin=0.0;
@@ -1099,17 +1099,6 @@ double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
   if(ymin<0.0) ymin=0.0;
   if(ymax > cpar->imy)
     ymax = cpar->imy;
-
-/* suggest to remove this obscure limit - how one could get negative pixels? if
- * happens anywhere, it shall be captured there and the points shall be eliminated
-
-  if(x<0.0) x=0.0;
-  if(x > cpar->imx)
-    x = cpar->imx;
-  if(y<0.0) y=0.0;
-  if(y > cpar->imy)
-    y = cpar->imy;
-*/
 
   p1 = p2 = p3 = p4 = -999;
   d1 = d2 = d3 = d4 = dmin;

@@ -43,17 +43,15 @@ START_TEST(test_candsearch_in_pix)
 
     target test_pix[] = {
         {0, 0.0, -0.2, 5, 1, 2, 10, -999},
-        {6, 0.2, 0.0, 10, 8, 1, 20, -999},
-        {3, 0.2, 0.8, 10, 3, 3, 30, -999},
-        {4, 0.4, -1.1, 10, 3, 3, 40, -999},
-        {1, 0.7, -0.1, 10, 3, 3, 50, -999},
-        {7, 1.2, 0.3, 10, 3, 3, 60, -999},
-        {5, 10.4, 0.1, 10, 3, 3, 70, -999}
+        {6, 0.2, 0.2, 10, 8, 1, 20, -999},
+        {3, 0.2, 0.3, 10, 3, 3, 30, -999},
+        {4, 0.2, 1.0, 10, 3, 3, 40, -999},
+        {1, -0.7, 1.2, 10, 3, 3, 50, -999},
+        {7, 1.2, 1.3, 10, 3, 3, 60, -999},
+        {5, 10.4, 2.1, 10, 3, 3, 70, -999}
     };
     int num_targets = 7;
 
-    /* trivial case, search around your place */
-    cent_x = cent_y = dl = dr = du = dd = 0;
 
     /* prepare test control parameters, basically for pix_x  */
     int cam;
@@ -79,10 +77,33 @@ START_TEST(test_candsearch_in_pix)
     test_cpar->mm->n3 = 1.33;
     test_cpar->mm->d[0] = 5;
 
+    cent_x = cent_y = 0.2;
+    dl = dr = du = dd = 0.1;
 
     counter = candsearch_in_pix (test_pix, num_targets, cent_x, cent_y, \
                                  dl, dr, du, dd, p, test_cpar);
-    fail_unless(counter == 1);
+
+    printf("counter %d \n",counter);
+    printf("candidates: \n");
+    for (int i=0;i<counter;i++){
+        printf("%f,%f\n",test_pix[p[i]].x,test_pix[p[i]].y);
+    }
+    fail_unless(counter == 2);
+
+
+    cent_x = 0.5;
+    cent_y = 0.3;
+    dl = dr = du = dd = 10.2;
+
+    counter = candsearch_in_pix (test_pix, num_targets, cent_x, cent_y, \
+                                 dl, dr, du, dd, p, test_cpar);
+    printf("counter %d \n",counter);
+    printf("candidates:\n");
+    for (int i=0;i<counter;i++){
+        printf("%f,%f\n",test_pix[p[i]].x,test_pix[p[i]].y);
+    }
+
+    fail_unless(counter == 4);
 
 }
 END_TEST
