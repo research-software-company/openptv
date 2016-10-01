@@ -19,13 +19,14 @@
 
 START_TEST(test_predict)
 {
-    vec2d a = {1.1, 0.6};
-    vec2d b = {2.0, -0.8};
+    vec2d prev_pos = {1.1, 0.6};
+    vec2d curr_pos = {2.0, -0.8};
     vec2d result = {2.9, -2.2};
 
     vec2d c;
 
-    predict(a,b,c);
+    predict(prev_pos,curr_pos,c);
+
 
     ck_assert_msg( fabs(c[0] - result[0]) < EPS,
              "Was expecting 2.9 but found %f \n", fabs(c[0]));
@@ -35,6 +36,32 @@ START_TEST(test_predict)
 
 }
 END_TEST
+
+
+START_TEST(test_search_volume_center_moving)
+{
+    vec3d prev_pos = {1.1, 0.6, 0.1};
+    vec3d curr_pos = {2.0, -0.8, 0.2};
+    vec3d result = {2.9, -2.2, 0.3};
+
+    vec3d c;
+
+    search_volume_center_moving(prev_pos, curr_pos, c);
+
+
+    ck_assert_msg( fabs(c[0] - result[0]) < EPS,
+             "Was expecting 2.9 but found %f \n", c[0]);
+
+    ck_assert_msg( fabs(c[1] - result[1]) < EPS,
+             "Was expecting -2.2 but found %f \n", c[1]);
+
+    ck_assert_msg( fabs(c[2] - result[2]) < EPS,
+                      "Was expecting 0.3 but found %f \n", c[2]);
+
+}
+END_TEST
+
+
 
 START_TEST(test_candsearch_in_pix)
 {
@@ -174,6 +201,11 @@ Suite* fb_suite(void) {
     TCase *tc = tcase_create ("predict test");
     tcase_add_test(tc, test_predict);
     suite_add_tcase (s, tc);
+
+    tc = tcase_create ("search_volume_center_moving");
+    tcase_add_test(tc, test_search_volume_center_moving);
+    suite_add_tcase (s, tc);
+
 
     tc = tcase_create ("candsearch_in_pix");
     tcase_add_test(tc, test_candsearch_in_pix);

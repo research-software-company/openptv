@@ -178,7 +178,21 @@ void search_volume_center_moving(vec3d prev_pos, vec3d curr_pos, vec3d output)
 {
     vec_scalar_mul(curr_pos, 2, output);
     vec_subt(output, prev_pos, output);
+
 }
+
+/* predict is used in display loop (only) of track.c to predict the position of
+ * a particle in the next frame, using the previous and current positions
+ * Arguments:
+ * vec2d prev_pos, curr_pos are 2d positions at previous/current frames
+ * vec2d output - output of the 2D positions of the particle in the next frame.
+*/
+void predict (vec2d prev_pos, vec2d curr_pos, vec2d output)
+{
+  output[0] = 2*curr_pos[0] - prev_pos[0];
+  output[1] = 2*curr_pos[1] - prev_pos[1];
+}
+
 
 /* pos3d_in_bounds() checks that all components of a pos3d are in their
    respective bounds taken from a track_par object.
@@ -1159,18 +1173,6 @@ double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
 
 
 
-/* predict is used in display loop (only) of track.c to predict the position of
-   a particle in the next frame, using the previous and current positions
-   Arguments:
-   vec2d a,b are vectors in 2D of the previous and current position, respectively
-   vec2d c - output of the 2D positions of the particle in the next frame.
-*/
-void predict (vec2d a, vec2d b, vec2d c)
-{
-  c[0] = 2*b[0] - a[0];
-  c[1] = 2*b[1] - a[1];
-  return;
-}
 
 void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], double yu[4], \
 track_par *tpar, control_par *cpar, Calibration *cal){
