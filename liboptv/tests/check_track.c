@@ -61,6 +61,30 @@ START_TEST(test_search_volume_center_moving)
 }
 END_TEST
 
+START_TEST(test_pos3d_in_bounds)
+{
+    vec3d inside = {1.0,-1.0,0.0};
+    vec3d outside = {2.0, -0.8, 2.1};
+
+    track_par bounds[] = {
+        0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1.
+    };
+
+    int result;
+    result = pos3d_in_bounds(inside, bounds);
+
+    ck_assert_msg( result == 1,
+             "Was expecting True but found %f \n", result);
+
+    result = pos3d_in_bounds(outside, bounds);
+
+    ck_assert_msg( result == 0,
+            "Was expecting False but found %f \n", result);
+
+}
+END_TEST
+
+
 
 
 START_TEST(test_candsearch_in_pix)
@@ -206,6 +230,9 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_search_volume_center_moving);
     suite_add_tcase (s, tc);
 
+    tc = tcase_create ("pos3d_in_bounds");
+    tcase_add_test(tc, test_pos3d_in_bounds);
+    suite_add_tcase (s, tc);
 
     tc = tcase_create ("candsearch_in_pix");
     tcase_add_test(tc, test_candsearch_in_pix);
