@@ -94,7 +94,6 @@ END_TEST
 
 START_TEST(test_diff_norm)
 {
-    int i;
     vec3d vec1 = {1., 2., 3.}, vec2 = {4., 5., 6.};
     fail_unless(vec_diff_norm(vec1, vec2) == sqrt(3)*3);
 }
@@ -185,6 +184,10 @@ Suite* fb_suite(void) {
 
     tc = tcase_create("Cross product");
     tcase_add_test(tc, test_cross);
+    suite_add_tcase (s, tc);
+    
+    tc = tcase_create("Normalized difference");
+    tcase_add_test(tc, test_diff_norm);
     suite_add_tcase (s, tc);
 
     return s;
