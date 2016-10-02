@@ -93,7 +93,6 @@ int targ_rec (unsigned char *img, target_par *targ_par, int xmin,
       /* => local maximum, 'peak' */
           {
             yn=i;  xn=j;
-            xn = xn;
             sumg = gv;  *(img0 + i*imx + j) = 0;
             xa = xn;  xb = xn;  ya = yn;  yb = yn;
             gv -= thres;
@@ -188,10 +187,7 @@ int targ_rec (unsigned char *img, target_par *targ_par, int xmin,
                     pix[n_targets].tnr = CORRES_NONE;
                     pix[n_targets].pnr = n_targets;
                     n_targets++;
-                    
-                    xn = x;  
-                    yn = y;
-              }
+             }
           } /*  end of if-loop  */
     }
     free(img0);
