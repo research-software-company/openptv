@@ -291,7 +291,7 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     }
     
     for(i = 0; i < NPAR; i++)
-        sigmabeta[j] = 0.0;
+        sigmabeta[i] = 0.0;
 
     if(flags->interfflag){
         numbers = 18;
@@ -712,7 +712,7 @@ int read_man_ori_fix(vec3d fix4[4], char* calblock_filename,
     FILE* fpp;
     int	dummy, pnr, nr[4],i;
     int num_fix, num_match;
-    vec3d *fix;
+    vec3d *fix = NULL;
 
     fpp = fopen(man_ori_filename,"r");
     if (! fpp) {

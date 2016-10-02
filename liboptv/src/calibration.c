@@ -124,7 +124,7 @@ int read_ori (Exterior Ex[], Interior I[], Glass G[], char *ori_file, \
   if ((fp == NULL) && add_fallback) fp = fopen (add_fallback, "r");
   
   if (fp) {
-    scan_res = fscanf (fp, "%lf %lf %lf %lf %lf %lf %lf",
+    fscanf (fp, "%lf %lf %lf %lf %lf %lf %lf",
         &(addp->k1), &(addp->k2), &(addp->k3), &(addp->p1), &(addp->p2),
         &(addp->scx), &(addp->she));
     fclose (fp);
