@@ -616,7 +616,7 @@ int take_best_candidates(n_tupel *src, n_tupel *dst,
 n_tupel *correspondences (frame *frm, coord_2d **corrected,
   volume_par *vpar, control_par *cpar, Calibration **calib, int match_counts[])
 {
-  int 	i, j, p1, match0;
+  int 	i, j, match0;
   n_tupel *con0, *con;
   correspond *list[4][4];
   int **tim;

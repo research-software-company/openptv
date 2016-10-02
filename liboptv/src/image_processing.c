@@ -388,6 +388,7 @@ int prepare_image(unsigned char  *img, unsigned char  *img_hp, int dim_lp,
   }
   fast_box_blur(dim_lp, img, img_lp, cpar);
   subtract_img (img, img_lp, img_hp, cpar);
+  free (img_lp);
   
   /* consider field mode */
   if (cpar->chfield == 1 || cpar->chfield == 2)
@@ -412,7 +413,7 @@ int prepare_image(unsigned char  *img, unsigned char  *img_hp, int dim_lp,
         break;
   }
   
-  free (img_lp);
+  
   return 1;
 }
 
