@@ -512,9 +512,9 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                         }
                     }
                 }
-		        invol=0;
+		        //invol=0;
 	        }
-	        quali=0;
+	        //quali=0;
 
 	        /* end of creating new particle position */
 	        /* *************************************************************** */
@@ -622,7 +622,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                             zusatz++;
                         }
                     }
-		            invol=0;
+		            //invol=0;
 		        } // if quali >= 2
             }
         }
@@ -773,7 +773,7 @@ void trackcorr_c_finish(tracking_run *run_info, int step, int display)
   fb_free(run_info->fb);
 
   /* reset of display flag */
-  display = 1;
+  //display = 1;
 }
 
 /*     track backwards */
@@ -806,7 +806,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
     int _ix; /* For use in any of the complex index expressions below */
     int _frame_parts; /* number of particles in a frame */
 
-    display = 1;
+    //display = 1;
     /* read data */
     seq_par = read_sequence_par("parameters/sequence.par", 4);
     tpar = read_track_par("parameters/track.par");
@@ -995,7 +995,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
                                 fb->buf[2]->num_parts++;
                             }
                         }
-                        invol=0;
+                        //invol=0;
                     }
                 }
             } /* end of if old wasn't found try to create new particle position from rest */
@@ -1081,7 +1081,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
     free(tpar);
 
     /* reset of display flag */
-    display = 1;
+    //display = 1;
 }
 
 
@@ -1101,7 +1101,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
 int candsearch_in_pix (target next[], int num_targets, double cent_x, double cent_y,
 double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
 
-  int  	  j, j0, dj, pnr = -999;
+  int  	  j, j0, dj;
   int  counter=0, p1, p2, p3, p4;
   double  d, dmin=1e20, xmin, xmax, ymin, ymax;
   double d1, d2, d3, d4;
@@ -1139,7 +1139,7 @@ double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
                           (cent_y-next[j].y)*(cent_y-next[j].y));
 
                 if (d < dmin) {
-                   dmin = d; pnr = j;
+                   dmin = d;
                 }
 
                 if ( d < d1 ) {
@@ -1330,13 +1330,13 @@ void sort(int n, float a[], int b[]){
 }
 
 void det_lsq_3d (Calibration *cals, mm_np mm, vec2d v[], double *Xp, double *Yp, double *Zp, int num_cams) {
-	    int     i,count_inner=0,n,m, flag[4] = {0., 0., 0., 0.};
-	    double  d_inner=0.,x,y;
-	    double X[4][3], a[4][3];
-        double dist,X_pos[6],Y_pos[6],Z_pos[6],XX,YY,ZZ,si0,sqX,sqY,sqZ;
-        double rmsX, rmsY, rmsZ, mean_sigma0;
-        vec3d res;
-        int cam;
+    int     i,count_inner=0,n,m, flag[4] = {0., 0., 0., 0.};
+    double  d_inner=0.,x,y;
+    double X[4][3], a[4][3];
+    double dist,X_pos[6],Y_pos[6],Z_pos[6],XX,YY,ZZ,si0,sqX,sqY,sqZ;
+    double rmsX, rmsY, rmsZ, mean_sigma0;
+    vec3d res;
+    int cam;
     
     rmsX = rmsY = rmsZ = mean_sigma0 = 0.0;
 
@@ -1366,7 +1366,7 @@ void det_lsq_3d (Calibration *cals, mm_np mm, vec2d v[], double *Xp, double *Yp,
 				}
 			}
 		}
-        d_inner/=(double)count_inner;
+        //d_inner/=(double)count_inner;
 		XX=0.;YY=0.;ZZ=0.;
 		for(i=0;i<count_inner;i++){
            XX+=X_pos[i];
