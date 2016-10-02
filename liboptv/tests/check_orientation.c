@@ -34,7 +34,7 @@ START_TEST(test_raw_orient)
     vec3d fix4[4], pos;
     target pix4[4];
     int nfix, i;
-    int eps, correct_eps = 25;
+    int correct_eps = 25;
     double xp, yp;
     
     /* read 4 points manually selected from the calibration file */
