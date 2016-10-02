@@ -1334,11 +1334,11 @@ void det_lsq_3d (Calibration *cals, mm_np mm, vec2d v[], double *Xp, double *Yp,
     double  d_inner=0.,x,y;
     double X[4][3], a[4][3];
     double dist,X_pos[6],Y_pos[6],Z_pos[6],XX,YY,ZZ,si0,sqX,sqY,sqZ;
-    double rmsX, rmsY, rmsZ, mean_sigma0;
+//    double rmsX, rmsY, rmsZ, mean_sigma0;
     vec3d res;
     int cam;
     
-    rmsX = rmsY = rmsZ = mean_sigma0 = 0.0;
+//    rmsX = rmsY = rmsZ = mean_sigma0 = 0.0;
 
 
 
@@ -1389,10 +1389,10 @@ void det_lsq_3d (Calibration *cals, mm_np mm, vec2d v[], double *Xp, double *Yp,
 		}
 		si0/=(double)count_inner;sqX/=(double)count_inner;sqY/=(double)count_inner;sqZ/=(double)count_inner;
 
-		mean_sigma0 += pow(si0,0.5);
-        rmsX += pow(sqX,0.5);
-        rmsY += pow(sqY,0.5);
-        rmsZ += pow(sqZ,0.5);
+//		mean_sigma0 += pow(si0,0.5);
+//        rmsX += pow(sqX,0.5);
+//        rmsY += pow(sqY,0.5);
+//        rmsZ += pow(sqZ,0.5);
 		//end of statistics
 
 }
