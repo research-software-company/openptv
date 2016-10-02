@@ -7,8 +7,8 @@
 #ifndef TRACKING_RUN_H
 #define TRACKING_RUN_H
 
-#include <optv/parameters.h>
-#include <optv/tracking_frame_buf.h>
+#include "parameters.h"
+#include "tracking_frame_buf.h"
 
 typedef struct {
     framebuf *fb;
