@@ -99,7 +99,7 @@ START_TEST(test_pos3d_in_bounds)
     vec3d outside = {2.0, -0.8, 2.1};
 
     track_par bounds[] = {
-        0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1.
+        {0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1.}
     };
 
     int result;
@@ -287,7 +287,6 @@ START_TEST(test_searchquader)
     double xr[4], xl[4], yd[4], yu[4];
     Calibration *calib[4];
     control_par *cpar;
-    int cam, matched;
 
     Calibration cal;
 
@@ -301,9 +300,7 @@ START_TEST(test_searchquader)
 
     printf (" number of cameras in searchquader test: %d \n",cpar->num_cams);
 
-    track_par tpar[] = {
-        0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1.
-    };
+    track_par tpar[] = { {0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1.} };
 
     read_all_calibration(calib, cpar);
 
