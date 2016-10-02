@@ -75,7 +75,7 @@ START_TEST(test_sortgrid)
     vec3d *fix;
     target pix[2];
     target *sorted_pix;
-    int nfix, i;
+    int nfix;
     int eps, correct_eps = 25;
 
     eps = read_sortgrid_par("testing_fodder/parameters/sortgrid.par");
