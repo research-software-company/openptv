@@ -1,27 +1,67 @@
 /* Unit tests for reading and writing parameter files. */
 
 #include <check.h>
+#include <stdio.h>
 #include "segmentation.h"
 #include "tracking_frame_buf.h"
 
 
+
+/* create_empty_img creates a black (full of 0) image by 
+ * allocating an array and filling with zeros.
+ * Arguments: 
+ * integer width, height of the image
+ * Returns:
+ * unsigned char* pointer to the image array
+ */
+unsigned char * create_empty_img(int width,int height){
+    
+    unsigned char* img = malloc(width*height*sizeof(unsigned char));
+    
+    for (int row=0;row<height;row++){
+        for (int col=0;col<width;col++){
+            img[row*width+col] = 0;
+        }
+    }
+    return img;
+}
+
+/* create_blob_img creates a black (full of 0) image by
+ * allocating an array and filling with zeros and the fills the center
+ * by 255 (white pixels). Only a 1-pixel boundaries remain black.
+ * Arguments:
+ * integer width, height of the image
+ * Returns:
+ * unsigned char* pointer to the image array
+ */
+unsigned char * create_blob_img(int width,int height){
+    
+    unsigned char* img = create_empty_img(width,height);
+    
+    for (int row=1;row<height-1;row++){
+        for (int col=1;col<width-1;col++){
+            img[row*width+col] = 255;
+        }
+    }
+    return img;
+}
+
 START_TEST(test_peak_fit)
 {
     int ntargets; 
-    unsigned char img[5][5] = {
-        { 0,   0,   0,   0, 0},
-        { 0, 255, 255, 255, 0},
-        { 0, 255, 255, 255, 0},
-        { 0, 255, 255, 255, 0},
-        { 0,   0,   0,   0, 0}
-    };
-    
-    target pix[1024];
     
     control_par cpar = {
         .imx = 5,
         .imy = 5,
-    }; 
+    };
+    
+    unsigned char* img = create_blob_img(cpar.imx,cpar.imy);
+
+    
+    
+    target pix[1024];
+    
+
 
 
     target_par targ_par= { 
@@ -39,13 +79,10 @@ START_TEST(test_peak_fit)
    fail_unless(pix[0].n == 9);
    
    /* test the two objects */
-     unsigned char img1[5][5] = {
-        { 0,   0,   0,   0, 0},
-        { 0, 255, 0, 0, 0},
-        { 0, 0, 0, 0, 0},
-        { 0, 0, 0, 251, 0},
-        { 0,   0,   0,   0, 0}
-    };
+    unsigned char* img1 = create_empty_img(cpar.imx,cpar.imy);
+    img1[6] = 255;
+    img1[18] = 251;
+    
    ntargets = peak_fit(img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, 
         pix);
    fail_unless(ntargets == 2);
@@ -61,21 +98,14 @@ END_TEST
 START_TEST(test_targ_rec)
 {
     int ntargets; 
-    unsigned char img[5][5] = {
-        { 0,   0,   0,   0, 0},
-        { 0, 255, 255, 255, 0},
-        { 0, 255, 255, 255, 0},
-        { 0, 255, 255, 255, 0},
-        { 0,   0,   0,   0, 0}
-    };
-    
+   
     target pix[1024];
     
     control_par cpar = {
         .imx = 5,
         .imy = 5,
     }; 
-
+    unsigned char* img = create_blob_img(cpar.imx,cpar.imy);
 
     target_par targ_par= { 
         .gvthres = {250, 100, 20, 20}, 
@@ -93,24 +123,22 @@ START_TEST(test_targ_rec)
     fail_unless(pix[0].tnr == CORRES_NONE);
    
     /* test the two objects */
-    unsigned char img1[5][5] = {
-        { 0,   0,   0,   0, 0},
-        { 0, 255, 0, 0, 0},
-        { 0, 0, 0, 0, 0},
-        { 0, 0, 0, 251, 0},
-        { 0,   0,   0,   0, 0}
-    };
+    unsigned char* img1 = create_empty_img(cpar.imx,cpar.imy);
+    img1[6] = 255;
+    img1[18] = 251;
+    
+    
     ntargets = targ_rec (img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, 
         pix);
     fail_unless(ntargets == 2);
    
     targ_par.gvthres[1] = 252; 
-    ntargets = targ_rec ((unsigned char *)img1, &targ_par, 0, cpar.imx, 
+    ntargets = targ_rec (img1, &targ_par, 0, cpar.imx,
         0, cpar.imy, &cpar, 1, pix);
     fail_unless(ntargets == 1);
 
     /* Trip a segfault writing over the edge. */
-    img1[4][4] = 255;
+    img1[4*cpar.imx+4] = 255;
     ntargets = targ_rec (img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1,
         pix);
     /* If execution reached here, test passed. */
