@@ -34,7 +34,6 @@ START_TEST(test_raw_orient)
     vec3d fix4[4], pos;
     target pix4[4];
     int nfix, i;
-    int eps, correct_eps = 25;
     double xp, yp;
     
     /* read 4 points manually selected from the calibration file */
@@ -82,13 +81,11 @@ START_TEST(test_orient)
     Calibration *cal, *org_cal;
     control_par *cpar;
     orient_par *opar;
-    vec3d fix[64], pos;
+    vec3d fix[64];
     target pix[64];
-    double sigmabeta[20], nGl, *resi;
-    int nfix, i, k=0, pnr, ix, iy, iz, pt_id;
-    int eps, correct_eps = 25;
+    double sigmabeta[20], *resi;
+    int i, ix, iy, iz, pt_id;
     double xp, yp;
-    FILE *fpp;
     
     pt_id = 0;
     for (ix = 0; ix < 4; ix++) {
