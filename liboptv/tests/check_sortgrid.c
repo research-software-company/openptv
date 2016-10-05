@@ -55,13 +55,12 @@ END_TEST
 START_TEST(test_read_calblock)
 {
     int num_points, correct_num_points = 5;
-    vec3d *fix;
     char calblock_file[] = "testing_fodder/cal/calblock.txt";
     
     ck_assert_msg (file_exists(calblock_file) == 1, 
         "\n File %s does not exist\n", calblock_file);
     
-    fix = read_calblock(&num_points, calblock_file);   
+    read_calblock(&num_points, calblock_file);
     
     fail_if (num_points == 0, "\n calblock file reading failed \n");
     fail_unless(num_points == correct_num_points);
@@ -75,7 +74,7 @@ START_TEST(test_sortgrid)
     vec3d *fix;
     target pix[2];
     target *sorted_pix;
-    int nfix, i;
+    int nfix;
     int eps, correct_eps = 25;
 
     eps = read_sortgrid_par("testing_fodder/parameters/sortgrid.par");

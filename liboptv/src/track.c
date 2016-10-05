@@ -152,7 +152,7 @@ void register_closest_neighbs(target *targets, int num_targets, int cam,
 {
     int cand, all_cands[MAX_CANDS];
 
-    cand = candsearch_in_pix (targets, num_targets, cent_x, cent_y, dl, dr,
+    candsearch_in_pix (targets, num_targets, cent_x, cent_y, dl, dr,
         du, dd, all_cands, cpar);
 
     for (cand = 0; cand < MAX_CANDS; cand++) {
@@ -512,9 +512,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                         }
                     }
                 }
-		        invol=0;
 	        }
-	        quali=0;
 
 	        /* end of creating new particle position */
 	        /* *************************************************************** */
@@ -622,7 +620,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                             zusatz++;
                         }
                     }
-		            invol=0;
 		        } // if quali >= 2
             }
         }
@@ -772,8 +769,6 @@ void trackcorr_c_finish(tracking_run *run_info, int step, int display)
 
   fb_free(run_info->fb);
 
-  /* reset of display flag */
-  display = 1;
 }
 
 /*     track backwards */
@@ -806,7 +801,6 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
     int _ix; /* For use in any of the complex index expressions below */
     int _frame_parts; /* number of particles in a frame */
 
-    display = 1;
     /* read data */
     seq_par = read_sequence_par("parameters/sequence.par", 4);
     tpar = read_track_par("parameters/track.par");
@@ -995,7 +989,6 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
                                 fb->buf[2]->num_parts++;
                             }
                         }
-                        invol=0;
                     }
                 }
             } /* end of if old wasn't found try to create new particle position from rest */
@@ -1081,7 +1074,6 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
     free(tpar);
 
     /* reset of display flag */
-    display = 1;
 }
 
 
@@ -1101,7 +1093,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
 int candsearch_in_pix (target next[], int num_targets, double cent_x, double cent_y,
 double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
 
-  int  	  j, j0, dj, pnr = -999;
+  int  	  j, j0, dj;
   int  counter=0, p1, p2, p3, p4;
   double  d, dmin=1e20, xmin, xmax, ymin, ymax;
   double d1, d2, d3, d4;
@@ -1139,7 +1131,7 @@ double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
                           (cent_y-next[j].y)*(cent_y-next[j].y));
 
                 if (d < dmin) {
-                   dmin = d; pnr = j;
+                   dmin = d;
                 }
 
                 if ( d < d1 ) {
@@ -1334,11 +1326,11 @@ void det_lsq_3d (Calibration *cals, mm_np mm, vec2d v[], double *Xp, double *Yp,
 	    double  d_inner=0.,x,y;
 	    double X[4][3], a[4][3];
         double dist,X_pos[6],Y_pos[6],Z_pos[6],XX,YY,ZZ,si0,sqX,sqY,sqZ;
-        double rmsX, rmsY, rmsZ, mean_sigma0;
+        //double rmsX, rmsY, rmsZ, mean_sigma0;
         vec3d res;
         int cam;
     
-    rmsX = rmsY = rmsZ = mean_sigma0 = 0.0;
+    //rmsX = rmsY = rmsZ = mean_sigma0 = 0.0;
 
 
 
@@ -1366,7 +1358,7 @@ void det_lsq_3d (Calibration *cals, mm_np mm, vec2d v[], double *Xp, double *Yp,
 				}
 			}
 		}
-        d_inner/=(double)count_inner;
+        // d_inner/=(double)count_inner;
 		XX=0.;YY=0.;ZZ=0.;
 		for(i=0;i<count_inner;i++){
            XX+=X_pos[i];
@@ -1387,12 +1379,15 @@ void det_lsq_3d (Calibration *cals, mm_np mm, vec2d v[], double *Xp, double *Yp,
 		   sqY+=pow(Y_pos[i]-YY,2.);
 		   sqZ+=pow(Z_pos[i]-ZZ,2.);
 		}
-		si0/=(double)count_inner;sqX/=(double)count_inner;sqY/=(double)count_inner;sqZ/=(double)count_inner;
+//		si0/=(double)count_inner;
+//        sqX/=(double)count_inner;
+//        sqY/=(double)count_inner;
+//        sqZ/=(double)count_inner;
 
-		mean_sigma0 += pow(si0,0.5);
-        rmsX += pow(sqX,0.5);
-        rmsY += pow(sqY,0.5);
-        rmsZ += pow(sqZ,0.5);
+//		mean_sigma0 += pow(si0,0.5);
+//        rmsX += pow(sqX,0.5);
+//        rmsY += pow(sqY,0.5);
+//        rmsZ += pow(sqZ,0.5);
 		//end of statistics
 
 }

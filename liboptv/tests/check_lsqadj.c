@@ -19,7 +19,7 @@ START_TEST(test_matmul)
     double e[4] = {10, 11, 12, 99};
     double f[3] = {0, 0, 0};
     double expected[3] = {68, 167, 266};
-    int i,j,k;
+    int i;
         
         
     Exterior test_Ex = {
@@ -87,7 +87,7 @@ START_TEST(test_atl)
     double u[3];
     double expected[3] = {16, 26, 30};
     
-    int i, j;
+    int i;
     
     for (i=0; i<3; i++){
                  u[i] = 0.0;

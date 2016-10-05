@@ -12,7 +12,7 @@
 START_TEST(test_epi_mm_2D)
 {
         double x, y;
-        vec3d pos, v, out;
+        vec3d  out;
         
     Exterior test_Ex = {
         0.0, 0.0, 100.0,
@@ -66,8 +66,7 @@ END_TEST
 START_TEST(test_epi_mm)
 {
 
-    double x, y, z, xmin, xmax, ymin, ymax;
-    vec3d pos, v;
+    double x, y, xmin, xmax, ymin, ymax;
 
     /* first camera */
     
@@ -135,7 +134,7 @@ END_TEST
 START_TEST(test_epi_mm_perpendicular)
 {
 
-    double x, y, z, xmin, xmax, ymin, ymax;
+    double xmin, xmax, ymin, ymax;
 
     /* first camera */
     
@@ -242,13 +241,13 @@ START_TEST(test_find_candidate)
     ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
     Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
     
-    mm_np test_mm = {
-    	1, 
-    	1.0, 
-    	{1.49, 0.0, 0.0}, 
-    	{5.0, 0.0, 0.0},
-    	1.33,
-    };
+//    mm_np test_mm = {
+//    	1, 
+//    	1.0, 
+//    	{1.49, 0.0, 0.0}, 
+//    	{5.0, 0.0, 0.0},
+//    	1.33,
+//    };
     
     volume_par test_vpar = {
         {-250., 250.}, {-100., -100.}, {100., 100.}, 0.01, 0.3, 0.3, 0.01, 1.0, 33
@@ -258,7 +257,7 @@ START_TEST(test_find_candidate)
     int cam;
     char img_format[] = "cam%d";
     char cal_format[] = "cal/cam%d.tif";
-    control_par *test_cpar, *cpar;
+    control_par *test_cpar;
     
     test_cpar = new_control_par(4);
     for (cam = 0; cam < 4; cam++) {
