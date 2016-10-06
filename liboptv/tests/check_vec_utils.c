@@ -182,6 +182,11 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_vec_add);
     suite_add_tcase (s, tc);
 
+    tc = tcase_create("Diff norm");
+    tcase_add_test(tc, test_diff_norm);
+    suite_add_tcase (s, tc);
+    
+    
     tc = tcase_create("Cross product");
     tcase_add_test(tc, test_cross);
     suite_add_tcase (s, tc);
@@ -193,7 +198,7 @@ int main(void) {
     int number_failed;
     Suite *s = fb_suite ();
     SRunner *sr = srunner_create (s);
-    srunner_run_all (sr, CK_ENV);
+    srunner_run_all (sr, CK_VERBOSE);
     number_failed = srunner_ntests_failed (sr);
     srunner_free (sr);
     return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
