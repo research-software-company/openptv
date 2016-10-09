@@ -400,8 +400,7 @@ double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
     volume_par *vpar - struct holding the observed volume size.
     control_par *cpar - struct holding general control parameters such as 
         image size.
-    Calibration *cal - current single-camera positioning and other camera-
-        specific data.
+    Calibration *cal - pointer to all cameras calibraton parameters.
 */  
 void volumedimension (double *xmax, double *xmin, 
     double *ymax, double *ymin,

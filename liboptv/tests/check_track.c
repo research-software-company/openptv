@@ -19,13 +19,13 @@
 
 /* Tests of correspondence components and full process using dummy data */
 
-void read_all_calibration(Calibration *calib[4], control_par *cpar) {
+void read_all_calibration(Calibration *calib[4], int num_cams) {
     char ori_tmpl[] = "testing_fodder/cal/sym_cam%d.tif.ori";
     char added_name[] = "testing_fodder/cal/cam1.tif.addpar";
     char ori_name[40];
     int cam;
 
-    for (cam = 0; cam < cpar->num_cams; cam++) {
+    for (cam = 0; cam < num_cams; cam++) {
         sprintf(ori_name, ori_tmpl, cam + 1);
         calib[cam] = read_calibration(ori_name, added_name, NULL);
     }
@@ -288,10 +288,6 @@ START_TEST(test_searchquader)
     Calibration *calib[4];
     control_par *cpar;
 
-    Calibration cal;
-
-    cal = test_cal();
-
     fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
 
     /* see check_correspondences for explanations */
@@ -304,7 +300,7 @@ START_TEST(test_searchquader)
         {0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1.}
     };
 
-    read_all_calibration(calib, cpar);
+    read_all_calibration(calib, cpar->num_cams);
 
     searchquader(point, xr, xl, yd, yu, tpar, cpar, calib);
 
@@ -347,13 +343,23 @@ START_TEST(test_sortwhatfound)
     ck_assert_msg( dest[1].freq == 0 ,
                   "Was expecting dest[1].freq == 0 but found %d \n", dest[1].freq);
 
-    
-
-
-    
 }
 END_TEST
 
+START_TEST(test_trackcorr_c_loop)
+{
+    Calibration *calib[4];
+    control_par *cpar;
+    tracking_run *tr;
+    
+    fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
+    
+    read_all_calibration(calib, cpar->num_cams);
+
+    tr = trackcorr_c_init((Calibration *)calib);
+    //void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibration **cal)
+}
+END_TEST
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("ttools");
@@ -393,6 +399,11 @@ Suite* fb_suite(void) {
     tc = tcase_create ("Sortwhatfound");
     tcase_add_test(tc, test_sortwhatfound);
     suite_add_tcase (s, tc);
+    
+    tc = tcase_create ("Trackcorr_c_loop");
+    tcase_add_test(tc, test_trackcorr_c_loop);
+    suite_add_tcase (s, tc);
+
 
     return s;
 }
