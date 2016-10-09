@@ -323,9 +323,9 @@ END_TEST
 
 START_TEST(test_sortwhatfound)
 {
-    foundpix src[] = {  {1,1,{1,0}},
-                        {2,5,{1,1}}
-                        };
+    foundpix src[] = {  {1,0,{1,0}},
+                        {2,0,{1,1}}
+                     };
     foundpix *dest;
     int num_cams = 2;
     
@@ -335,35 +335,20 @@ START_TEST(test_sortwhatfound)
     copy_foundpix_array(dest, src, 2, 2);
 
     
-   int counter;
-    
-    
-    printf("Unsorted foundpix array:\n");
-    for (int i=0; i<num_cams * MAX_CANDS;i++){
-        printf("%d: %d %d, cams:\t",i, dest[i].ftnr,dest[i].freq);
-        for (int j=0;j<num_cams;j++){
-            printf("%d\t",dest[i].whichcam[j]);
-        }
-        printf("\n");
-    }
-    
+    int counter;
+
     /* test simple sort of a small foundpix array */
     sortwhatfound(dest, &counter, num_cams);
     
-    printf("After sortwhatfound, counter: %d\n", counter);
-    printf("src:\n");
-    for (int i=0; i<num_cams * MAX_CANDS;i++){
-        printf("%d: %d %d, cams:\t",i, dest[i].ftnr,dest[i].freq);
-        for (int j=0;j<num_cams;j++){
-            printf("%d\t",dest[i].whichcam[j]);
-        }
-        printf("\n");
-    }
-
+    ck_assert_msg( dest[0].ftnr == 2 ,
+                  "Was expecting dest[0].ftnr == 2 but found %d \n", dest[0].ftnr);
+    ck_assert_msg( dest[0].freq == 2 ,
+                  "Was expecting dest[0].freq == 2 but found %d \n", dest[0].freq);
+    ck_assert_msg( dest[1].freq == 0 ,
+                  "Was expecting dest[1].freq == 0 but found %d \n", dest[1].freq);
 
     
-//    ck_assert_msg( src[0].ftnr == 2 ,
-//                  "Was expecting src[0].ftnr == 2 but found %d \n", src[0].ftnr);
+
 
     
 }

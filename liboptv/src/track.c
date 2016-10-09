@@ -421,11 +421,16 @@ void sortwhatfound (foundpix item[], int *counter, int num_cams)
                 {
                     item[i].whichcam[j]=1;
                 }
+            
+        
+    
     
     /* how often was ftnr found */
     for (i=0; i<num_cams*MAX_CANDS; i++)
         for (j=0; j < num_cams; j++)
-            if (item[i].whichcam[j] == 1 && item[i].ftnr !=-1) item[i].freq++;
+            if (item[i].whichcam[j] == 1 && item[i].ftnr !=-1){
+                item[i].freq++;
+            }
     
     /* sort freq */
     for (i=1; i<num_cams*MAX_CANDS; ++i)  for (j=num_cams*MAX_CANDS-1; j>=i; --j)
