@@ -1249,59 +1249,66 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
   }
 }
 
+/* sortwhatfound sourts the list of candidates in foundpix array
+ * Arguments:
+ * foundpix array, item[16] 16 candidates 
+ * integer * counter - pointer to the list of the candidates
+ * integer num_cams - number of cameras in the experiment (typically 1-4)
+ * Returns the sorted array item[16] and the interger of
+ */
 
 
 void sortwhatfound (foundpix item[16], int *counter, int num_cams)
 {
-  int i,j,m, different;
-  foundpix temp;
-
-  different=0;
-
-  /* where what was found */
-  for (i=0; i<16; i++)
-    for (j=0; j<4; j++)
-      for (m=0; m<4; m++)
-	if(item[i].ftnr == item[4*j+m].ftnr)
-	  {
-	    item[i].whichcam[j]=1;
-	  }
-
-  /* how often was ftnr found */
-  for (i=0; i<16; i++)
-    for (j=0; j < num_cams; j++)
-      if (item[i].whichcam[j] == 1 && item[i].ftnr !=-1) item[i].freq++;
-
-  /* sort freq */
-  for (i=1; i<16; ++i)  for (j=16-1; j>=i; --j)
+    int i,j,m, different;
+    foundpix temp;
+    
+    different=0;
+    
+    /* where what was found */
+    for (i=0; i<16; i++)
+        for (j=0; j<4; j++)
+            for (m=0; m<4; m++)
+                if(item[i].ftnr == item[4*j+m].ftnr)
+                {
+                    item[i].whichcam[j]=1;
+                }
+    
+    /* how often was ftnr found */
+    for (i=0; i<16; i++)
+        for (j=0; j < num_cams; j++)
+            if (item[i].whichcam[j] == 1 && item[i].ftnr !=-1) item[i].freq++;
+    
+    /* sort freq */
+    for (i=1; i<16; ++i)  for (j=16-1; j>=i; --j)
     {
-      if ( item[j-1].freq < item[j].freq )
-	{
-	  temp = *(item+j-1); *(item+j-1) = *(item+j); *(item+j) = temp;
-	}
+        if ( item[j-1].freq < item[j].freq )
+        {
+            temp = *(item+j-1); *(item+j-1) = *(item+j); *(item+j) = temp;
+        }
     }
-
-  for (i=0; i<16; i++)
-    for (j=i+1; j<16; j++)
-      {
-	if (item[i].ftnr == item[j].ftnr || item[j].freq <2)
-	  {
-	    item[j].freq=0;
-	    item[j].ftnr=-1;
-	  }
-      }
-
-  /* sort freq */
-  for (i=1; i<16; ++i)  for (j=16-1; j>=i; --j)
+    
+    for (i=0; i<16; i++)
+        for (j=i+1; j<16; j++)
+        {
+            if (item[i].ftnr == item[j].ftnr || item[j].freq <2)
+            {
+                item[j].freq=0;
+                item[j].ftnr=-1;
+            }
+        }
+    
+    /* sort freq */
+    for (i=1; i<16; ++i)  for (j=16-1; j>=i; --j)
     {
-      if ( item[j-1].freq < item[j].freq )
-	{
-	  temp = *(item+j-1); *(item+j-1) = *(item+j); *(item+j) = temp;
-	}
+        if ( item[j-1].freq < item[j].freq )
+        {
+            temp = *(item+j-1); *(item+j-1) = *(item+j); *(item+j) = temp;
+        }
     }
-  for (i=0; i<16; ++i) if(item[i].freq != 0) different++;
-  *counter=different;
-
+    for (i=0; i<16; ++i) if(item[i].freq != 0) different++;
+    *counter=different;
+    
 }
 
 /* sorts a float array a and an integer array b both of length n

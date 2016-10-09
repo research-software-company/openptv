@@ -99,7 +99,7 @@ START_TEST(test_pos3d_in_bounds)
     vec3d outside = {2.0, -0.8, 2.1};
 
     track_par bounds[] = {
-        0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1.
+        {0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1.}
     };
 
     int result;
@@ -287,7 +287,6 @@ START_TEST(test_searchquader)
     double xr[4], xl[4], yd[4], yu[4];
     Calibration *calib[4];
     control_par *cpar;
-    int cam, matched;
 
     Calibration cal;
 
@@ -302,7 +301,7 @@ START_TEST(test_searchquader)
     printf (" number of cameras in searchquader test: %d \n",cpar->num_cams);
 
     track_par tpar[] = {
-        0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1.
+        {0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1.}
     };
 
     read_all_calibration(calib, cpar);
@@ -322,7 +321,42 @@ START_TEST(test_searchquader)
 END_TEST
 
 
-
+START_TEST(test_sortwhatfound)
+{
+    foundpix src[] = {  {1,1,{1,0}},
+                        {2,5,{1,1}}
+    };
+    foundpix *dest;
+    int arr_len = 2;
+    int num_cams = 2;
+    int counter;
+    
+    dest = (foundpix *) calloc (arr_len, sizeof (foundpix));
+    
+    reset_foundpix_array(dest, arr_len, num_cams);
+    ck_assert_msg( dest[1].ftnr == -1 ,
+                  "Was expecting dest[1].ftnr == -1 but found %d \n", dest[1].ftnr);
+    ck_assert_msg( dest[0].freq == 0 ,
+                  "Was expecting dest.freq == 0 but found %d \n", dest[0].freq);
+    ck_assert_msg( dest[1].whichcam[0] == 0 ,
+                  "Was expecting 0 but found %d \n", dest[1].whichcam[0]);
+    
+    
+    
+    sortwhatfound(src, &counter, num_cams);
+    
+    ck_assert_msg( src[1].ftnr == 2 ,
+                  "Was expecting dest[1].ftnr == 2 but found %d \n", dest[1].ftnr);
+    
+    printf(" destination foundpix array\n");
+    for (int i=0; i<arr_len; i++){
+        printf("ftnr = %d freq=%d whichcam = %d %d\n", dest[i].ftnr, dest[i].freq, \
+               dest[i].whichcam[0],dest[i].whichcam[1]);
+    }
+    
+    
+}
+END_TEST
 
 
 Suite* fb_suite(void) {
@@ -358,6 +392,10 @@ Suite* fb_suite(void) {
 
     tc = tcase_create ("searchquader");
     tcase_add_test(tc, test_searchquader);
+    suite_add_tcase (s, tc);
+    
+    tc = tcase_create ("Sortwhatfound");
+    tcase_add_test(tc, test_sortwhatfound);
     suite_add_tcase (s, tc);
 
     return s;
