@@ -245,6 +245,346 @@ void angle_acc(vec3d start, vec3d pred, vec3d cand, double *angle, double *acc)
     }
 }
 
+
+/* candsearch_in_pix searches of four (4) near candidates in target list
+ * Arguments:
+ * target next[] array of targets (pointer, x,y, n, nx,ny, sumg, track ID),
+ * has to be y sorted ?!! this is not tested in the function.
+ * int num_targets - target array length.
+ * double cent_x, cent_y - image coordinates of the position of a particle [pixel]
+ * double dl, dr, du, dd - respectively the left, right, up, down distance to
+ *   the search area borders from its center, [pixel]
+ * int p[] array of integer pointers
+ * control_par *cpar array of parameters (cpar->imx,imy are needed)
+ * Returns the integer counter of the number of candidates, between 0 - 3
+ */
+
+int candsearch_in_pix (target next[], int num_targets, double cent_x, double cent_y,
+                       double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
+    
+    int  	  j, j0, dj, pnr = -999;
+    int  counter=0, p1, p2, p3, p4;
+    double  d, dmin=1e20, xmin, xmax, ymin, ymax;
+    double d1, d2, d3, d4;
+    
+    xmin = cent_x - dl;  xmax = cent_x + dr;  ymin = cent_y - du;  ymax = cent_y + dd;
+    
+    if(xmin<0.0) xmin=0.0;
+    if(xmax > cpar->imx)
+        xmax = cpar->imx;
+    if(ymin<0.0) ymin=0.0;
+    if(ymax > cpar->imy)
+        ymax = cpar->imy;
+    
+    p1 = p2 = p3 = p4 = -999;
+    d1 = d2 = d3 = d4 = dmin;
+    
+    if (cent_x >= 0.0 && cent_x <= cpar->imx ) {
+        if (cent_y >= 0.0 && cent_y <= cpar->imy ) {
+            
+            /* binarized search for start point of candidate search */
+            for (j0=num_targets/2, dj=num_targets/4; dj>1; dj/=2)
+            {
+                if (next[j0].y < ymin) j0 += dj;
+                else j0 -= dj;
+            }
+            
+            j0 -= 12;  if (j0 < 0)  j0 = 0;	       	/* due to trunc */
+            for (j=j0; j<num_targets; j++) {	       	        /* candidate search */
+                if (next[j].tnr != -1 ) {
+                    if (next[j].y > ymax )  break;	    /* finish search */
+                    
+                    if (next[j].x > xmin && next[j].x < xmax \
+                        && next[j].y > ymin && next[j].y < ymax){
+                        d = sqrt ((cent_x-next[j].x)*(cent_x-next[j].x) + \
+                                  (cent_y-next[j].y)*(cent_y-next[j].y));
+                        
+                        if (d < dmin) {
+                            dmin = d; pnr = j;
+                        }
+                        
+                        if ( d < d1 ) {
+                            p4=p3; p3=p2; p2=p1; p1=j;
+                            d4=d3; d3=d2; d2=d1; d1=d;
+                        }
+                        else if ( d1 < d &&  d < d2 ){
+                            p4=p3; p3=p2; p2=j;
+                            d4=d3; d3=d2; d2=d;
+                        }
+                        else if ( d2 < d && d < d3 ){
+                            p4=p3; p3=j;
+                            d4=d3; d3=d;
+                        }
+                        else if ( d3 < d && d < d4 ){
+                            p4=j;
+                            d4=d;
+                        }
+                    }
+                }
+            }
+            
+            p[0]=p1;
+            p[1]=p2;
+            p[2]=p3;
+            p[3]=p4;
+            
+            for (j=0; j<4; j++) if ( p[j] != -999 ) { counter++; }
+        } /* if x is within the image boundaries */
+    }   /* if y is within the image boundaries */
+    return (counter);
+}
+
+
+
+
+/* searchquader defines the search region, using tracking parameters
+ * dvxmin, ... dvzmax (but within the image boundaries), per camera
+ * Arguments:
+ * vec3d point position in physical space
+ * track_par *tpar set of tracking parameters
+ * control_par *cpar set of control parameters for the num_cams
+ * Calibration *cal calibration per camera to find a projection of a 3D vertex
+ * of a cuboid in the image space.
+ * Returns the arrays xr,xl,yd,yu (right, left, down, up) per camera
+ * for the search of a quader (cuboid).
+ */
+
+void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
+                  double yu[4], track_par *tpar, control_par *cpar, Calibration **cal){
+    int i, pt, dim;
+    vec3d mins, maxes;
+    double x, y, xz, yz;
+    vec3d quader[8];
+    
+    
+    
+    vec_set(mins, tpar->dvxmin, tpar->dvymin, tpar->dvzmin);
+    vec_set(maxes, tpar->dvxmax, tpar->dvymax, tpar->dvzmax);
+    /* 3D positions of search volume - eight corners of a box */
+    for (pt = 0; pt < 8; pt++) {
+        vec_copy(quader[pt], point);
+        for (dim = 0; dim < 3; dim++) {
+            if (pt & 1<<dim) {
+                quader[pt][dim] += maxes[dim];
+            } else {
+                quader[pt][dim] += mins[dim];
+            }
+            // printf("quader[%d][%d]=%f \n", pt,dim,quader[pt][dim]);
+        }
+    }
+    
+    
+    
+    /* calculation of search area in each camera */
+    for (i = 0; i < cpar->num_cams; i++) {
+        xr[i]=0;
+        xl[i] = cpar->imx;
+        yd[i]=0;
+        yu[i] = cpar->imy;
+        
+        img_coord (point, cal[i], cpar->mm, &xz, &yz);
+        metric_to_pixel (&xz, &yz, xz, yz, cpar);
+        
+        for (pt = 0; pt < 8; pt++) {
+            img_coord (quader[pt], cal[i], cpar->mm, &x, &y);
+            metric_to_pixel (&x, &y, x, y, cpar);
+            
+            if (x <xl[i] ) xl[i]=x;
+            if (y <yu[i] ) yu[i]=y;
+            if (x >xr[i] ) xr[i]=x;
+            if (y >yd[i] ) yd[i]=y;
+        }
+        if (xl[i] < 0 ) xl[i]=0;
+        if (yu[i] < 0 ) yu[i]=0;
+        if (xr[i] > cpar->imx)
+            xr[i] = cpar->imx;
+        if (yd[i] > cpar->imy)
+            yd[i] = cpar->imy;
+        
+        
+        
+        xr[i]=xr[i]-xz;
+        xl[i]=xz-xl[i];
+        yd[i]=yd[i]-yz;
+        yu[i]=yz-yu[i];
+    }
+}
+
+/* sortwhatfound sourts the list of candidates in foundpix array
+ * Arguments:
+ * foundpix array, item[16] 16 candidates
+ * integer * counter - pointer to the list of the candidates
+ * integer num_cams - number of cameras in the experiment (typically 1-4)
+ * Returns the sorted array item[16] and the interger of
+ */
+
+
+void sortwhatfound (foundpix item[16], int *counter, int num_cams)
+{
+    int i,j,m, different;
+    foundpix temp;
+    
+    different=0;
+    
+    /* where what was found */
+    for (i=0; i<16; i++)
+        for (j=0; j<4; j++)
+            for (m=0; m<4; m++)
+                if(item[i].ftnr == item[4*j+m].ftnr)
+                {
+                    item[i].whichcam[j]=1;
+                }
+    
+    /* how often was ftnr found */
+    for (i=0; i<16; i++)
+        for (j=0; j < num_cams; j++)
+            if (item[i].whichcam[j] == 1 && item[i].ftnr !=-1) item[i].freq++;
+    
+    /* sort freq */
+    for (i=1; i<16; ++i)  for (j=16-1; j>=i; --j)
+    {
+        if ( item[j-1].freq < item[j].freq )
+        {
+            temp = *(item+j-1); *(item+j-1) = *(item+j); *(item+j) = temp;
+        }
+    }
+    
+    for (i=0; i<16; i++)
+        for (j=i+1; j<16; j++)
+        {
+            if (item[i].ftnr == item[j].ftnr || item[j].freq <2)
+            {
+                item[j].freq=0;
+                item[j].ftnr=-1;
+            }
+        }
+    
+    /* sort freq */
+    for (i=1; i<16; ++i)  for (j=16-1; j>=i; --j)
+    {
+        if ( item[j-1].freq < item[j].freq )
+        {
+            temp = *(item+j-1); *(item+j-1) = *(item+j); *(item+j) = temp;
+        }
+    }
+    for (i=0; i<16; ++i) if(item[i].freq != 0) different++;
+    *counter=different;
+    
+}
+
+/* sorts a float array a and an integer array b both of length n
+ * Arguments:
+ *  float array a (returned sorted in the ascending order)
+ *  integer array b (returned sorted according to float array a)
+ *  int n (length of a)
+ */
+void sort(int n, float a[], int b[]){
+    int flag = 0, i, itemp;
+    float ftemp;
+    
+    do {
+        flag = 0;
+        for(i=0; i<(n-1); i++)
+            if(a[i] > a[i+1]) {
+                ftemp =  a[i];
+                itemp =  b[i];
+                a[i] = a[i+1];
+                b[i] = b[i+1];
+                a[i+1] = ftemp;
+                b[i+1] = itemp;
+                flag = 1;
+            }
+    }while(flag);
+}
+
+void det_lsq_3d (Calibration *cals, mm_np mm, vec2d v[], double *Xp, double *Yp, double *Zp, int num_cams) {
+    int     i,count_inner=0,n,m, flag[4] = {0., 0., 0., 0.};
+    double  d_inner=0.,x,y;
+    double X[4][3], a[4][3];
+    double dist,X_pos[6],Y_pos[6],Z_pos[6],XX,YY,ZZ,si0,sqX,sqY,sqZ;
+    double rmsX, rmsY, rmsZ, mean_sigma0;
+    vec3d res;
+    int cam;
+    
+    rmsX = rmsY = rmsZ = mean_sigma0 = 0.0;
+    
+    
+    
+    for (cam = 0; cam < num_cams; cam++){
+        if(v[cam][0] > -999){
+            flag[cam]=1;
+            dist_to_flat(v[cam][0], v[cam][1], &(cals[cam]),
+                         &x, &y, 100000);
+            ray_tracing(x,y, &(cals[cam]), mm, X[cam], a[cam]);
+            
+        }
+    }
+    
+    
+    count_inner=0;
+    for (n = 0; n < num_cams; n++){
+        for(m = n+1; m < num_cams; m++){
+            if(flag[n]==1 && flag[m]==1){
+                dist = skew_midpoint(X[n], a[n], X[m], a[m], res);
+                d_inner += dist;
+                X_pos[count_inner]=res[0];
+                Y_pos[count_inner]=res[1];
+                Z_pos[count_inner]=res[2];
+                count_inner++;
+            }
+        }
+    }
+    d_inner/=(double)count_inner;
+    XX=0.;YY=0.;ZZ=0.;
+    for(i=0;i<count_inner;i++){
+        XX+=X_pos[i];
+        YY+=Y_pos[i];
+        ZZ+=Z_pos[i];
+    }
+    XX/=(double)count_inner;YY/=(double)count_inner;ZZ/=(double)count_inner;
+    //end of new det_lsq
+    *Xp=XX;
+    *Yp=YY;
+    *Zp=ZZ;
+    
+    //statistics
+    si0=0.;sqX=0.;sqY=0.;sqZ=0.;
+    for(i=0;i<count_inner;i++){
+        si0+=pow(X_pos[i]-XX,2.)+pow(Y_pos[i]-YY,2.)+pow(Z_pos[i]-ZZ,2.);
+        sqX+=pow(X_pos[i]-XX,2.);
+        sqY+=pow(Y_pos[i]-YY,2.);
+        sqZ+=pow(Z_pos[i]-ZZ,2.);
+    }
+    si0/=(double)count_inner;sqX/=(double)count_inner;sqY/=(double)count_inner;sqZ/=(double)count_inner;
+    
+    mean_sigma0 += pow(si0,0.5);
+    rmsX += pow(sqX,0.5);
+    rmsY += pow(sqY,0.5);
+    rmsZ += pow(sqZ,0.5);
+    //end of statistics
+    
+}
+
+
+/* trackcorr_c_loop is the main tracking subroutine that scans the 3D particle position 
+ * data from rt_is.* files and the 2D particle positions in image space in _targets and
+ * constructs trajectories (links) of the particles in 3D in time. 
+ * the basic concepts of the tracking procedure are from the following publication by 
+ * Jochen Willneff: "A New Spatio-Temporal Matching Algorithm For 3D-Particle Tracking Velocimetry"
+ * https://www.mendeley.com/catalog/new-spatiotemporal-matching-algorithm-3dparticle-tracking-velocimetry/
+ * or http://e-collection.library.ethz.ch/view/eth:26978
+ * this method is an extension of the previously used tracking method described in details in
+ * Malik et al. 1993: "Particle tracking velocimetry in three-dimensional flows: Particle tracking"
+ * http://mnd.ly/2dCt3um
+ * 
+ * Arguments:
+ * tracking_run *run_info pointer to the (sliding) frame dataset of 4 frames of particle positions
+ * and all the needed parameters underneath: control, volume, etc.
+ * integer step number or the frame number from the sequence
+ * integer display - shall be probably removed, was used as a flag for intermediate data returnt for display
+ * Calibration **cal is a set of calibration parameters of the involved cameras (from 1 to run_info->cpar->num_cams)
+ * Returns: function does not return an argument, the tracks are updated within the run_info dataset
+ */
 void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibration **cal)
 {
    /* sequence loop */
@@ -1085,321 +1425,4 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
 }
 
 
-/* candsearch_in_pix searches of four (4) near candidates in target list
- * Arguments:
- * target next[] array of targets (pointer, x,y, n, nx,ny, sumg, track ID),
- * has to be y sorted ?!! this is not tested in the function.
- * int num_targets - target array length.
- * double cent_x, cent_y - image coordinates of the position of a particle [pixel]
- * double dl, dr, du, dd - respectively the left, right, up, down distance to
- *   the search area borders from its center, [pixel]
- * int p[] array of integer pointers
- * control_par *cpar array of parameters (cpar->imx,imy are needed)
- * Returns the integer counter of the number of candidates, between 0 - 3
-*/
 
-int candsearch_in_pix (target next[], int num_targets, double cent_x, double cent_y,
-double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
-
-  int  	  j, j0, dj, pnr = -999;
-  int  counter=0, p1, p2, p3, p4;
-  double  d, dmin=1e20, xmin, xmax, ymin, ymax;
-  double d1, d2, d3, d4;
-
-  xmin = cent_x - dl;  xmax = cent_x + dr;  ymin = cent_y - du;  ymax = cent_y + dd;
-
-  if(xmin<0.0) xmin=0.0;
-  if(xmax > cpar->imx)
-        xmax = cpar->imx;
-  if(ymin<0.0) ymin=0.0;
-  if(ymax > cpar->imy)
-    ymax = cpar->imy;
-
-  p1 = p2 = p3 = p4 = -999;
-  d1 = d2 = d3 = d4 = dmin;
-
-  if (cent_x >= 0.0 && cent_x <= cpar->imx ) {
-        if (cent_y >= 0.0 && cent_y <= cpar->imy ) {
-
-      /* binarized search for start point of candidate search */
-      for (j0=num_targets/2, dj=num_targets/4; dj>1; dj/=2)
-        {
-          if (next[j0].y < ymin) j0 += dj;
-          else j0 -= dj;
-        }
-
-      j0 -= 12;  if (j0 < 0)  j0 = 0;	       	/* due to trunc */
-      for (j=j0; j<num_targets; j++) {	       	        /* candidate search */
-        if (next[j].tnr != -1 ) {
-            if (next[j].y > ymax )  break;	    /* finish search */
-
-            if (next[j].x > xmin && next[j].x < xmax \
-            && next[j].y > ymin && next[j].y < ymax){
-                d = sqrt ((cent_x-next[j].x)*(cent_x-next[j].x) + \
-                          (cent_y-next[j].y)*(cent_y-next[j].y));
-
-                if (d < dmin) {
-                   dmin = d; pnr = j;
-                }
-
-                if ( d < d1 ) {
-                   p4=p3; p3=p2; p2=p1; p1=j;
-                   d4=d3; d3=d2; d2=d1; d1=d;
-                  }
-                else if ( d1 < d &&  d < d2 ){
-                   p4=p3; p3=p2; p2=j;
-                   d4=d3; d3=d2; d2=d;
-                }
-                else if ( d2 < d && d < d3 ){
-                   p4=p3; p3=j;
-                   d4=d3; d3=d;
-                }
-                else if ( d3 < d && d < d4 ){
-                   p4=j;
-                   d4=d;
-                }
-              }
-        }
-      }
-
-      p[0]=p1;
-      p[1]=p2;
-      p[2]=p3;
-      p[3]=p4;
-
-      for (j=0; j<4; j++) if ( p[j] != -999 ) { counter++; }
-      } /* if x is within the image boundaries */
-    }   /* if y is within the image boundaries */
-  return (counter);
-}
-
-
-
-
-/* searchquader defines the search region, using tracking parameters
- * dvxmin, ... dvzmax (but within the image boundaries), per camera
- * Arguments:
- * vec3d point position in physical space
- * track_par *tpar set of tracking parameters
- * control_par *cpar set of control parameters for the num_cams
- * Calibration *cal calibration per camera to find a projection of a 3D vertex
- * of a cuboid in the image space.
- * Returns the arrays xr,xl,yd,yu (right, left, down, up) per camera
- * for the search of a quader (cuboid).
-*/
-
-void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
-    double yu[4], track_par *tpar, control_par *cpar, Calibration **cal){
-  int i, pt, dim;
-  vec3d mins, maxes;
-  double x, y, xz, yz;
-  vec3d quader[8];
-
-
-
-  vec_set(mins, tpar->dvxmin, tpar->dvymin, tpar->dvzmin);
-  vec_set(maxes, tpar->dvxmax, tpar->dvymax, tpar->dvzmax);
-  /* 3D positions of search volume - eight corners of a box */
-  for (pt = 0; pt < 8; pt++) {
-    vec_copy(quader[pt], point);
-    for (dim = 0; dim < 3; dim++) {
-        if (pt & 1<<dim) {
-            quader[pt][dim] += maxes[dim];
-        } else {
-            quader[pt][dim] += mins[dim];
-        }
-        // printf("quader[%d][%d]=%f \n", pt,dim,quader[pt][dim]);
-    }
-  }
-
-
-
-  /* calculation of search area in each camera */
-  for (i = 0; i < cpar->num_cams; i++) {
-      xr[i]=0;
-      xl[i] = cpar->imx;
-      yd[i]=0;
-      yu[i] = cpar->imy;
-
-      img_coord (point, cal[i], cpar->mm, &xz, &yz);
-      metric_to_pixel (&xz, &yz, xz, yz, cpar);
-
-      for (pt = 0; pt < 8; pt++) {
-        img_coord (quader[pt], cal[i], cpar->mm, &x, &y);
-	    metric_to_pixel (&x, &y, x, y, cpar);
-
-	    if (x <xl[i] ) xl[i]=x;
-	    if (y <yu[i] ) yu[i]=y;
-	    if (x >xr[i] ) xr[i]=x;
-	    if (y >yd[i] ) yd[i]=y;
-	  }
-      if (xl[i] < 0 ) xl[i]=0;
-      if (yu[i] < 0 ) yu[i]=0;
-      if (xr[i] > cpar->imx)
-        xr[i] = cpar->imx;
-      if (yd[i] > cpar->imy)
-        yd[i] = cpar->imy;
-
-
-
-      xr[i]=xr[i]-xz;
-      xl[i]=xz-xl[i];
-      yd[i]=yd[i]-yz;
-      yu[i]=yz-yu[i];
-  }
-}
-
-/* sortwhatfound sourts the list of candidates in foundpix array
- * Arguments:
- * foundpix array, item[16] 16 candidates 
- * integer * counter - pointer to the list of the candidates
- * integer num_cams - number of cameras in the experiment (typically 1-4)
- * Returns the sorted array item[16] and the interger of
- */
-
-
-void sortwhatfound (foundpix item[16], int *counter, int num_cams)
-{
-    int i,j,m, different;
-    foundpix temp;
-    
-    different=0;
-    
-    /* where what was found */
-    for (i=0; i<16; i++)
-        for (j=0; j<4; j++)
-            for (m=0; m<4; m++)
-                if(item[i].ftnr == item[4*j+m].ftnr)
-                {
-                    item[i].whichcam[j]=1;
-                }
-    
-    /* how often was ftnr found */
-    for (i=0; i<16; i++)
-        for (j=0; j < num_cams; j++)
-            if (item[i].whichcam[j] == 1 && item[i].ftnr !=-1) item[i].freq++;
-    
-    /* sort freq */
-    for (i=1; i<16; ++i)  for (j=16-1; j>=i; --j)
-    {
-        if ( item[j-1].freq < item[j].freq )
-        {
-            temp = *(item+j-1); *(item+j-1) = *(item+j); *(item+j) = temp;
-        }
-    }
-    
-    for (i=0; i<16; i++)
-        for (j=i+1; j<16; j++)
-        {
-            if (item[i].ftnr == item[j].ftnr || item[j].freq <2)
-            {
-                item[j].freq=0;
-                item[j].ftnr=-1;
-            }
-        }
-    
-    /* sort freq */
-    for (i=1; i<16; ++i)  for (j=16-1; j>=i; --j)
-    {
-        if ( item[j-1].freq < item[j].freq )
-        {
-            temp = *(item+j-1); *(item+j-1) = *(item+j); *(item+j) = temp;
-        }
-    }
-    for (i=0; i<16; ++i) if(item[i].freq != 0) different++;
-    *counter=different;
-    
-}
-
-/* sorts a float array a and an integer array b both of length n
- * Arguments:
- *  float array a (returned sorted in the ascending order)
- *  integer array b (returned sorted according to float array a)
- *  int n (length of a)
-*/
-void sort(int n, float a[], int b[]){
-  int flag = 0, i, itemp;
-  float ftemp;
-
-  do {
-    flag = 0;
-    for(i=0; i<(n-1); i++)
-      if(a[i] > a[i+1]) {
-	ftemp =  a[i];
-	itemp =  b[i];
-	a[i] = a[i+1];
-	b[i] = b[i+1];
-	a[i+1] = ftemp;
-	b[i+1] = itemp;
-        flag = 1;
-      }
-  }while(flag);
-}
-
-void det_lsq_3d (Calibration *cals, mm_np mm, vec2d v[], double *Xp, double *Yp, double *Zp, int num_cams) {
-	    int     i,count_inner=0,n,m, flag[4] = {0., 0., 0., 0.};
-	    double  d_inner=0.,x,y;
-	    double X[4][3], a[4][3];
-        double dist,X_pos[6],Y_pos[6],Z_pos[6],XX,YY,ZZ,si0,sqX,sqY,sqZ;
-        double rmsX, rmsY, rmsZ, mean_sigma0;
-        vec3d res;
-        int cam;
-    
-    rmsX = rmsY = rmsZ = mean_sigma0 = 0.0;
-
-
-
-	    for (cam = 0; cam < num_cams; cam++){
-          if(v[cam][0] > -999){
-			 flag[cam]=1;
-             dist_to_flat(v[cam][0], v[cam][1], &(cals[cam]),
-                 &x, &y, 100000);
-		     ray_tracing(x,y, &(cals[cam]), mm, X[cam], a[cam]);
-
-		  }
-		}
-
-
-		count_inner=0;
-		for (n = 0; n < num_cams; n++){
-			for(m = n+1; m < num_cams; m++){
-				if(flag[n]==1 && flag[m]==1){
-                    dist = skew_midpoint(X[n], a[n], X[m], a[m], res);
-                    d_inner += dist;
-					X_pos[count_inner]=res[0];
-                    Y_pos[count_inner]=res[1];
-                    Z_pos[count_inner]=res[2];
-					count_inner++;
-				}
-			}
-		}
-        d_inner/=(double)count_inner;
-		XX=0.;YY=0.;ZZ=0.;
-		for(i=0;i<count_inner;i++){
-           XX+=X_pos[i];
-		   YY+=Y_pos[i];
-		   ZZ+=Z_pos[i];
-		}
-		XX/=(double)count_inner;YY/=(double)count_inner;ZZ/=(double)count_inner;
-		//end of new det_lsq
-		*Xp=XX;
-		*Yp=YY;
-		*Zp=ZZ;
-
-		//statistics
-		si0=0.;sqX=0.;sqY=0.;sqZ=0.;
-		for(i=0;i<count_inner;i++){
-           si0+=pow(X_pos[i]-XX,2.)+pow(Y_pos[i]-YY,2.)+pow(Z_pos[i]-ZZ,2.);
-           sqX+=pow(X_pos[i]-XX,2.);
-		   sqY+=pow(Y_pos[i]-YY,2.);
-		   sqZ+=pow(Z_pos[i]-ZZ,2.);
-		}
-		si0/=(double)count_inner;sqX/=(double)count_inner;sqY/=(double)count_inner;sqZ/=(double)count_inner;
-
-		mean_sigma0 += pow(si0,0.5);
-        rmsX += pow(sqX,0.5);
-        rmsY += pow(sqY,0.5);
-        rmsZ += pow(sqZ,0.5);
-		//end of statistics
-
-}
