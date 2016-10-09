@@ -325,35 +325,46 @@ START_TEST(test_sortwhatfound)
 {
     foundpix src[] = {  {1,1,{1,0}},
                         {2,5,{1,1}}
-    };
+                        };
     foundpix *dest;
-    int arr_len = 2;
     int num_cams = 2;
-    int counter;
     
-    dest = (foundpix *) calloc (arr_len, sizeof (foundpix));
+    /* sortwhatfound freaks out if array is not reset before */
+    dest = (foundpix *) calloc (num_cams*MAX_CANDS, sizeof (foundpix));
+    reset_foundpix_array(dest, num_cams*MAX_CANDS, num_cams);
+    copy_foundpix_array(dest, src, 2, 2);
+
     
-    reset_foundpix_array(dest, arr_len, num_cams);
-    ck_assert_msg( dest[1].ftnr == -1 ,
-                  "Was expecting dest[1].ftnr == -1 but found %d \n", dest[1].ftnr);
-    ck_assert_msg( dest[0].freq == 0 ,
-                  "Was expecting dest.freq == 0 but found %d \n", dest[0].freq);
-    ck_assert_msg( dest[1].whichcam[0] == 0 ,
-                  "Was expecting 0 but found %d \n", dest[1].whichcam[0]);
+   int counter;
     
     
-    
-    sortwhatfound(src, &counter, num_cams);
-    
-    ck_assert_msg( src[1].ftnr == 2 ,
-                  "Was expecting dest[1].ftnr == 2 but found %d \n", dest[1].ftnr);
-    
-    printf(" destination foundpix array\n");
-    for (int i=0; i<arr_len; i++){
-        printf("ftnr = %d freq=%d whichcam = %d %d\n", dest[i].ftnr, dest[i].freq, \
-               dest[i].whichcam[0],dest[i].whichcam[1]);
+    printf("Unsorted foundpix array:\n");
+    for (int i=0; i<num_cams * MAX_CANDS;i++){
+        printf("%d: %d %d, cams:\t",i, dest[i].ftnr,dest[i].freq);
+        for (int j=0;j<num_cams;j++){
+            printf("%d\t",dest[i].whichcam[j]);
+        }
+        printf("\n");
     }
     
+    /* test simple sort of a small foundpix array */
+    sortwhatfound(dest, &counter, num_cams);
+    
+    printf("After sortwhatfound, counter: %d\n", counter);
+    printf("src:\n");
+    for (int i=0; i<num_cams * MAX_CANDS;i++){
+        printf("%d: %d %d, cams:\t",i, dest[i].ftnr,dest[i].freq);
+        for (int j=0;j<num_cams;j++){
+            printf("%d\t",dest[i].whichcam[j]);
+        }
+        printf("\n");
+    }
+
+
+    
+//    ck_assert_msg( src[0].ftnr == 2 ,
+//                  "Was expecting src[0].ftnr == 2 but found %d \n", src[0].ftnr);
+
     
 }
 END_TEST
@@ -386,7 +397,7 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_sort);
     suite_add_tcase (s, tc);
 
-    tc = tcase_create ("copy_foundpix_array");
+    tc = tcase_create ("reset_copy_foundpix_array");
     tcase_add_test(tc, test_copy_foundpix_array);
     suite_add_tcase (s, tc);
 

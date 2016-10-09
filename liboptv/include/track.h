@@ -13,6 +13,20 @@
 #include "orientation.h"
 #include "calibration.h"
 
+/* The buffer space required for this algorithm:
+ 
+ Note that MAX_TARGETS is taken from the global M, but I want a separate
+ definition because the fb created here should be local, not used outside
+ this file.
+ 
+ MAX_CANDS is the max number of candidates sought in search volume for next
+ link.
+ */
+#define BUFSPACE 4
+#define MAX_TARGETS 20000
+#define MAX_CANDS 4
+
+
 
 typedef struct /* struct for what was found to corres */
 {
