@@ -121,7 +121,10 @@ int read_ori (Exterior Ex[], Interior I[], Glass G[], char *ori_file, \
   
   /* Additional: */
   fp = fopen(add_file, "r");
-  if ((fp == NULL) && add_fallback) fp = fopen (add_fallback, "r");
+    if ((fp == NULL) && add_fallback){
+        printf("error reading .addpar file: %s\n",add_file);
+        fp = fopen (add_fallback, "r");
+    }
   
   if (fp) {
     scan_res = fscanf (fp, "%lf %lf %lf %lf %lf %lf %lf",
@@ -129,9 +132,9 @@ int read_ori (Exterior Ex[], Interior I[], Glass G[], char *ori_file, \
         &(addp->scx), &(addp->she));
     fclose (fp);
   } else {
-    printf("no addpar fallback used\n"); // Waits for proper logging.
-    addp->k1 = addp->k2 = addp->k3 = addp->p1 = addp->p2 = addp->she = 0.0;
-    addp->scx=1.0;
+      printf("error reading .addpar file: %s and no fallback\n",add_file);
+      addp->k1 = addp->k2 = addp->k3 = addp->p1 = addp->p2 = addp->she = 0.0;
+      addp->scx=1.0;
   }
   
   return 1;
