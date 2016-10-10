@@ -139,8 +139,10 @@ void register_closest_neighbs(target *targets, int num_targets, int cam,
 {
     int cand, all_cands[MAX_CANDS];
 
-    candsearch_in_pix (targets, num_targets, cent_x, cent_y, dl, dr,
+    cand = candsearch_in_pix (targets, num_targets, cent_x, cent_y, dl, dr,
         du, dd, all_cands, cpar);
+    
+    printf("found %d targets \n",cand);
 
     for (cand = 0; cand < MAX_CANDS; cand++) {
         if(all_cands[cand] == -999) {
@@ -265,6 +267,9 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
 
     p1 = p2 = p3 = p4 = -999;
     d1 = d2 = d3 = d4 = dmin;
+    
+    printf("candsearch around %f %f \n",cent_x,cent_y);
+    // printf("targets in this frame %d \n",num_targets);
 
     if (cent_x >= 0.0 && cent_x <= cpar->imx ) {
         if (cent_y >= 0.0 && cent_y <= cpar->imy ) {
@@ -280,7 +285,6 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
             for (j=j0; j<num_targets; j++) {	    /* candidate search */
                 if (next[j].tnr != -1 ) {
                     if (next[j].y > ymax )  break;	/* finish search */
-
                     if (next[j].x > xmin && next[j].x < xmax \
                         && next[j].y > ymin && next[j].y < ymax){
                         d = sqrt ((cent_x-next[j].x)*(cent_x-next[j].x) + \
@@ -589,6 +593,10 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
     curr_targets = fb->buf[1]->targets;
     
     printf("present frame is buf[1] with %d particles \n",fb->buf[1]->num_parts);
+    printf(" ------------------------- \n");
+    printf("we temporarly use only the 1st particle\n");
+    /****************** don't forget to remove ******/
+    fb->buf[1]->num_parts = 4;
 
     p16 = (foundpix*) calloc(fb->num_cams*MAX_CANDS, sizeof(foundpix));
 
@@ -605,10 +613,8 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 	    /* 3D-position */
 	    vec_copy(X[1], curr_path_inf->x);
         
-        if (h<1){
         printf("Trying to link particle %d, located at: %f %f %f\n",h,X[1][0],X[1][1],X[1][2]);
         printf("previous %d, next %d\n",curr_path_inf->prev,curr_path_inf->next);
-        }
 
 	    /* use information from previous to locate new search position
 	       and to calculate values for search area */
@@ -623,25 +629,25 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 	    } else {
             vec_copy(X[2], X[1]);
 	        for (j=0; j < fb->num_cams; j++) {
+                printf("curr_corres->p[%d]=%d\n",j,curr_corres->p[j]);
 	            if (curr_corres->p[j] == -1) {
                     point_to_pixel (v1[j], X[2], cal[j], cpar);
 	            } else {
                     _ix = curr_corres->p[j];
                     v1[j][0] = curr_targets[j][_ix].x;
                     v1[j][1] = curr_targets[j][_ix].y;
+                    //printf("cam %d search center is [pixels] %f,%f\n",j,v1[j][0],v1[j][1]);
                 }
             }
-            if (h<1) printf("In cam %d search around %f,%f\n",j,v1[j][0],v1[j][1]);
+            
 	    }
 
 	    /* calculate search cuboid (quader) and reproject it to the image space */
 	    searchquader(X[2], xr, xl, yd, yu, tpar, cpar, cal);
         
-        if (h<1) {
-            printf("search region is:\n");
-            for (j = 0; j < fb->num_cams; j++) {
-                printf("cam %d %f %f %f %f\n",j,xr[j],xl[j],yd[j],yu[j]);
-            }
+        printf("search region around is [pixels]: right, left, down, up:\n");
+        for (j = 0; j < fb->num_cams; j++) {
+            printf("cam %d %f %f %f %f\n",j,xr[j],xl[j],yd[j],yu[j]);
         }
 
 	    /* search in pix for candidates in the next time step */
@@ -653,6 +659,9 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
 	    /* fill and sort candidate struct */
 	    sortwhatfound(p16, &counter1, fb->num_cams);
+        for (j=0;j<counter1;j++){
+            printf("p16[%d].ftnr = %d, freq = %d\n",j,p16[j].ftnr,p16[j].freq);
+        }
 	    w = (foundpix *) calloc (counter1, sizeof (foundpix));
 
 	    if (counter1 > 0) count2++;
@@ -660,6 +669,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 	    /*end of candidate struct */
 
 	    /* check for what was found */
+        printf("check for what was found\n");
 	    for (mm=0; mm<counter1;mm++) { /* counter1-loop */
 	        /* search for found corr of current the corr in next
 		    with predicted location */
@@ -710,6 +720,10 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
 	        /* fill and sort candidate struct */
 	        sortwhatfound(p16, &counter2, fb->num_cams);
+            for (j=0;j<counter2;j++){
+                printf("next step p16[%d].ftnr = %d, freq = %d\n",j,p16[j].ftnr,p16[j].freq);
+            }
+            
 	        wn = (foundpix *) calloc (counter2, sizeof (foundpix));
 	        if (counter2 > 0) count3++;
             copy_foundpix_array(wn, p16, counter2, fb->num_cams);
@@ -732,6 +746,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
                     acc=(acc0+acc1)/2; angle=(angle0+angle1)/2;
                     quali=wn[kk].freq+w[mm].freq;
+                    printf("kk=%d,acc=%3.2f,angle=%3.2f,quali=%d\n",kk,acc,angle,quali);
 
                     if ((acc < tpar->dacc && angle < tpar->dangle) || \
                         (acc < tpar->dacc/10))

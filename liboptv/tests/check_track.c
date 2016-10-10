@@ -350,7 +350,7 @@ END_TEST
 
 START_TEST(test_trackcorr_c_loop)
 {
-    Calibration *calib[4];
+    Calibration *calib[3];
     tracking_run *ret;
     int step, test_step = 10001, display = 0;
 
@@ -381,7 +381,6 @@ START_TEST(test_trackcorr_c_loop)
                      (ret->tpar->dvzmin - ret->tpar->dvzmax));
     
     read_all_calibration(calib, ret->cpar->num_cams);
-    fail(); // we have to replace the read_all_calibration to track folder
     
     volumedimension (&(ret->vpar->X_lay[1]), &(ret->vpar->X_lay[0]), &(ret->ymax),
                      &(ret->ymin), &(ret->vpar->Zmax_lay[1]), &(ret->vpar->Zmin_lay[0]),
