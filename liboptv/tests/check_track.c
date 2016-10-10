@@ -294,7 +294,7 @@ START_TEST(test_searchquader)
     cpar->mm->n2[0] = 1.0001;
     cpar->mm->n3 = 1.0001;
 
-    printf (" number of cameras in searchquader test: %d \n",cpar->num_cams);
+    printf ("number of cameras in searchquader test: %d \n",cpar->num_cams);
 
     track_par tpar[] = {
         {0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1.}
@@ -312,6 +312,11 @@ START_TEST(test_searchquader)
              "Was expecting 47.06 but found %d \n", xr[0]);
     ck_assert_msg( fabs(yu[3] - 33.512680)<EPS ,
                       "Was expecting 33.512680 but found %d \n", yu[3]);
+    
+    /* let's test just one camera, if there are no problems with the borders */
+    cpar->num_cams = 1;
+    searchquader(point, xr, xl, yd, yu, tpar, cpar, calib);
+    fail();
 
 }
 END_TEST

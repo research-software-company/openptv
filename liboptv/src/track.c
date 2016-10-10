@@ -326,6 +326,14 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
 
 /* searchquader defines the search region, using tracking parameters
  * dvxmin, ... dvzmax (but within the image boundaries), per camera
+ * Its primary objective is to provide a safe search region in each camera
+ * to the following candidate search in pixels (candsearch_in_pix).
+ * We project a position of a center of search from 3D to the image space (pixels)
+ * and project also 8 corners in 3D of a cuboid on the image space
+ * The searchquader returns the distances from the center of search to the 
+ * left, right, up and down, in any case not crossing the image size limits
+ * (0,0) and (cpar->imx, cpar->imy). If the point is on the border, the search
+ * region is only in the allowed directions.
  * Arguments:
  * vec3d point position in physical space
  * track_par *tpar set of tracking parameters
@@ -366,23 +374,28 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
 
     /* calculation of search area in each camera */
     for (i = 0; i < cpar->num_cams; i++) {
-        xr[i]=0;
+        /* initially large or small values */
+        xr[i] = 0;
         xl[i] = cpar->imx;
-        yd[i]=0;
+        yd[i] = 0;
         yu[i] = cpar->imy;
-
+        
+        /* pixel position of a search center */
         point_to_pixel (center, point, cal[i], cpar);
-
+        
+        
+        /* mark 4 corners of the search region in pixels */
         for (pt = 0; pt < 8; pt++) {
             point_to_pixel (corner, quader[pt], cal[i], cpar);
 
-            if (corner[0] <xl[i] ) xl[i]=corner[0];
-            if (corner[1] <yu[i] ) yu[i]=corner[1];
-            if (corner[0] >xr[i] ) xr[i]=corner[0];
-            if (corner[1] >yd[i] ) yd[i]=corner[1];
+            if (corner[0] < xl[i] ) xl[i] = corner[0];
+            if (corner[1] < yu[i] ) yu[i] = corner[1];
+            if (corner[0] > xr[i] ) xr[i] = corner[0];
+            if (corner[1] > yd[i] ) yd[i] = corner[1];
         }
-        if (xl[i] < 0 ) xl[i]=0;
-        if (yu[i] < 0 ) yu[i]=0;
+        
+        if (xl[i] < 0 ) xl[i] = 0;
+        if (yu[i] < 0 ) yu[i] = 0;
         if (xr[i] > cpar->imx)
             xr[i] = cpar->imx;
         if (yd[i] > cpar->imy)
@@ -849,7 +862,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                 
                 quali=0;
                 for (j = 0; j < fb->num_cams; j++) {
-                    point_to_pixel (n[j], X[2], cal[j], cpar);
+                    point_to_pixel (n[j], X[2], cal[j],cpar);
                     
 		            /*use fix distance to define xl, xr, yu, yd instead of searchquader */
 		            xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
