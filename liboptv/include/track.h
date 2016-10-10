@@ -51,6 +51,7 @@ void angle_acc(vec3d start, vec3d pred, vec3d cand, double *angle, double *acc);
 void reset_foundpix_array(foundpix *arr, int arr_len, int num_cams);
 void copy_foundpix_array(foundpix *dest, foundpix *src, int arr_len, \
     int num_cams);
+void point_to_pixel (vec2d v1, vec3d point, Calibration *cal, control_par *cpar);
 
 tracking_run* trackcorr_c_init(Calibration *cal);
 void trackcorr_c_loop (tracking_run *run_info, int step, int display, \

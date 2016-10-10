@@ -349,7 +349,6 @@ END_TEST
 START_TEST(test_trackcorr_c_loop)
 {
     Calibration *calib[4];
-    control_par *cpar;
     tracking_run *ret;
     int step, test_step = 10001, display = 0;
 

@@ -341,7 +341,7 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
                   double yu[4], track_par *tpar, control_par *cpar, Calibration **cal){
     int i, pt, dim;
     vec3d mins, maxes;
-    double x, y, xz, yz;
+    vec2d corner, center;
     vec3d quader[8];
 
 
@@ -371,17 +371,15 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
         yd[i]=0;
         yu[i] = cpar->imy;
 
-        img_coord (point, cal[i], cpar->mm, &xz, &yz);
-        metric_to_pixel (&xz, &yz, xz, yz, cpar);
+        point_to_pixel (center, point, cal[i], cpar);
 
         for (pt = 0; pt < 8; pt++) {
-            img_coord (quader[pt], cal[i], cpar->mm, &x, &y);
-            metric_to_pixel (&x, &y, x, y, cpar);
+            point_to_pixel (corner, quader[pt], cal[i], cpar);
 
-            if (x <xl[i] ) xl[i]=x;
-            if (y <yu[i] ) yu[i]=y;
-            if (x >xr[i] ) xr[i]=x;
-            if (y >yd[i] ) yd[i]=y;
+            if (corner[0] <xl[i] ) xl[i]=corner[0];
+            if (corner[1] <yu[i] ) yu[i]=corner[1];
+            if (corner[0] >xr[i] ) xr[i]=corner[0];
+            if (corner[1] >yd[i] ) yd[i]=corner[1];
         }
         if (xl[i] < 0 ) xl[i]=0;
         if (yu[i] < 0 ) yu[i]=0;
@@ -391,10 +389,10 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
             yd[i] = cpar->imy;
 
         /* eventually xr,xl,yd,yu are pixel distances relative to the point */
-        xr[i]=xr[i]-xz;
-        xl[i]=xz-xl[i];
-        yd[i]=yd[i]-yz;
-        yu[i]=yz-yu[i];
+        xr[i] = xr[i]     - center[0];
+        xl[i] = center[0] - xl[i];
+        yd[i] = yd[i]     - center[1];
+        yu[i] = center[1] - yu[i];
     }
 }
 
@@ -498,13 +496,12 @@ void sort(int n, float a[], int b[]){
  * Arguments: 
  * vec3d point in 3D space
  * Calibration *cal parameters
- * multimedia mm_np parameters
- * Control parameters (num cams, etc.)
+ * Control parameters (num cams, multimedia parameters, cpar->mm, etc.)
  * Returns (as a first argument):
  * vec2d with pixel positions (x,y) in the camera. 
  */
-void point_to_pixel (vec2d v1, vec3d point, Calibration *cal, mm_np *mm_np, control_par *cpar){
-    img_coord(point, cal, mm_np, &v1[0], &v1[1]);
+void point_to_pixel (vec2d v1, vec3d point, Calibration *cal, control_par *cpar){
+    img_coord(point, cal, cpar->mm, &v1[0], &v1[1]);
     metric_to_pixel(&v1[0], &v1[1], v1[0], v1[1], cpar);
 }
 
@@ -610,13 +607,13 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
             search_volume_center_moving(ref_path_inf->x, curr_path_inf->x, X[2]);
 
 	        for (j = 0; j < fb->num_cams; j++) {
-                point_to_pixel (v1[j], X[2], cal[j], cpar->mm, cpar);
+                point_to_pixel (v1[j], X[2], cal[j], cpar);
 	        }
 	    } else {
             vec_copy(X[2], X[1]);
 	        for (j=0; j < fb->num_cams; j++) {
 	            if (curr_corres->p[j] == -1) {
-                    point_to_pixel (v1[j], X[2], cal[j], cpar->mm, cpar);
+                    point_to_pixel (v1[j], X[2], cal[j], cpar);
 	            } else {
                     _ix = curr_corres->p[j];
                     v1[j][0] = curr_targets[j][_ix].x;
@@ -628,6 +625,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
 	    /* calculate search cuboid (quader) and reproject it to the image space */
 	    searchquader(X[2], xr, xl, yd, yu, tpar, cpar, cal);
+        
         if (h<1) {
             printf("search region is:\n");
             for (j = 0; j < fb->num_cams; j++) {
@@ -670,7 +668,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
             searchquader(X[5], xr, xl, yd, yu, tpar, cpar, cal);
 
 	        for (j = 0; j < fb->num_cams; j++) {
-                point_to_pixel (v1[j], X[5], cal[j], cpar->mm, cpar);
+                point_to_pixel (v1[j], X[5], cal[j], cpar);
 	        }
 
 	        /* search for candidates in next time step */
@@ -743,7 +741,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
             
             quali=0;
 	        for (j = 0;j < fb->num_cams; j++) {
-                point_to_pixel (n[j], X[5], cal[j], cpar->mm, cpar);
+                point_to_pixel (n[j], X[5], cal[j], cpar);
                 
 		        xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
 
@@ -851,7 +849,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                 
                 quali=0;
                 for (j = 0; j < fb->num_cams; j++) {
-                    point_to_pixel (n[j], X[2], cal[j], cpar->mm, cpar);
+                    point_to_pixel (n[j], X[2], cal[j], cpar);
                     
 		            /*use fix distance to define xl, xr, yu, yd instead of searchquader */
 		            xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
