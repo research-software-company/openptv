@@ -273,8 +273,8 @@ START_TEST(test_searchquader)
     control_par *cpar;
 
     fail_if((cpar = read_control_par("testing_fodder/track/parameters/ptv.par"))== 0);
-
-    printf ("number of cameras in searchquader test: %d \n",cpar->num_cams);
+    cpar->mm->n2[0] = 1.0000001;
+    cpar->mm->n3 = 1.0000001;
 
     track_par tpar[] = {
         {0.4, 120, 0.2, -0.2, 0.1, -0.1, 0.1, -0.1, 0., 0., 0., 0., 1.}
@@ -284,15 +284,15 @@ START_TEST(test_searchquader)
 
     searchquader(point, xr, xl, yd, yu, tpar, cpar, calib);
 
-    printf("searchquader returned:\n");
-    for (int i=0; i<cpar->num_cams;i++){
-         printf("%f %f %f %f\n",xr[i],xl[i],yd[i],yu[i]);
-     }
+    //printf("searchquader returned:\n");
+    //for (int i=0; i<cpar->num_cams;i++){
+    //     printf("%f %f %f %f\n",xr[i],xl[i],yd[i],yu[i]);
+    // }
     
-    ck_assert_msg( fabs(xr[0] - 2.193512)<EPS ,
-             "Was expecting 2.193512 but found %f \n", xr[0]);
-    ck_assert_msg( fabs(yu[2] - 1.041432)<EPS ,
-                      "Was expecting 1.041432 but found %f \n", yu[2]);
+    ck_assert_msg( fabs(xr[0] - 2.232556)<EPS ,
+             "Was expecting 2.232556 but found %f \n", xr[0]);
+    ck_assert_msg( fabs(yu[2] - 1.001057)<EPS ,
+                      "Was expecting 1.001057 but found %f \n", yu[2]);
     
     /* let's test just one camera, if there are no problems with the borders */
     
@@ -311,8 +311,8 @@ START_TEST(test_searchquader)
     searchquader(point, xr, xl, yd, yu, tpar2, cpar, calib);
     ck_assert_msg( fabs(xr[0] + xl[0] - cpar->imx)<EPS ,
                   "Was expecting image size but found %f \n", xr[0]+xl[0]);
-    ck_assert_msg( fabs(yd[0] - 127.748831)<EPS ,
-                  "Was expecting almost half cpar->imy but found %f \n", yd[0]);
+    ck_assert_msg( fabs(yd[0] + yu[0] - cpar->imy)<EPS ,
+                  "Was expecting cpar->imy but found %f \n", yd[0]+yu[0]);
 
 
 }
@@ -432,9 +432,9 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_sortwhatfound);
     suite_add_tcase (s, tc);
     
-//    tc = tcase_create ("Trackcorr_c_loop");
-//    tcase_add_test(tc, test_trackcorr_c_loop);
-//    suite_add_tcase (s, tc);
+    tc = tcase_create ("Trackcorr_c_loop");
+    tcase_add_test(tc, test_trackcorr_c_loop);
+    suite_add_tcase (s, tc);
 
 
     return s;

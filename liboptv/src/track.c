@@ -366,16 +366,13 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
             } else {
                 quader[pt][dim] += mins[dim];
             }
-            // printf("quader[%d][%d]=%f \n", pt,dim,quader[pt][dim]);
         }
     }
-
-    printf("number of cameras in searchquader: %d\n",cpar->num_cams);
-    printf("imx,imy = %d %d\n",cpar->imx,cpar->imy);
 
 
     /* calculation of search area in each camera */
     for (i = 0; i < cpar->num_cams; i++) {
+        
         /* initially large or small values */
         xr[i] = 0;
         xl[i] = cpar->imx;
@@ -384,22 +381,16 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
         
         /* pixel position of a search center */
         point_to_pixel (center, point, cal[i], cpar);
-        printf("center %f %f\n",center[0],center[1]);
-        
         
         /* mark 4 corners of the search region in pixels */
         for (pt = 0; pt < 8; pt++) {
             point_to_pixel (corner, quader[pt], cal[i], cpar);
-            // printf("corner %i %f %f\n",pt, corner[0],corner[1]);
 
             if (corner[0] < xl[i] ) xl[i] = corner[0];
             if (corner[1] < yu[i] ) yu[i] = corner[1];
             if (corner[0] > xr[i] ) xr[i] = corner[0];
             if (corner[1] > yd[i] ) yd[i] = corner[1];
-            // printf("top left: %f %f right bottom: %f %f\n",xl[i],yu[i],xr[i],yd[i]);
         }
-        
-        printf("selected top left: %f %f right bottom: %f %f\n",xl[i],yu[i],xr[i],yd[i]);
         
         if (xl[i] < 0 ) xl[i] = 0;
         if (yu[i] < 0 ) yu[i] = 0;
