@@ -11,6 +11,7 @@
 #include <check.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <math.h>
 #include "track.h"
 #include "calibration.h"
@@ -20,8 +21,8 @@
 /* Tests of correspondence components and full process using dummy data */
 
 void read_all_calibration(Calibration *calib[4], int num_cams) {
-    char ori_tmpl[] = "testing_fodder/track/cal/cam%d.tif.ori";
-    char added_tmpl[] = "testing_fodder/track/cal/cam%d.tif.addpar";
+    char ori_tmpl[] = "cal/cam%d.tif.ori";
+    char added_tmpl[] = "cal/cam%d.tif.addpar";
     char ori_name[256],added_name[256];
     int cam;
 
@@ -271,8 +272,10 @@ START_TEST(test_searchquader)
     double xr[3], xl[3], yd[3], yu[3];
     Calibration *calib[3];
     control_par *cpar;
+    
+    chdir("testing_fodder/track");
 
-    fail_if((cpar = read_control_par("testing_fodder/track/parameters/ptv.par"))== 0);
+    fail_if((cpar = read_control_par("parameters/ptv.par"))== 0);
     cpar->mm->n2[0] = 1.0000001;
     cpar->mm->n3 = 1.0000001;
 
@@ -353,15 +356,39 @@ START_TEST(test_trackcorr_c_loop)
     Calibration *calib[3];
     tracking_run *ret;
     int step, test_step = 10001, display = 0;
-
+    vec3d point = {0.0, 0.0, 0.0};
+    vec2d v[3];
+    control_par *cpar;
+    
+    
+    chdir("testing_fodder/track");
+    
+    /* prepare the 3D point moving in the flow */
+    cpar = read_control_par("parameters/ptv.par");
+    read_all_calibration(calib, cpar->num_cams);
+    
+    target t1 = {0, 1127.0000, 796.0000, 10, 2, 2, 100, 0};
+    
+    char target_tmpl[] = "img/cam%d.";
+    char target_name[256];
+    
+    for(step = test_step-1; step < test_step + 4; step++){
+        for (int j=0; j<cpar->num_cams;j++){
+            point[0] += 0.1;
+            point_to_pixel(v[j], point, calib[j], cpar);
+            t1.x = v[j][0]; t1.y = v[j][1];
+            sprintf(target_name, target_tmpl, j + 1);
+            write_targets(&t1, 1, target_name, step);
+        }
+    }
 
     ret = (tracking_run *) malloc(sizeof(tracking_run));
     
-    tr_init(ret, "testing_fodder/track/parameters/sequence.par", "testing_fodder/track/parameters/track.par",
-            "testing_fodder/track/parameters/criteria.par", "testing_fodder/track/parameters/ptv.par");
+    tr_init(ret, "parameters/sequence.par", "parameters/track.par",
+            "parameters/criteria.par", "parameters/ptv.par");
     
     fb_init(ret->fb, 4, ret->cpar->num_cams, MAX_TARGETS,
-            "testing_fodder/track/res/rt_is", "testing_fodder/track/res/ptv_is", "testing_fodder/track/res/added", ret->seq_par->img_base_name);
+            "res/rt_is", "res/ptv_is", "res/added", ret->seq_par->img_base_name);
     
     printf("Sequence for the test: %d - %d \n",ret->seq_par->first,ret->seq_par->last);
     

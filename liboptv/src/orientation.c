@@ -92,29 +92,20 @@ double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
     double dtot = 0;
     vec3d point_tot = {0., 0., 0.};
     
-    printf("inside point_position\n");
-
     vec3d* vertices = (vec3d *) calloc(num_cams, sizeof(vec3d));
     vec3d* directs = (vec3d *) calloc(num_cams, sizeof(vec3d));
     vec3d point;
     
     
     
-    for (cam = 0; cam < num_cams; cam++) {
-            printf("targets: %3.2f %3.2f\n",targets[cam][0], targets[cam][1]);
-        }
-
     /* Shoot rays from all cameras. */
     for (cam = 0; cam < num_cams; cam++) {
         if (targets[cam][0] != PT_UNUSED) {
-            printf("targets: %3.2f %3.2f\n",targets[cam][0], targets[cam][1]);
-            ray_tracing(targets[cam][0], targets[cam][1], cals[cam], 
+            ray_tracing(targets[cam][0], targets[cam][1], cals[cam],
                 *multimed_pars, vertices[cam], directs[cam]);
         }
     }
     
-    printf("finished ray tracing\n");
-
     /* Check intersection distance for each pair of rays and find position */
     for (cam = 0; cam < num_cams; cam++) {
         if (targets[cam][0] == PT_UNUSED) continue;

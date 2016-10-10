@@ -23,6 +23,9 @@ Routines contained:    	trackcorr_c
 
 #include "tracking_run.h"
 #include "track.h"
+#include <stdlib.h>
+#include <stdio.h>
+
 
 
 
@@ -593,10 +596,10 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
     curr_targets = fb->buf[1]->targets;
     
     printf("present frame is buf[1] with %d particles \n",fb->buf[1]->num_parts);
-    printf(" ------------------------- \n");
-    printf("we temporarly use only the 1st particle\n");
+    //printf(" ------------------------- \n");
+    //printf("we temporarly use only the 1st particle\n");
     /****************** don't forget to remove ******/
-    fb->buf[1]->num_parts = 4;
+    // fb->buf[1]->num_parts = 4;
 
     p16 = (foundpix*) calloc(fb->num_cams*MAX_CANDS, sizeof(foundpix));
 
@@ -772,15 +775,11 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
 	        if ( quali >= 2) {
                 vec_copy(X[4], X[5]);
+                printf("was: %3.2f %3.2f %3.2f\n",X[4][0],X[4][1],X[4][2]);
 		        in_volume = 0; //inside volume
                 
-                
-                printf("going to find the position\n");
-                for (j=0;j<fb->num_cams;j++){
-                    printf("v2[%d] = %3.2f %3.2f\n",j,v2[j][0],v2[j][1]);
-                }
-                dl = point_position(v2, fb->num_cams, cpar->mm, cal, X[4]);
-                printf("dl %4.3f at %3.2f %3.2f %3.2f\n",dl,X[4][0],X[4][1],X[4][2]);
+                dl = point_position(v2, cpar->num_cams, cpar->mm, cal, X[4]);
+                printf("dl = %3.2f, is: %3.2f %3.2f %3.2f\n",dl, X[4][0],X[4][1],X[4][2]);
 
                 
 
