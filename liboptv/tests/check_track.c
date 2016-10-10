@@ -350,14 +350,48 @@ START_TEST(test_trackcorr_c_loop)
 {
     Calibration *calib[4];
     control_par *cpar;
-    tracking_run *tr;
-    
-    fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
-    
-    read_all_calibration(calib, cpar->num_cams);
+    tracking_run *ret;
+    int step, test_step = 10001, display = 0;
 
-    tr = trackcorr_c_init((Calibration *)calib);
-    //void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibration **cal)
+    
+    //cpar = read_control_par("testing_fodder/track/parameters/ptv.par");
+    
+    //read_all_calibration(calib, cpar->num_cams);
+
+    ret = (tracking_run *) malloc(sizeof(tracking_run));
+    
+    tr_init(ret, "testing_fodder/track/parameters/sequence.par", "testing_fodder/track/parameters/track.par",
+            "testing_fodder/track/parameters/criteria.par", "testing_fodder/track/parameters/ptv.par");
+    
+    fb_init(ret->fb, 4, ret->cpar->num_cams, MAX_TARGETS,
+            "testing_fodder/track/res/rt_is", "testing_fodder/track/res/ptv_is", "testing_fodder/track/res/added", ret->seq_par->img_base_name);
+    
+    printf("Sequence for the test: %d - %d \n",ret->seq_par->first,ret->seq_par->last);
+    
+    /* Prime the buffer with first frames */
+    //for (step = ret->seq_par->first; step < ret->seq_par->first + 3; step++) {
+    for (step = test_step-1; step < test_step + 3; step++) {
+        printf("reading step %d",step);
+        if (step == test_step) printf(" <-- test");
+        printf("\n");
+        fb_read_frame_at_end(ret->fb, step, 0);
+        fb_next(ret->fb);
+    }
+    fb_prev(ret->fb);
+    
+    ret->lmax = norm((ret->tpar->dvxmin - ret->tpar->dvxmax), \
+                     (ret->tpar->dvymin - ret->tpar->dvymax), \
+                     (ret->tpar->dvzmin - ret->tpar->dvzmax));
+    
+    read_all_calibration(calib, ret->cpar->num_cams);
+    
+    volumedimension (&(ret->vpar->X_lay[1]), &(ret->vpar->X_lay[0]), &(ret->ymax),
+                     &(ret->ymin), &(ret->vpar->Zmax_lay[1]), &(ret->vpar->Zmin_lay[0]),
+                     ret->vpar, ret->cpar, (Calibration *)calib);
+    
+
+    
+    trackcorr_c_loop (ret, test_step, display, calib);
 }
 END_TEST
 

@@ -29,7 +29,7 @@ int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
 
   fp = fopen (filename, "w");
   if (! fp) {
-        printf("Can't open ascii file: %s\n", filename);
+        printf("Can't open ascii ori file for writing: %s\n", filename);
         goto finalize;
   }
     
@@ -46,7 +46,7 @@ int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
   if (add_file == NULL) goto finalize;
   fp = fopen (add_file, "w");
   if (! fp) {
-        printf("Can't open ascii file: %s\n", add_file);
+        printf("Can't open ascii file for addpar: %s\n", add_file);
         goto finalize;
   }
   fprintf (fp, "%.8f %.8f %.8f %.8f %.8f %.8f %.8f", ap.k1, ap.k2, ap.k3, ap.p1, ap.p2,

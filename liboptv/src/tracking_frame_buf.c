@@ -55,12 +55,12 @@ int read_targets(target buffer[], char* file_base, int frame_num) {
     
     FILEIN = fopen (filein, "r");
     if (! FILEIN) {
-        printf("Can't open ascii file: %s\n", filein);
+        printf("Can't open ascii file to read: %s\n", filein);
         goto handle_error;
     }
 
     if (fscanf(FILEIN, "%d\n", &num_targets) == 0) {
-        printf("Bad format for file: %s\n", filein);
+        printf("Bad format for _targets file: %s\n", filein);
         goto handle_error;
     }
     for (tix = 0; tix < num_targets; tix++)	{
@@ -110,7 +110,7 @@ int write_targets(target buffer[], int num_targets, char* file_base, \
 
     FILEOUT = fopen(fileout, "w");
     if (! FILEOUT) {
-        printf("Can't open ascii file: %s\n", fileout);
+        printf("Can't open _targets file for writing: %s\n", fileout);
         goto finalize;
     }
     
@@ -238,7 +238,7 @@ int read_path_frame(corres *cor_buf, P *path_buf, \
     filein = fopen (fname, "r");
     if (!filein) {
         /* Keeping the printf until we have proper logging. */
-        printf("Can't open ascii file: %s\n", fname);
+        printf("Can't open ascii file to read: %s\n", fname);
         goto finalize;
     }
     

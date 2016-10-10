@@ -277,9 +277,9 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
             }
 
             j0 -= 12;  if (j0 < 0)  j0 = 0;	       	/* due to trunc */
-            for (j=j0; j<num_targets; j++) {	       	        /* candidate search */
+            for (j=j0; j<num_targets; j++) {	    /* candidate search */
                 if (next[j].tnr != -1 ) {
-                    if (next[j].y > ymax )  break;	    /* finish search */
+                    if (next[j].y > ymax )  break;	/* finish search */
 
                     if (next[j].x > xmin && next[j].x < xmax \
                         && next[j].y > ymin && next[j].y < ymax){
@@ -333,7 +333,8 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
  * Calibration *cal calibration per camera to find a projection of a 3D vertex
  * of a cuboid in the image space.
  * Returns the arrays xr,xl,yd,yu (right, left, down, up) per camera
- * for the search of a quader (cuboid).
+ * for the search of a quader (cuboid), given in pixel distances, relative to the 
+ * point of search.
  */
 
 void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
@@ -347,6 +348,7 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
 
     vec_set(mins, tpar->dvxmin, tpar->dvymin, tpar->dvzmin);
     vec_set(maxes, tpar->dvxmax, tpar->dvymax, tpar->dvzmax);
+        
     /* 3D positions of search volume - eight corners of a box */
     for (pt = 0; pt < 8; pt++) {
         vec_copy(quader[pt], point);
@@ -388,8 +390,7 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
         if (yd[i] > cpar->imy)
             yd[i] = cpar->imy;
 
-
-
+        /* eventually xr,xl,yd,yu are pixel distances relative to the point */
         xr[i]=xr[i]-xz;
         xl[i]=xz-xl[i];
         yd[i]=yd[i]-yz;
@@ -491,72 +492,20 @@ void sort(int n, float a[], int b[]){
     }while(flag);
 }
 
-void det_lsq_3d (Calibration *cals, mm_np mm, vec2d v[], double *Xp, double *Yp, double *Zp, int num_cams) {
-    int     i,count_inner=0,n,m, flag[4] = {0., 0., 0., 0.};
-    double  d_inner=0.,x,y;
-    double X[4][3], a[4][3];
-    double dist,X_pos[6],Y_pos[6],Z_pos[6],XX,YY,ZZ,si0,sqX,sqY,sqZ;
-    double rmsX, rmsY, rmsZ, mean_sigma0;
-    vec3d res;
-    int cam;
-
-    rmsX = rmsY = rmsZ = mean_sigma0 = 0.0;
-
-
-
-    for (cam = 0; cam < num_cams; cam++){
-        if(v[cam][0] > -999){
-            flag[cam]=1;
-            dist_to_flat(v[cam][0], v[cam][1], &(cals[cam]),
-                         &x, &y, 100000);
-            ray_tracing(x,y, &(cals[cam]), mm, X[cam], a[cam]);
-
-        }
-    }
-
-
-    count_inner=0;
-    for (n = 0; n < num_cams; n++){
-        for(m = n+1; m < num_cams; m++){
-            if(flag[n]==1 && flag[m]==1){
-                dist = skew_midpoint(X[n], a[n], X[m], a[m], res);
-                d_inner += dist;
-                X_pos[count_inner]=res[0];
-                Y_pos[count_inner]=res[1];
-                Z_pos[count_inner]=res[2];
-                count_inner++;
-            }
-        }
-    }
-    d_inner/=(double)count_inner;
-    XX=0.;YY=0.;ZZ=0.;
-    for(i=0;i<count_inner;i++){
-        XX+=X_pos[i];
-        YY+=Y_pos[i];
-        ZZ+=Z_pos[i];
-    }
-    XX/=(double)count_inner;YY/=(double)count_inner;ZZ/=(double)count_inner;
-    //end of new det_lsq
-    *Xp=XX;
-    *Yp=YY;
-    *Zp=ZZ;
-
-    //statistics
-    si0=0.;sqX=0.;sqY=0.;sqZ=0.;
-    for(i=0;i<count_inner;i++){
-        si0+=pow(X_pos[i]-XX,2.)+pow(Y_pos[i]-YY,2.)+pow(Z_pos[i]-ZZ,2.);
-        sqX+=pow(X_pos[i]-XX,2.);
-        sqY+=pow(Y_pos[i]-YY,2.);
-        sqZ+=pow(Z_pos[i]-ZZ,2.);
-    }
-    si0/=(double)count_inner;sqX/=(double)count_inner;sqY/=(double)count_inner;sqZ/=(double)count_inner;
-
-    mean_sigma0 += pow(si0,0.5);
-    rmsX += pow(sqX,0.5);
-    rmsY += pow(sqY,0.5);
-    rmsZ += pow(sqZ,0.5);
-    //end of statistics
-
+/* point_to_pixel is just a shortcut to two lines that repeat every so in track loop
+ * img_coord (from 3d point to a 2d vector in metric units), followed by 
+ * metric_to_pixel (from 2d vector in metric units to the pixel position in the camera)
+ * Arguments: 
+ * vec3d point in 3D space
+ * Calibration *cal parameters
+ * multimedia mm_np parameters
+ * Control parameters (num cams, etc.)
+ * Returns (as a first argument):
+ * vec2d with pixel positions (x,y) in the camera. 
+ */
+void point_to_pixel (vec2d v1, vec3d point, Calibration *cal, mm_np *mm_np, control_par *cpar){
+    img_coord(point, cal, mm_np, &v1[0], &v1[1]);
+    metric_to_pixel(&v1[0], &v1[1], v1[0], v1[1], cpar);
 }
 
 
@@ -575,6 +524,9 @@ void det_lsq_3d (Calibration *cals, mm_np mm, vec2d v[], double *Xp, double *Yp,
  * tracking_run *run_info pointer to the (sliding) frame dataset of 4 frames of particle positions
  * and all the needed parameters underneath: control, volume, etc.
  * integer step number or the frame number from the sequence
+ * Note: step is not really setting up the step to track, the buffer provided to the trackcoor_c_loop
+ * is already preset by 4 frames buf[0] to buf[3] and we track particles in buf[1], i.e. one "previous" 
+ * one present and two future frames.
  * integer display - shall be probably removed, was used as a flag for intermediate data returnt for display
  * Calibration **cal is a set of calibration parameters of the involved cameras (from 1 to run_info->cpar->num_cams)
  * Returns: function does not return an argument, the tracks are updated within the run_info dataset
@@ -582,7 +534,6 @@ void det_lsq_3d (Calibration *cals, mm_np mm, vec2d v[], double *Xp, double *Yp,
 void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibration **cal)
 {
    /* sequence loop */
-    char  buf[256];
     int j, h, mm, kk, invol=0;
     int counter1, counter2, philf[4][MAX_CANDS];
     int count1=0, count2=0, count3=0, num_added=0;
@@ -619,7 +570,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
     foundpix *w, *wn, *p16; //p16 due to history of 4 cameras times 4 candidates
 
-    sprintf (buf, "Time step: %d, seqnr: %d, Particle info:",
+    printf ("Time step: %d, seqnr: %d, Particle info:\n",
         step - run_info->seq_par->first, step);
     count1=0; num_added=0;
 
@@ -628,6 +579,8 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
     vpar = run_info->vpar;
     cpar = run_info->cpar;
     curr_targets = fb->buf[1]->targets;
+    
+    printf("present frame is buf[1] with %d particles \n",fb->buf[1]->num_parts);
 
     p16 = (foundpix*) calloc(fb->num_cams*MAX_CANDS, sizeof(foundpix));
 
@@ -643,6 +596,11 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
 	    /* 3D-position */
 	    vec_copy(X[1], curr_path_inf->x);
+        
+        if (h<1){
+        printf("Trying to link particle %d, located at: %f %f %f\n",h,X[1][0],X[1][1],X[1][2]);
+        printf("previous %d, next %d\n",curr_path_inf->prev,curr_path_inf->next);
+        }
 
 	    /* use information from previous to locate new search position
 	       and to calculate values for search area */
@@ -652,25 +610,30 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
             search_volume_center_moving(ref_path_inf->x, curr_path_inf->x, X[2]);
 
 	        for (j = 0; j < fb->num_cams; j++) {
-                img_coord(X[2], cal[j], cpar->mm, &v1[j][0], &v1[j][1]);
-		        metric_to_pixel(&v1[j][0], &v1[j][1], v1[j][0], v1[j][1], cpar);
+                point_to_pixel (v1[j], X[2], cal[j], cpar->mm, cpar);
 	        }
 	    } else {
             vec_copy(X[2], X[1]);
 	        for (j=0; j < fb->num_cams; j++) {
 	            if (curr_corres->p[j] == -1) {
-                    img_coord(X[2], cal[j], cpar->mm, &v1[j][0], &v1[j][1]);
-                    metric_to_pixel(&v1[j][0], &v1[j][1], v1[j][0], v1[j][1], cpar);
+                    point_to_pixel (v1[j], X[2], cal[j], cpar->mm, cpar);
 	            } else {
                     _ix = curr_corres->p[j];
                     v1[j][0] = curr_targets[j][_ix].x;
                     v1[j][1] = curr_targets[j][_ix].y;
                 }
             }
+            if (h<1) printf("In cam %d search around %f,%f\n",j,v1[j][0],v1[j][1]);
 	    }
 
 	    /* calculate search cuboid (quader) and reproject it to the image space */
 	    searchquader(X[2], xr, xl, yd, yu, tpar, cpar, cal);
+        if (h<1) {
+            printf("search region is:\n");
+            for (j = 0; j < fb->num_cams; j++) {
+                printf("cam %d %f %f %f %f\n",j,xr[j],xl[j],yd[j],yu[j]);
+            }
+        }
 
 	    /* search in pix for candidates in the next time step */
 	    for (j = 0; j < fb->num_cams; j++) {
@@ -707,8 +670,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
             searchquader(X[5], xr, xl, yd, yu, tpar, cpar, cal);
 
 	        for (j = 0; j < fb->num_cams; j++) {
-                img_coord(X[5], cal[j], cpar->mm, &v1[j][0], &v1[j][1]);
-		        metric_to_pixel(&v1[j][0], &v1[j][1], v1[j][0], v1[j][1], cpar);
+                point_to_pixel (v1[j], X[5], cal[j], cpar->mm, cpar);
 	        }
 
 	        /* search for candidates in next time step */
@@ -781,8 +743,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
             
             quali=0;
 	        for (j = 0;j < fb->num_cams; j++) {
-                img_coord(X[5], cal[j], cpar->mm, &n[j][0], &n[j][1]);
-		        metric_to_pixel(&n[j][0], &n[j][1], n[j][0], n[j][1], cpar);
+                point_to_pixel (n[j], X[5], cal[j], cpar->mm, cpar);
                 
 		        xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
 
@@ -805,9 +766,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 	        if ( quali >= 2) {
                 vec_copy(X[4], X[5]);
 		        invol=0;
-
-//		        det_lsq_3d (*cal, *(cpar->mm), v2, \
-//                            &(X[4][0]), &(X[4][1]), &(X[4][2]), fb->num_cams);
                 
                 point_position(v2, fb->num_cams, cpar->mm, cal, X[4]);
 
@@ -893,8 +851,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                 
                 quali=0;
                 for (j = 0; j < fb->num_cams; j++) {
-                    img_coord(X[2], cal[j], cpar->mm, &n[j][0], &n[j][1]);
-		            metric_to_pixel(&n[j][0], &n[j][1], n[j][0], n[j][1], cpar);
+                    point_to_pixel (n[j], X[2], cal[j], cpar->mm, cpar);
                     
 		            /*use fix distance to define xl, xr, yu, yd instead of searchquader */
 		            xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
@@ -906,7 +863,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                         _ix = philf[j][0];
 	    	            v2[j][0] = fb->buf[2]->targets[j][_ix].x;
                         v2[j][1] = fb->buf[2]->targets[j][_ix].y;
-                        
                         pixel_to_metric(&v2[j][0], &v2[j][1], v2[j][0], v2[j][1], cpar);
                         quali++;
                     } else {
@@ -919,10 +875,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 		        if (quali>=2) {
                     vec_copy(X[3], X[2]);
 		            invol=0;
-
-//	    	        det_lsq_3d (*cal, *(cpar->mm),v2, \
-//                        &(X[3][0]), &(X[3][1]), &(X[3][2]), \
-//                        fb->num_cams);
                     
                     point_position(v2, fb->num_cams, cpar->mm, cal, X[3]);
 
@@ -1092,7 +1044,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
     /* ******** End of Draw links ******** */
     
     
-    sprintf (buf, "step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d",
+    printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d\n",
         step, fb->buf[1]->num_parts, fb->buf[2]->num_parts, count1,
         fb->buf[1]->num_parts - count1, num_added);
 
@@ -1302,9 +1254,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
                         vec_copy(X[3], X[2]);
                         invol=0;
 
-                        det_lsq_3d (*cal, *(cpar->mm), v2,
-                            &(X[3][0]), &(X[3][1]), &(X[3][2]), \
-                            fb->num_cams);
+                        point_position(v2, fb->num_cams, cpar->mm, cal, X[3]);
 
                         /* volume check */
                         if ( vpar->X_lay[0] < X[3][0] && X[3][0] < vpar->X_lay[1] &&
