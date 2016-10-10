@@ -540,13 +540,13 @@ void point_to_pixel (vec2d v1, vec3d point, Calibration *cal, control_par *cpar)
  * is already preset by 4 frames buf[0] to buf[3] and we track particles in buf[1], i.e. one "previous" 
  * one present and two future frames.
  * integer display - shall be probably removed, was used as a flag for intermediate data returnt for display
- * Calibration **cal is a set of calibration parameters of the involved cameras (from 1 to run_info->cpar->num_cams)
+ * Calibration **cal is a set of calibration parameters of the in_volumeved cameras (from 1 to run_info->cpar->num_cams)
  * Returns: function does not return an argument, the tracks are updated within the run_info dataset
  */
 void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibration **cal)
 {
    /* sequence loop */
-    int j, h, mm, kk, invol=0;
+    int j, h, mm, kk, in_volume=0;
     int counter1, counter2, philf[4][MAX_CANDS];
     int count1=0, count2=0, count3=0, num_added=0;
     int intx0, intx1, inty0, inty1;
@@ -692,25 +692,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                 point_to_pixel (v1[j], X[5], cal[j], cpar);
 	        }
 
-	        /* search for candidates in next time step */
-	        // for (j=0; j < fb->num_cams; j++) {
-	        //     counter2 = candsearch_in_pix (fb->buf[3]->targets[j],
-            //         fb->buf[3]->num_targets[j], v1[j][0], v1[j][1],
-			// 		xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
-            //
-		    //     for(k = 0; k < 4; k++) {
-			// 	    if (philf[j][k] == -999) {
-            //             p16[j*4+k].ftnr=-1;
-			// 	    } else {
-			// 	        if (fb->buf[3]->targets[j][philf[j][k]].tnr != -1) {
-            //                 _ix = philf[j][k];
-            //                 p16[j*4+k].ftnr = fb->buf[3]->targets[j][_ix].tnr;
-            //                 p16[j*4+k].whichcam[j] = 1;
-			// 		    }
-			// 	    }
-		    //     }
-		    // }
-            /* replaced by register_closest_neighbs */
             for (j = 0; j < fb->num_cams; j++) {
                 register_closest_neighbs(fb->buf[3]->targets[j],
                     fb->buf[3]->num_targets[j], j, v1[j][0], v1[j][1],
@@ -769,11 +750,13 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 	        for (j = 0;j < fb->num_cams; j++) {
                 point_to_pixel (n[j], X[5], cal[j], cpar);
                 
-		        xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
+		        xl[j]= xr[j]= yu[j]= yd[j] = ADD_PART;
 
 	            counter2 = candsearch_in_pix (fb->buf[3]->targets[j],
                     fb->buf[3]->num_targets[j], n[j][0], n[j][1],
 					xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
+                
+                printf("within ADD_PART found %d candidates in cam %d\n",counter2, j);
                 
 		        if(counter2>0 ) {
                     _ix = philf[j][0]; // first nearest neighbour
@@ -789,9 +772,15 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
 	        if ( quali >= 2) {
                 vec_copy(X[4], X[5]);
-		        invol=0;
+		        in_volume = 0; //inside volume
                 
-                point_position(v2, fb->num_cams, cpar->mm, cal, X[4]);
+                
+                printf("going to find the position\n");
+                for (j=0;j<fb->num_cams;j++){
+                    printf("v2[%d] = %3.2f %3.2f\n",j,v2[j][0],v2[j][1]);
+                }
+                dl = point_position(v2, fb->num_cams, cpar->mm, cal, X[4]);
+                printf("dl %4.3f at %3.2f %3.2f %3.2f\n",dl,X[4][0],X[4][1],X[4][2]);
 
                 
 
@@ -800,11 +789,11 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 		            run_info->ymin < X[4][1] && X[4][1] < run_info->ymax &&
 		            vpar->Zmin_lay[0] < X[4][2] && X[4][2] < vpar->Zmax_lay[1])
                 {
-                    invol = 1;
+                    in_volume = 1;
                 }
 
                 vec_subt(X[3], X[4], diff_pos);
-                if ( invol == 1 && pos3d_in_bounds(diff_pos, tpar) ) {
+                if ( in_volume == 1 && pos3d_in_bounds(diff_pos, tpar) ) {
                     angle_acc(X[3], X[4], X[5], &angle, &acc);
 
                     if ((acc < tpar->dacc && angle < tpar->dangle) || \
@@ -840,7 +829,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                         }
                     }
                 }
-		        invol=0;
+		        in_volume=0;
 	        }
 	        quali=0;
 
@@ -878,7 +867,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                     point_to_pixel (n[j], X[2], cal[j],cpar);
                     
 		            /*use fix distance to define xl, xr, yu, yd instead of searchquader */
-		            xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
+		            xl[j]= xr[j]= yu[j]= yd[j] = ADD_PART;
                     
 	                counter2 = candsearch_in_pix (fb->buf[2]->targets[j],
                         fb->buf[2]->num_targets[j], n[j][0], n[j][1],
@@ -898,9 +887,10 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
 		        if (quali>=2) {
                     vec_copy(X[3], X[2]);
-		            invol=0;
+		            in_volume=0;
                     
-                    point_position(v2, fb->num_cams, cpar->mm, cal, X[3]);
+                    dl = point_position(v2, fb->num_cams, cpar->mm, cal, X[3]);
+                    printf("distance is %4.3f\n",dl);
 
 		            /* in volume check */
 		            if ( vpar->X_lay[0] < X[3][0] && X[3][0] < vpar->X_lay[1] &&
@@ -908,11 +898,11 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                         vpar->Zmin_lay[0] < X[3][2] &&
                         X[3][2] < vpar->Zmax_lay[1])
                     {
-                        invol = 1;
+                        in_volume = 1;
                     }
 
                     vec_subt(X[2], X[3], diff_pos);
-                    if ( invol == 1 && pos3d_in_bounds(diff_pos, tpar) ) {
+                    if ( in_volume == 1 && pos3d_in_bounds(diff_pos, tpar) ) {
                         angle_acc(X[1], X[2], X[3], &angle, &acc);
 
                         if ( (acc < tpar->dacc && angle < tpar->dangle) || \
@@ -946,7 +936,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                             num_added++;
                         }
                     }
-		            invol=0;
+		            in_volume=0;
 		        } // if quali >= 2
             }
         }
@@ -1106,7 +1096,7 @@ void trackcorr_c_finish(tracking_run *run_info, int step, int display)
 void trackback_c (tracking_run *run_info, int step, int display, Calibration **cal)
 {
     char  buf[256];
-    int i, j, h, k, invol=0;
+    int i, j, h, k, in_volume=0;
     int counter1, philf[4][MAX_CANDS];
     int count1=0, count2=0, num_added=0;
     int quali=0;
@@ -1255,7 +1245,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
                 if ( curr_path_inf->inlist == 0) {
                     for (j = 0; j < fb->num_cams; j++) {
                         /* use fix distance to define xl, xr, yu, yd instead of searchquader */
-                        xl[j]= xr[j]= yu[j]= yd[j] = 3.0;
+                        xl[j]= xr[j]= yu[j]= yd[j] = ADD_PART;
 
                         counter1 = candsearch_in_pix (fb->buf[2]->targets[j],
                             fb->buf[2]->num_targets[j], n[j][0], n[j][1],
@@ -1276,7 +1266,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
 
                     if (quali>=2) {
                         vec_copy(X[3], X[2]);
-                        invol=0;
+                        in_volume=0;
 
                         point_position(v2, fb->num_cams, cpar->mm, cal, X[3]);
 
@@ -1284,10 +1274,10 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
                         if ( vpar->X_lay[0] < X[3][0] && X[3][0] < vpar->X_lay[1] &&
                             Ymin < X[3][1] && X[3][1] < Ymax &&
                             vpar->Zmin_lay[0] < X[3][2] && X[3][2] < vpar->Zmax_lay[1])
-                                {invol = 1;}
+                                {in_volume = 1;}
 
                         vec_subt(X[1], X[3], diff_pos);
-                        if (invol == 1 && pos3d_in_bounds(diff_pos, tpar)) {
+                        if (in_volume == 1 && pos3d_in_bounds(diff_pos, tpar)) {
                             angle_acc(X[1], X[2], X[3], &angle, &acc);
 
                             if ( (acc<tpar->dacc && angle<tpar->dangle) || \
@@ -1322,7 +1312,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
                                 fb->buf[2]->num_parts++;
                             }
                         }
-                        invol=0;
+                        in_volume=0;
                     }
                 }
             } /* end of if old wasn't found try to create new particle position from rest */
