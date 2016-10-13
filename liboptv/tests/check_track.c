@@ -411,6 +411,32 @@ START_TEST(test_trackcorr_c_loop)
 }
 END_TEST
 
+START_TEST(test_trackcorr_back)
+{
+    tracking_run *ret;
+    int step, display=0;
+    Calibration *calib[3];
+    control_par *cpar;
+    
+    chdir("testing_fodder/track");
+    
+    
+    cpar = read_control_par("parameters/ptv.par");
+    read_all_calibration(calib, cpar->num_cams);
+    ret = trackcorr_c_init(calib[0]);
+    
+    
+    trackcorr_c_loop (ret, ret->seq_par->first, display, calib);
+    
+    for (step = ret->seq_par->first+1; step < ret->seq_par->last; step++)
+    {
+        trackcorr_c_loop (ret, step, display, calib);
+    }
+    trackcorr_c_finish(ret, ret->seq_par->last, display);
+}
+END_TEST
+
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("ttools");
 
@@ -452,6 +478,10 @@ Suite* fb_suite(void) {
     
     tc = tcase_create ("Trackcorr_c_loop");
     tcase_add_test(tc, test_trackcorr_c_loop);
+    suite_add_tcase (s, tc);
+    
+    tc = tcase_create ("Trackcorr_back");
+    tcase_add_test(tc, test_trackcorr_back);
     suite_add_tcase (s, tc);
 
 
