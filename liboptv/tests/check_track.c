@@ -389,7 +389,7 @@ END_TEST
 START_TEST(test_trackcorr_c_loop)
 {
     tracking_run *ret;
-    int step, test_step=10001,display=0;
+    int step, test_step=10096,display=0;
     Calibration *calib[3];
 
     chdir("testing_fodder/track");
@@ -428,6 +428,11 @@ START_TEST(test_trackcorr_c_loop)
 
     
     trackcorr_c_loop (ret, test_step, display, calib);
+    
+    for (step = test_step; step < test_step+6; step++) {
+        trackcorr_c_loop (ret, step, display, calib);
+    }
+    trackcorr_c_finish(ret, step, display);
 }
 END_TEST
 
