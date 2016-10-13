@@ -58,7 +58,7 @@ tracking_run* trackcorr_c_init(Calibration *cal);
 void trackcorr_c_loop (tracking_run *run_info, int step, int display, \
     Calibration **cal);
 void trackcorr_c_finish(tracking_run *run_info, int step, int display);
-void trackback_c(tracking_run *run_info, int step, int display, \
+double trackback_c(tracking_run *run_info, int step, int display, \
     Calibration **cal);
 
 #endif

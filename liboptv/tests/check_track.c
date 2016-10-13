@@ -408,13 +408,26 @@ START_TEST(test_trackcorr_c_loop)
         trackcorr_c_loop (ret, step, display, calib);
     }
     trackcorr_c_finish(ret, ret->seq_par->last, display);
+    
+    int range = ret->seq_par->last - ret->seq_par->first;
+    double npart, nlinks;
+    
+    /* average of all steps */
+    npart = (double)ret->npart / range;
+    nlinks = (double)ret->nlinks / range;
+    
+    ck_assert_msg(fabs(npart - 208.0/210.0)<EPS,
+                  "Was expecting npart == 0.99 but found %f \n", 208.0/210.0);
+    ck_assert_msg(fabs(nlinks - 206.0/210.0)<EPS,
+                  "Was expecting npart == 0.98 but found %f \n", 206.0/210.0);
 }
 END_TEST
 
-START_TEST(test_trackcorr_back)
+START_TEST(test_trackback)
 {
     tracking_run *ret;
-    int step, display=0;
+    int display=0;
+    double nlinks;
     Calibration *calib[3];
     control_par *cpar;
     
@@ -424,15 +437,24 @@ START_TEST(test_trackcorr_back)
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
     ret = trackcorr_c_init(calib[0]);
+//
+//    
+//    trackcorr_c_loop (ret, ret->seq_par->first, display, calib);
+//    
+//    for (step = ret->seq_par->first+1; step < ret->seq_par->last; step++)
+//    {
+//        trackcorr_c_loop (ret, step, display, calib);
+//    }
+//    trackcorr_c_finish(ret, ret->seq_par->last, display);
     
     
-    trackcorr_c_loop (ret, ret->seq_par->first, display, calib);
+    nlinks = trackback_c(ret, ret->seq_par->last, display, calib);
     
-    for (step = ret->seq_par->first+1; step < ret->seq_par->last; step++)
-    {
-        trackcorr_c_loop (ret, step, display, calib);
-    }
-    trackcorr_c_finish(ret, ret->seq_par->last, display);
+    ck_assert_msg(fabs(nlinks - 205.0/209.0)<EPS,
+                  "Was expecting nlinks to be 206/209 but found %f\n", nlinks);
+    
+    
+    
 }
 END_TEST
 
@@ -480,8 +502,8 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_trackcorr_c_loop);
     suite_add_tcase (s, tc);
     
-    tc = tcase_create ("Trackcorr_back");
-    tcase_add_test(tc, test_trackcorr_back);
+    tc = tcase_create ("Trackback");
+    tcase_add_test(tc, test_trackback);
     suite_add_tcase (s, tc);
 
 

@@ -563,7 +563,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
     int intx0, intx1, inty0, inty1;
     int intx2, inty2;
     int quali=0;
-    vec3d diff_pos, X[7]; /* 7 reference points used in the algorithm, TODO: check if can reuse some */
+    vec3d diff_pos, X[6]; /* 7 reference points used in the algorithm, TODO: check if can reuse some */
     double angle, acc, angle0, acc0,  dl;
     double xr[4], xl[4], yd[4], yu[4], angle1, acc1;
     vec2d p[4], c[4], n[4]; // would replace xp,yp and xc,yc and xn,yn by p[i][0],p[i][1]
@@ -585,11 +585,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
     track_par *tpar;
     volume_par *vpar;
     control_par *cpar;
-
-    /* Remaining globals:
-    all those in trackcorr_c_init.
-    calibration globals.
-    */
 
     foundpix *w, *wn, *p16; //p16 due to history of 4 cameras times 4 candidates
 
@@ -613,7 +608,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
     /* try to track correspondences from previous 0 - corp, variable h */
     for (h = 0; h < fb->buf[1]->num_parts; h++) {
-        for (j = 0; j < 7; j++) vec_init(X[j]);
+        for (j = 0; j < 6; j++) vec_init(X[j]);
 
         curr_path_inf = &(fb->buf[1]->path_info[h]);
         curr_corres = &(fb->buf[1]->correspond[h]);
@@ -1137,17 +1132,16 @@ void trackcorr_c_finish(tracking_run *run_info, int step, int display)
 }
 
 /*     track backwards */
-void trackback_c (tracking_run *run_info, int step, int display, Calibration **cal)
+double trackback_c (tracking_run *run_info, int step, int display, Calibration **cal)
 {
     char  buf[256];
-    int i, j, h, k, in_volume=0;
+    int i, j, h, in_volume=0;
     int counter1, philf[4][MAX_CANDS];
     int count1=0, count2=0, num_added=0;
     int quali=0;
-    double  angle, acc, lmax, dl;
+    double  angle, acc, dl;
     double xr[4], xl[4], yd[4], yu[4];
-    vec3d diff_pos, X[7]; /* 7 reference points used in the algorithm, TODO: check if can reuse some */
-    // double xn[4], yn[4];
+    vec3d diff_pos, X[6]; /* 6 reference points used in the algorithm */
     vec2d n[4], v2[4]; // replaces xn,yn, x2[4], y2[4],
     double rr, Ymin=0, Ymax=0;
     double npart=0, nlinks=0;
@@ -1167,18 +1161,17 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
     int _frame_parts; /* number of particles in a frame */
 
     display = 1;
-    /* read data */
-    seq_par = read_sequence_par("parameters/sequence.par", 4);
-    tpar = read_track_par("parameters/track.par");
-    vpar = read_volume_par("parameters/criteria.par");
-    cpar = read_control_par("parameters/ptv.par");
+    
+    /* shortcuts */
+    seq_par = run_info->seq_par;
+    tpar = run_info->tpar;
+    vpar = run_info->vpar;
+    cpar = run_info->cpar;
 
     p16 = (foundpix*) calloc(cpar->num_cams*MAX_CANDS, sizeof(foundpix));
-
-
-    fb = (framebuf *) malloc(sizeof(framebuf));
-    fb_init(fb, 4, cpar->num_cams, MAX_TARGETS,
-        "res/rt_is", "res/ptv_is", "res/added", seq_par->img_base_name);
+    
+    
+    fb = run_info->fb;
 
     /* Prime the buffer with first frames */
     for (step = seq_par->last; step > seq_par->last - 4; step--) {
@@ -1187,14 +1180,9 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
     }
     fb_prev(fb);
 
-    lmax = norm((tpar->dvxmin - tpar->dvxmax), (tpar->dvymin - tpar->dvymax),
-	    (tpar->dvzmin - tpar->dvzmax));
-    volumedimension (&(vpar->X_lay[1]), &(vpar->X_lay[0]), &Ymax,
-        &Ymin, &(vpar->Zmax_lay[1]), &(vpar->Zmin_lay[0]), vpar, cpar, *cal);
-
     /* sequence loop */
     for (step = seq_par->last - 1; step > seq_par->first; step--) {
-        sprintf (buf, "Time step: %d, seqnr: %d, Particle info:",
+        printf ("Time step: %d, seqnr: %d:\n",
             step - seq_par->first, step);
 
         for (h = 0; h < fb->buf[1]->num_parts; h++) {
@@ -1203,7 +1191,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
             /* We try to find link only if the forward search failed to. */
             if ((curr_path_inf->next < 0) || (curr_path_inf->prev != -1)) continue;
 
-            for (j = 0; j < 7; j++) vec_init(X[j]);
+            for (j = 0; j < 6; j++) vec_init(X[j]);
             curr_path_inf->inlist = 0;
             reset_foundpix_array(p16, fb->num_cams*MAX_CANDS, fb->num_cams);
 
@@ -1217,36 +1205,18 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
             search_volume_center_moving(ref_path_inf->x, curr_path_inf->x, X[2]);
 
             for (j=0; j < fb->num_cams; j++) {
-                img_coord(X[2], cal[j], cpar->mm, &n[j][0], &n[j][1]);
-                metric_to_pixel(&n[j][0], &n[j][1], n[j][0], n[j][1], cpar);
+                point_to_pixel (n[j], X[2], cal[j], cpar);
             }
 
             /* calculate searchquader and reprojection in image space */
             searchquader(X[2], xr, xl, yd, yu, tpar, cpar, cal);
 
-
-            for (j = 0; j < fb->num_cams; j++) {
-                counter1 = candsearch_in_pix (
-                    fb->buf[2]->targets[j], fb->buf[2]->num_targets[j], n[j][0], n[j][1],
-                    xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
-
-                for(k=0; k<4; k++) {
-                    if( counter1>0) {
-                        if (philf[j][k] == -999){
-                            p16[j*4+k].ftnr=-1;
-                        } else {
-                            p16[j*4+k].ftnr=fb->buf[3]->targets[j][philf[j][k]].tnr;
-                            p16[j*4+k].whichcam[j]=1;
-                        }
-                    }
-                }
-            }
             /* search in pix for candidates in next time step */
-            //for (j = 0; j < fb->num_cams; j++) {
-            //    register_closest_neighbs(fb->buf[2]->targets[j],
-            //        fb->buf[2]->num_targets[j], j, n[j][0], n[j][1],
-            //        xl[j], xr[j], yu[j], yd[j], &p16[j*MAX_CANDS]);
-            //}
+            for (j = 0; j < fb->num_cams; j++) {
+                register_closest_neighbs(fb->buf[2]->targets[j],
+                    fb->buf[2]->num_targets[j], j, n[j][0], n[j][1],
+                    xl[j], xr[j], yu[j], yd[j], &p16[j*MAX_CANDS], cpar);
+            }
 
             /* fill and sort candidate struct */
             sortwhatfound(p16, &counter1, fb->num_cams);
@@ -1271,7 +1241,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
                         dl = (vec_diff_norm(X[1], X[3]) +
                             vec_diff_norm(X[0], X[1]) )/2;
                         quali=w[i].freq;
-                        rr = (dl/lmax + acc/tpar->dacc + angle/tpar->dangle)/quali;
+                        rr = (dl/run_info->lmax + acc/tpar->dacc + angle/tpar->dangle)/quali;
                         register_link_candidate(curr_path_inf, rr, w[i].ftnr);
                     }
                 }
@@ -1289,7 +1259,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
                 if ( curr_path_inf->inlist == 0) {
                     for (j = 0; j < fb->num_cams; j++) {
                         /* use fix distance to define xl, xr, yu, yd instead of searchquader */
-                        xl[j]= xr[j]= yu[j]= yd[j] = ADD_PART;
+                        xl[j]=xr[j]=yu[j]=yd[j] = ADD_PART;
 
                         counter1 = candsearch_in_pix (fb->buf[2]->targets[j],
                             fb->buf[2]->num_targets[j], n[j][0], n[j][1],
@@ -1309,10 +1279,11 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
                     }
 
                     if (quali>=2) {
-                        vec_copy(X[3], X[2]);
+                        //vec_copy(X[3], X[2]);
                         in_volume=0;
 
                         point_position(v2, fb->num_cams, cpar->mm, cal, X[3]);
+                        printf("from pointposition X[3]:%3.2f %3.2f %3.2f\n",X[3][0],X[3][1],X[3][2]);
 
                         /* volume check */
                         if ( vpar->X_lay[0] < X[3][0] && X[3][0] < vpar->X_lay[1] &&
@@ -1329,7 +1300,7 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
                             {
                                 dl = (vec_diff_norm(X[1], X[3]) +
                                     vec_diff_norm(X[0], X[1]) )/2;
-                                rr =(dl/lmax+acc/tpar->dacc + angle/tpar->dangle)/(quali);
+                                rr =(dl/run_info->lmax+acc/tpar->dacc + angle/tpar->dangle)/(quali);
 
                                 ref_path_inf = &(fb->buf[2]->path_info[
                                     fb->buf[2]->num_parts]);
@@ -1443,4 +1414,6 @@ void trackback_c (tracking_run *run_info, int step, int display, Calibration **c
 
     /* reset of display flag */
     display = 1;
+    
+    return nlinks;
 }
