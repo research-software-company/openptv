@@ -303,8 +303,8 @@ END_TEST
 
 START_TEST(test_searchquader)
 {
-    vec3d point = {0.0, 0.0, 0.0};
-    double xr[3], xl[3], yd[3], yu[3];
+    vec3d point = {185.5, 3.2, 203.9};
+    double xr[4], xl[4], yd[4], yu[4];
     Calibration *calib[3];
     control_par *cpar;
     
@@ -327,10 +327,10 @@ START_TEST(test_searchquader)
     //     printf("%f %f %f %f\n",xr[i],xl[i],yd[i],yu[i]);
     // }
     
-    ck_assert_msg( fabs(xr[0] - 2.232556)<EPS ,
-             "Was expecting 2.232556 but found %f \n", xr[0]);
-    ck_assert_msg( fabs(yu[2] - 1.001057)<EPS ,
-                      "Was expecting 1.001057 but found %f \n", yu[2]);
+    ck_assert_msg( fabs(xr[0] - 0.560048)<EPS ,
+             "Was expecting 0.560048 but found %f \n", xr[0]);
+    ck_assert_msg( fabs(yu[1] - 0.437303)<EPS ,
+                      "Was expecting 0.437303 but found %f \n", yu[1]);
     
     /* let's test just one camera, if there are no problems with the borders */
     
@@ -389,50 +389,25 @@ END_TEST
 START_TEST(test_trackcorr_c_loop)
 {
     tracking_run *ret;
-    int step, test_step=10096,display=0;
+    int step, display=0;
     Calibration *calib[3];
+    control_par *cpar;
 
     chdir("testing_fodder/track");
+    
+    
+    cpar = read_control_par("parameters/ptv.par");
+    read_all_calibration(calib, cpar->num_cams);
+    ret = trackcorr_c_init(calib[0]);
 
-    ret = (tracking_run *) malloc(sizeof(tracking_run));
-    
-    tr_init(ret, "parameters/sequence.par", "parameters/track.par",
-            "parameters/criteria.par", "parameters/ptv.par");
-    
-    fb_init(ret->fb, 4, ret->cpar->num_cams, MAX_TARGETS,
-            "res/rt_is", "res/ptv_is", "res/added", ret->seq_par->img_base_name);
-    
-    printf("Sequence for the test: %d - %d \n",ret->seq_par->first,ret->seq_par->last);
-    
-    /* Prime the buffer with first frames */
-    //for (step = ret->seq_par->first; step < ret->seq_par->first + 3; step++) {
-    for (step = test_step-1; step < test_step + 3; step++) {
-        printf("reading step %d",step);
-        if (step == test_step) printf(" <-- test");
-        printf("\n");
-        fb_read_frame_at_end(ret->fb, step, 0);
-        fb_next(ret->fb);
-    }
-    fb_prev(ret->fb);
-    
-    ret->lmax = norm((ret->tpar->dvxmin - ret->tpar->dvxmax), \
-                     (ret->tpar->dvymin - ret->tpar->dvymax), \
-                     (ret->tpar->dvzmin - ret->tpar->dvzmax));
-    
-    read_all_calibration(calib, ret->cpar->num_cams);
-    
-    volumedimension (&(ret->vpar->X_lay[1]), &(ret->vpar->X_lay[0]), &(ret->ymax),
-                     &(ret->ymin), &(ret->vpar->Zmax_lay[1]), &(ret->vpar->Zmin_lay[0]),
-                     ret->vpar, ret->cpar, (Calibration *)calib);
-    
 
+    trackcorr_c_loop (ret, ret->seq_par->first, display, calib);
     
-    trackcorr_c_loop (ret, test_step, display, calib);
-    
-    for (step = test_step; step < test_step+6; step++) {
+    for (step = ret->seq_par->first+1; step < ret->seq_par->last; step++)
+    {
         trackcorr_c_loop (ret, step, display, calib);
     }
-    trackcorr_c_finish(ret, step, display);
+    trackcorr_c_finish(ret, ret->seq_par->last, display);
 }
 END_TEST
 

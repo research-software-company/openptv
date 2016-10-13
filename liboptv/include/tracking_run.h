@@ -19,6 +19,7 @@ typedef struct {
     
     /* Intermediate calculations done in run setup phase and used in the loop: */
     double ymin, ymax, lmax;
+    int npart, nlinks;
 } tracking_run;
 
 void tr_init(tracking_run *tr, char *seq_par_fname, char *tpar_fname,
