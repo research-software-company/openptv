@@ -417,9 +417,9 @@ START_TEST(test_trackcorr_c_loop)
     nlinks = (double)ret->nlinks / range;
     
     ck_assert_msg(fabs(npart - 208.0/210.0)<EPS,
-                  "Was expecting npart == 0.99 but found %f \n", 208.0/210.0);
-    ck_assert_msg(fabs(nlinks - 206.0/210.0)<EPS,
-                  "Was expecting npart == 0.98 but found %f \n", 206.0/210.0);
+                  "Was expecting npart == 208/210 but found %f \n", npart);
+    ck_assert_msg(fabs(nlinks - 198.0/210.0)<EPS,
+                  "Was expecting nlinks == 198/210 but found %f \n", nlinks);
 }
 END_TEST
 
@@ -437,6 +437,12 @@ START_TEST(test_trackback)
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
     ret = trackcorr_c_init(calib[0]);
+    ret->tpar->dvxmin =ret->tpar->dvymin=ret->tpar->dvzmin=-50;
+    ret->tpar->dvxmax =ret->tpar->dvymax=ret->tpar->dvzmax=50;
+    
+    ret->lmax = norm((ret->tpar->dvxmin - ret->tpar->dvxmax), \
+                     (ret->tpar->dvymin - ret->tpar->dvymax), \
+                     (ret->tpar->dvzmin - ret->tpar->dvzmax));
 //
 //    
 //    trackcorr_c_loop (ret, ret->seq_par->first, display, calib);
@@ -450,8 +456,8 @@ START_TEST(test_trackback)
     
     nlinks = trackback_c(ret, ret->seq_par->last, display, calib);
     
-    ck_assert_msg(fabs(nlinks - 205.0/209.0)<EPS,
-                  "Was expecting nlinks to be 206/209 but found %f\n", nlinks);
+    ck_assert_msg(fabs(nlinks - 201.0/209.0)<EPS,
+                  "Was expecting nlinks to be 201/209 but found %f %f\n", nlinks, nlinks*209.0);
     
     
     

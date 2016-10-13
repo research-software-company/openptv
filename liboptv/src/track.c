@@ -75,10 +75,6 @@ tracking_run* trackcorr_c_init(Calibration *cal) {
         &(ret->ymin), &(ret->vpar->Zmax_lay[1]), &(ret->vpar->Zmin_lay[0]),
         ret->vpar, ret->cpar, cal);
 
-    // Denis - globals below are used in trackcorr_finish
-    npart=0;
-    nlinks=0;
-
     return ret;
 }
 
