@@ -395,6 +395,8 @@ START_TEST(test_trackcorr_c_loop)
 
     chdir("testing_fodder/track");
     
+    printf("----------------------------\n");
+    printf("Test tracking multiple files 2 cameras, 1 particle \n");
     
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
@@ -421,51 +423,20 @@ START_TEST(test_trackcorr_c_loop)
     ck_assert_msg(fabs(nlinks - 198.0/210.0)<EPS,
                   "Was expecting nlinks == 198/210 but found %f \n", nlinks);
     
-    
-    
-    printf("----------------------------\n");
-    printf("Test cavity case \n");
-    chdir("testing_fodder/test_cavity");
-    
-    
-    cpar = read_control_par("parameters/ptv.par");
-    read_all_calibration(calib, cpar->num_cams);
-    printf("In test_cavity num cams = %d\n",cpar->num_cams);
-    ret = trackcorr_c_init(calib[0]);
-    
-    
-    
-    for (step = ret->seq_par->first; step < ret->seq_par->last; step++)
-    {
-        trackcorr_c_loop (ret, step, display, calib);
-    }
-    trackcorr_c_finish(ret, ret->seq_par->last, display);
-    
-//    range = ret->seq_par->last - ret->seq_par->first;
-    
-    /* average of all steps */
-//    npart = (double)ret->npart / range;
-//    nlinks = (double)ret->nlinks / range;
-    
-//    ck_assert_msg(fabs(npart - 208.0/210.0)<EPS,
-//                  "Was expecting npart == 208/210 but found %f \n", npart);
-//    ck_assert_msg(fabs(nlinks - 198.0/210.0)<EPS,
-//                  "Was expecting nlinks == 198/210 but found %f \n", nlinks);
 }
 END_TEST
 
 START_TEST(test_cavity)
 {
     tracking_run *ret;
-    int step, display=0;
+    int display=0;
     Calibration *calib[4];
     control_par *cpar;
-    double npart, nlinks;
-    int range;
     
     
     printf("----------------------------\n");
     printf("Test cavity case \n");
+    
     chdir("testing_fodder/test_cavity");
     
     
@@ -474,39 +445,28 @@ START_TEST(test_cavity)
     printf("In test_cavity num cams = %d\n",cpar->num_cams);
     ret = trackcorr_c_init(calib[0]);
     
+    trackcorr_c_loop (ret, 10002, display, calib);
+    //trackcorr_c_finish(ret, 10002, display);
     
-    
-//    for (step = ret->seq_par->first; step < ret->seq_par->last; step++)
-//    {
-        trackcorr_c_loop (ret, 10002, display, calib);
-//    }
-//    trackcorr_c_finish(ret, ret->seq_par->last, display);
-    
-    
-//    range = ret->seq_par->last - ret->seq_par->first;
-//    
-//    
-//    /* average of all steps */
-//    npart = (double)ret->npart / range;
-//    nlinks = (double)ret->nlinks / range;
-//    
-//    ck_assert_msg(fabs(npart - 208.0/210.0)<EPS,
-//                  "Was expecting npart == 208/210 but found %f \n", npart);
-//    ck_assert_msg(fabs(nlinks - 198.0/210.0)<EPS,
-//                  "Was expecting nlinks == 198/210 but found %f \n", nlinks);
+    ck_assert_msg(ret->npart == 672,
+                  "Was expecting npart == 672 but found %f \n", ret->npart);
+    ck_assert_msg(ret->nlinks == 99,
+                  "Was expecting nlinks == 99 but found %f \n", ret->nlinks);
 }
 END_TEST
 
 START_TEST(test_trackback)
 {
     tracking_run *ret;
-    int step, display=0;
-    double npart, nlinks;
+    int display=0;
+    double nlinks;
     Calibration *calib[3];
     control_par *cpar;
     
     chdir("testing_fodder/track");
     
+    printf("----------------------------\n");
+    printf("trackback test \n");
     
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
@@ -522,32 +482,6 @@ START_TEST(test_trackback)
     
     ck_assert_msg(fabs(nlinks - 201.0/209.0)<EPS,
                   "Was expecting nlinks to be 201/209 but found %f %f\n", nlinks, nlinks*209.0);
-    
-    ret = trackcorr_c_init(calib[0]);
-    ret->tpar->dvxmin =ret->tpar->dvymin=ret->tpar->dvzmin=-50;
-    ret->tpar->dvxmax =ret->tpar->dvymax=ret->tpar->dvzmax=50;
-    
-    ret->lmax = norm((ret->tpar->dvxmin - ret->tpar->dvxmax), \
-                     (ret->tpar->dvymin - ret->tpar->dvymax), \
-                     (ret->tpar->dvzmin - ret->tpar->dvzmax));
-    
-    for (step = ret->seq_par->first; step < ret->seq_par->last; step++)
-    {
-        trackcorr_c_loop (ret, step, display, calib);
-    }
-    trackcorr_c_finish(ret, ret->seq_par->last, display);
-    
-    int range = ret->seq_par->last - ret->seq_par->first;
-    
-    
-    /* average of all steps */
-    npart = (double)ret->npart / range;
-    nlinks = (double)ret->nlinks / range;
-    
-    ck_assert_msg(fabs(npart - 208.0/210.0)<EPS,
-                  "Was expecting npart == 208/210 but found %f \n", npart);
-    ck_assert_msg(fabs(nlinks - 206.0/210.0)<EPS,
-                  "Was expecting nlinks == 206/210 but found %f \n", nlinks);
     
     
     
@@ -594,17 +528,17 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_sortwhatfound);
     suite_add_tcase (s, tc);
     
-//    tc = tcase_create ("Trackcorr_c_loop");
-//    tcase_add_test(tc, test_trackcorr_c_loop);
-//    suite_add_tcase (s, tc);
-    
     tc = tcase_create ("Test cavity case");
     tcase_add_test(tc, test_cavity);
     suite_add_tcase (s, tc);
     
-//    tc = tcase_create ("Trackback");
-//    tcase_add_test(tc, test_trackback);
-//    suite_add_tcase (s, tc);
+    tc = tcase_create ("Trackcorr_c_loop");
+    tcase_add_test(tc, test_trackcorr_c_loop);
+    suite_add_tcase (s, tc);
+
+    tc = tcase_create ("Trackback");
+    tcase_add_test(tc, test_trackback);
+    suite_add_tcase (s, tc);
 
 
     return s;
