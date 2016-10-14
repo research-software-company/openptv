@@ -140,10 +140,7 @@ void register_closest_neighbs(target *targets, int num_targets, int cam,
     cand = candsearch_in_pix (targets, num_targets, cent_x, cent_y, dl, dr,
         du, dd, all_cands, cpar);
     
-    printf("found %d targets \n",cand);
-
     for (cand = 0; cand < MAX_CANDS; cand++) {
-        printf("allcands[%d] = %d\n",cand,all_cands[cand]);
         if(all_cands[cand] == -999) {
             reg[cand].ftnr = -1;
         } else {
@@ -151,7 +148,6 @@ void register_closest_neighbs(target *targets, int num_targets, int cam,
             reg[cand].ftnr = targets[all_cands[cand]].tnr;
         }
     }
-    printf("finished assignment to p16 in register_closest\n");
 }
 
 /* search_volume_center_moving() finds the position of the center of the search
@@ -275,7 +271,7 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
     p1 = p2 = p3 = p4 = -999;
     d1 = d2 = d3 = d4 = dmin;
     
-    printf("candsearch center %3.2f %3.2f\n",cent_x,cent_y);
+    // printf("candsearch center %3.2f %3.2f\n",cent_x,cent_y);
     // printf("targets in this frame %d \n",num_targets);
 
     if (cent_x >= 0.0 && cent_x <= cpar->imx ) {
@@ -327,7 +323,7 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
             p[3]=p4;
 
             for (j=0; j<4; j++) if ( p[j] != -999 ) {
-                printf("neighbour %d at %3.2f %3.2f \n",p[j],next[p[j]].x,next[p[j]].y);
+                // printf("neighbour %d at %3.2f %3.2f \n",p[j],next[p[j]].x,next[p[j]].y);
                 counter++;
             }
         } /* if x is within the image boundaries */
