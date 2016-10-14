@@ -143,6 +143,7 @@ void register_closest_neighbs(target *targets, int num_targets, int cam,
     printf("found %d targets \n",cand);
 
     for (cand = 0; cand < MAX_CANDS; cand++) {
+        printf("allcands[%d] = %d\n",cand,all_cands[cand]);
         if(all_cands[cand] == -999) {
             reg[cand].ftnr = -1;
         } else {
@@ -150,6 +151,7 @@ void register_closest_neighbs(target *targets, int num_targets, int cam,
             reg[cand].ftnr = targets[all_cands[cand]].tnr;
         }
     }
+    printf("finished assignment to p16 in register_closest\n");
 }
 
 /* search_volume_center_moving() finds the position of the center of the search
@@ -269,6 +271,7 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
     if(ymax > cpar->imy)
         ymax = cpar->imy;
 
+    for (j=0; j<4; j++) ( p[j] = -999 );
     p1 = p2 = p3 = p4 = -999;
     d1 = d2 = d3 = d4 = dmin;
     
@@ -598,7 +601,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
     //printf(" ------------------------- \n");
     //printf("we temporarly use only the 1st particle\n");
     /****************** don't forget to remove ******/
-    // fb->buf[1]->num_parts = 4;
+    //fb->buf[1]->num_parts = 78;
 
     p16 = (foundpix*) calloc(fb->num_cams*MAX_CANDS, sizeof(foundpix));
 
@@ -792,20 +795,24 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
             
             quali=0;
             for (j = 0;j < fb->num_cams; j++) {
-                if (v2[j][0] != -1e-10 && v2[j][1] != -1e-10){
+                if (v2[j][0] != -1e10 && v2[j][1] != -1e10){
+                    printf("before pixel to metric %3.2f %3.2f\n",v2[j][0],v2[j][1]);
                     pixel_to_metric(&v2[j][0],&v2[j][1], v2[j][0],v2[j][1], cpar);
+                    printf("after pixel to metric %3.2f %3.2f\n",v2[j][0],v2[j][1]);
                     quali++;
                 }
             }
             
-
+            /* quali >=2 means at least in two cameras
+             * we found a candidate
+             */
 	        if ( quali >= 2) {
                 /* next line is not clear to me, why to copy X[5] to X[4]? */
                 /* todo: check when it really does something useful, i.e.
                  * when point_position does not return a thing? is it possible?
                  */
                 
-                //vec_copy(X[4], X[5]);
+                vec_copy(X[4], X[5]);
 		        in_volume = 0; //inside volume
                 
                 dl = point_position(v2, cpar->num_cams, cpar->mm, cal, X[4]);
