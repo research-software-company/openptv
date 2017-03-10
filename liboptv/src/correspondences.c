@@ -662,7 +662,7 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
   /*   search consistent quadruplets in the list */
   if (cpar->num_cams == 4) {
     match0 = four_camera_matching(list, frm->num_targets[0], 
-        vpar->corrmin, con0, frm->num_targets[0]); //4*NMAX);
+        vpar->corrmin, con0, 4*NMAX);
     
     match_counts[0] = take_best_candidates(con0, con, cpar->num_cams, match0, tim);
     match_counts[3] += match_counts[0];

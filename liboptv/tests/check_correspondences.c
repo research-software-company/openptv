@@ -453,7 +453,7 @@ START_TEST(test_correspondences)
     frm = generate_test_set(calib, cpar, vpar);
 
     corrected = correct_frame(frm, calib, cpar, 0.0001);
-    con = correspondences(frm, corrected, vpar, cpar, calib, match_counts);
+    correspondences(frm, corrected, vpar, cpar, calib, match_counts);
     
     for (int i=0;i<4;i++){
         printf("%d \n", match_counts[i]);
