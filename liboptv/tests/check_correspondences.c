@@ -94,7 +94,7 @@ END_TEST
 START_TEST(test_quicksort_con)
 {
     			   
-    int i, num = 3; /* length of the test_crd */
+    int num = 3; /* length of the test_crd */
     
     n_tupel test_con[] = {
         {{0, 1, 2, 3}, 0.1},
@@ -376,7 +376,6 @@ START_TEST(test_two_camera_matching)
     /* the overall setup is the same as the 4-camera test, with the following
        changes: targets are darkenned in two cameras to get 16 pairs. */
     frame *frm;
-    target *targ;
     
     Calibration *calib[4];
     volume_par *vpar;
@@ -387,7 +386,7 @@ START_TEST(test_two_camera_matching)
     n_tupel *con;
     int **tusage;
     
-    int cam, matched, part;
+    int cam, matched;
     
     fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
     fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
@@ -435,7 +434,7 @@ START_TEST(test_correspondences)
     control_par *cpar;
     coord_2d **corrected;
     n_tupel *con;
-    int cam, match_counts[4];
+    int match_counts[4];
     
     cpar = read_control_par("testing_fodder/parameters/ptv.par");
     vpar = read_volume_par("testing_fodder/parameters/criteria.par");
