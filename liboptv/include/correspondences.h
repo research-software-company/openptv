@@ -7,8 +7,11 @@
 #include "parameters.h"
 #include "calibration.h"
 #include "epi.h"
+#include "vec_utils.h"
+#include "imgcoord.h"
+#include "trafo.h"
 
-#define nmax 202400
+#define NMAX 202400
 
 
 typedef struct

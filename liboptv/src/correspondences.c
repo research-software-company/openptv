@@ -18,6 +18,7 @@ Description:	       	establishment of correspondences for 2/3/4 cameras
 #include <stdlib.h>
 #include "correspondences.h"
 
+#define NMAX 202400
 
 /* quicksort for list of correspondences in order of match quality */
 /* 4 camera version */
@@ -182,7 +183,7 @@ int** safely_allocate_target_usage_marks(int num_cams) {
     
     for (cam = 0; cam < num_cams; cam++) {
         if (error == 0) {
-            tusage[cam] = (int *) calloc(nmax, sizeof(int));
+            tusage[cam] = (int *) calloc(NMAX, sizeof(int));
             if (tusage[cam] == NULL) 
                 error = 1;
         } else {
@@ -327,7 +328,7 @@ int four_camera_matching(correspond *list[4][4], int base_target_count,
                   
                   matched++;
                   if (matched == scratch_size) {
-                      printf ("Overflow in correspondences.\n");
+                      printf ("Overflow in correspondences, 4 cams, matched = %d \n",matched);
                       return matched;
                   }
               }
@@ -370,16 +371,16 @@ int three_camera_matching(correspond *list[4][4], int num_cams,
         for (i = 0; i < target_counts[i1]; i++) {
             for (i2 = i1 + 1; i2 < num_cams - 1; i2++) {
                 p1 = list[i1][i2][i].p1;
-                if (p1 > nmax || tusage[i1][p1] > 0) continue;
+                if (p1 > NMAX || tusage[i1][p1] > 0) continue;
                 
                 for (j = 0; j < list[i1][i2][i].n; j++) {
                     p2 = list[i1][i2][i].p2[j];
-                    if (p2 > nmax || tusage[i2][p2] > 0) continue;
+                    if (p2 > NMAX || tusage[i2][p2] > 0) continue;
 
                     for (i3 = i2 + 1; i3 < num_cams; i3++)
                         for (k = 0; k < list[i1][i3][i].n; k++) {
                             p3 = list[i1][i3][i].p2[k];
-                            if (p3 > nmax || tusage[i3][p3] > 0) continue;
+                            if (p3 > NMAX || tusage[i3][p3] > 0) continue;
 						  						  
                             for (m = 0; m < list[i2][i3][p2].n; m++) {
                                 if (p3 != list[i2][i3][p2].p2[m]) continue;
@@ -406,7 +407,7 @@ int three_camera_matching(correspond *list[4][4], int num_cams,
                                 
                                 matched++;
                                 if (matched == scratch_size) {
-                                    printf ("Overflow in correspondences.\n");
+                                    printf ("Overflow in correspondences, 3 cams, matched = %d\n",matched);
                                     return matched;
                                 }
                             }
@@ -431,7 +432,7 @@ int consistent_pair_matching(correspond *list[4][4], int num_cams,
         for (i2 = i1 + 1; i2 < num_cams; i2++) {
             for (i=0; i < target_counts[i1]; i++) {
                 p1 = list[i1][i2][i].p1;
-                if (p1 > nmax || tusage[i1][p1] > 0) continue;
+                if (p1 > NMAX || tusage[i1][p1] > 0) continue;
 
                 /* if the candidate is the only one, there is no ambiguity. 
                    we only take unambiguous pairs.
@@ -439,7 +440,7 @@ int consistent_pair_matching(correspond *list[4][4], int num_cams,
                 if (list[i1][i2][i].n != 1) continue;
 
                 p2 = list[i1][i2][i].p2[0];
-                if (p2 > nmax || tusage[i2][p2] > 0) continue;
+                if (p2 > NMAX || tusage[i2][p2] > 0) continue;
 
                 corr = list[i1][i2][i].corr[0] / list[i1][i2][i].dist[0];
                 if (corr <= accept_corr) continue;
@@ -454,7 +455,7 @@ int consistent_pair_matching(correspond *list[4][4], int num_cams,
                 
                 matched++;
                 if (matched == scratch_size) {
-                    printf ("Overflow in correspondences.\n");
+                    printf ("Overflow in correspondences in pairs, matched = %d\n",matched);
                     return matched;
                 }
             }
@@ -620,8 +621,9 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
   /* Allocation of scratch buffers for internal tasks and return-value 
      space. 
   */
-  con0 = (n_tupel *) malloc(cpar->num_cams*nmax * sizeof(n_tupel));
-  con = (n_tupel *) malloc(cpar->num_cams*nmax * sizeof(n_tupel)); 
+    
+  con0 = (n_tupel *) malloc(cpar->num_cams*NMAX * sizeof(n_tupel));
+  con =  (n_tupel *) malloc(cpar->num_cams*NMAX * sizeof(n_tupel)); 
   
   tim = safely_allocate_target_usage_marks(cpar->num_cams);
   if (tim == NULL) {
@@ -645,7 +647,7 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
    number of targets in any image (if we will implement the cyclic search) but for 
    a while we always start with the cam1
 */     	
-  for (i = 0; i < nmax; i++) {
+  for (i = 0; i < NMAX; i++) {
     for (j = 0; j < cpar->num_cams; j++) {
         con0[i].p[j] = -1;
     }
@@ -656,11 +658,11 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
   /* Generate adjacency lists: mark candidates for correspondence.
      matching  1 -> 2,3,4  +  2 -> 3,4  +  3 -> 4 */
   match_pairs(list, corrected, frm, vpar, cpar, calib);
-
+  
   /*   search consistent quadruplets in the list */
   if (cpar->num_cams == 4) {
     match0 = four_camera_matching(list, frm->num_targets[0], 
-        vpar->corrmin, con0, 4*nmax);
+        vpar->corrmin, con0, frm->num_targets[0]); //4*NMAX);
     
     match_counts[0] = take_best_candidates(con0, con, cpar->num_cams, match0, tim);
     match_counts[3] += match_counts[0];
@@ -669,7 +671,7 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
   /*   search consistent triplets :  123, 124, 134, 234 */
   if ((cpar->num_cams == 4 && cpar->allCam_flag == 0) || cpar->num_cams == 3) {
     match0 = three_camera_matching(list, cpar->num_cams, frm->num_targets, 
-        vpar->corrmin, con0, 4*nmax, tim);
+        vpar->corrmin, con0, 4*NMAX, tim);
     
     match_counts[1] = take_best_candidates(con0, &(con[match_counts[3]]), 
         cpar->num_cams, match0, tim);
@@ -679,7 +681,7 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
   /*   search consistent pairs :  12, 13, 14, 23, 24, 34 */
   if(cpar->num_cams > 1 && cpar->allCam_flag == 0) {
       match0 = consistent_pair_matching(list, cpar->num_cams, 
-          frm->num_targets, vpar->corrmin, con0, 4*nmax, tim);
+          frm->num_targets, vpar->corrmin, con0, 4*NMAX, tim);
                 
       match_counts[2] = take_best_candidates(con0, &(con[match_counts[3]]), 
           cpar->num_cams, match0, tim);
