@@ -403,6 +403,7 @@ int prepare_image(unsigned char  *img, unsigned char  *img_hp, int dim_lp,
         for (i = 0; i < 9; i++) {
             if (fscanf(fp, "%lf", (double *)filt + i) == 0) {
                 fclose(fp);
+                free (img_lp);
                 return 0;
             }
         }

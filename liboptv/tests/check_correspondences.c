@@ -433,14 +433,14 @@ START_TEST(test_correspondences)
     volume_par *vpar;
     control_par *cpar;
     coord_2d **corrected;
-    n_tupel *con;
+    // n_tupel *con;
     int match_counts[4];
     
     cpar = read_control_par("testing_fodder/parameters/ptv.par");
     vpar = read_volume_par("testing_fodder/parameters/criteria.par");
     
-    // fail_if(cpar == 0);
-    // fail_if(vpar == 0);
+    fail_if(cpar == 0);
+    fail_if(vpar == 0);
         
     
     /* Cameras are at so high angles that opposing cameras don't see each other
@@ -453,17 +453,17 @@ START_TEST(test_correspondences)
     frm = generate_test_set(calib, cpar, vpar);
 
     corrected = correct_frame(frm, calib, cpar, 0.0001);
-    con = correspondences(frm, corrected, vpar, cpar, calib, match_counts);
+    correspondences(frm, corrected, vpar, cpar, calib, match_counts);
     
     for (int i=0;i<4;i++){
         printf("%d \n", match_counts[i]);
     }
     
     /* The example set is built to have all 16 quadruplets. */
-    //fail_unless(match_counts[0] == 16);
-    //fail_unless(match_counts[1] == 0);
-    //fail_unless(match_counts[2] == 0);
-    //fail_unless(match_counts[3] == 16); /* last elemnt is the sum of matches */
+    fail_unless(match_counts[0] == 16);
+    fail_unless(match_counts[1] == 0);
+    fail_unless(match_counts[2] == 0);
+    fail_unless(match_counts[3] == 16); /* last elemnt is the sum of matches */
 }
 END_TEST
 
