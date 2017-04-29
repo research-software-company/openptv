@@ -950,10 +950,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
     }
     /* end of creation of links with decision check */
 
-    printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d\n",
-            step, fb->buf[1]->num_parts, fb->buf[2]->num_parts, count1,
-            fb->buf[1]->num_parts - count1, num_added);
-
     /* for the average of particles and links */
     run_info->npart = run_info->npart + fb->buf[1]->num_parts;
     run_info->nlinks = run_info->nlinks + count1;
@@ -1022,9 +1018,6 @@ double trackback_c (tracking_run *run_info, int step)
 
     /* sequence loop */
     for (step = seq_par->last - 1; step > seq_par->first; step--) {
-        printf ("Time step: %d, seqnr: %d:\n",
-                step - seq_par->first, step);
-
         for (h = 0; h < fb->buf[1]->num_parts; h++) {
             curr_path_inf = &(fb->buf[1]->path_info[h]);
 
@@ -1168,10 +1161,6 @@ double trackback_c (tracking_run *run_info, int step)
 
             if (curr_path_inf->prev != PREV_NONE ) count1++;
         }         /* end of creation of links with decision check */
-
-        printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d",
-                step, fb->buf[1]->num_parts, fb->buf[2]->num_parts, count1,
-                fb->buf[1]->num_parts - count1, num_added);
 
         /* for the average of particles and links */
         npart = npart + fb->buf[1]->num_parts;

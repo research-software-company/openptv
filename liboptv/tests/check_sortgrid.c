@@ -19,23 +19,23 @@ START_TEST(test_nearest_neighbour_pix)
 {
     target t1 = {0, 1127.0000, 796.0000, 13320, 111, 120, 828903, 1};
     int pnr = -999;
-    
+
     /* test for zero distance */
     pnr = nearest_neighbour_pix (&t1, 1, 1128.0, 795.0, 0.0);
     fail_unless(pnr == -999);
-    
+
     /* test for negative epsilon */
     pnr = nearest_neighbour_pix (&t1, 1, 1128.0, 795.0, -1.0);
     fail_unless(pnr == -999);
-        
+
     /* test for negative pixel values */
     pnr = nearest_neighbour_pix (&t1, 1, -1127.0, -796.0, 1E3);
     fail_unless(pnr == -999);
-    
+
     /* test for the correct use */
     pnr = nearest_neighbour_pix (&t1, 1, 1127.0, 796.0, 1E-5);
     fail_unless(pnr == 0);
-    
+
 }
 END_TEST
 
@@ -45,7 +45,7 @@ START_TEST(test_read_sortgrid_par)
 
     eps = read_sortgrid_par("testing_fodder/parameters/sortgrid.par");
     fail_unless(eps == correct_eps);
-    
+
     eps = read_sortgrid_par("testing_fodder/parameters/sortgrid_corrupted.par");
     fail_unless(eps == 0);
 
@@ -57,12 +57,12 @@ START_TEST(test_read_calblock)
     int num_points, correct_num_points = 5;
     vec3d *fix;
     char calblock_file[] = "testing_fodder/cal/calblock.txt";
-    
-    ck_assert_msg (file_exists(calblock_file) == 1, 
+
+    ck_assert_msg (file_exists(calblock_file) == 1,
         "\n File %s does not exist\n", calblock_file);
-    
-    fix = read_calblock(&num_points, calblock_file);   
-    
+
+    fix = read_calblock(&num_points, calblock_file);
+
     fail_if (num_points == 0, "\n calblock file reading failed \n");
     fail_unless(num_points == correct_num_points);
 }
@@ -75,7 +75,7 @@ START_TEST(test_sortgrid)
     vec3d *fix;
     target pix[2];
     target *sorted_pix;
-    int nfix, i;
+    int nfix;
     int eps, correct_eps = 25;
 
     eps = read_sortgrid_par("testing_fodder/parameters/sortgrid.par");
@@ -105,29 +105,29 @@ START_TEST(test_sortgrid)
     sorted_pix = sortgrid (cal, cpar, nfix, fix, targets_read, 120, pix);
     fail_unless(sorted_pix[1].pnr == 1);
     fail_unless(sorted_pix[1].x == 796);
-    
+
 }
 END_TEST
 
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Sortgrid");
- 
+
     TCase *tc = tcase_create ("Nearest neighbour search");
     tcase_add_test(tc, test_nearest_neighbour_pix);
     suite_add_tcase (s, tc);
-    
+
     tc = tcase_create ("Read sortgrid.par");
-    tcase_add_test(tc, test_read_sortgrid_par);     
-    suite_add_tcase (s, tc); 
-    
-    tc = tcase_create ("Read calblock");
-    tcase_add_test(tc, test_read_calblock);     
+    tcase_add_test(tc, test_read_sortgrid_par);
     suite_add_tcase (s, tc);
-      
+
+    tc = tcase_create ("Read calblock");
+    tcase_add_test(tc, test_read_calblock);
+    suite_add_tcase (s, tc);
+
     tc = tcase_create ("Sortgrid");
-    tcase_add_test(tc, test_sortgrid);     
-    suite_add_tcase (s, tc); 
+    tcase_add_test(tc, test_sortgrid);
+    suite_add_tcase (s, tc);
     return s;
 }
 
@@ -150,4 +150,3 @@ int file_exists(char *filename){
         return 0;
     }
 }
-
