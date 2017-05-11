@@ -94,7 +94,6 @@ END_TEST
 
 START_TEST(test_diff_norm)
 {
-    int i;
     vec3d vec1 = {1., 2., 3.}, vec2 = {4., 5., 6.};
     fail_unless(vec_diff_norm(vec1, vec2) == sqrt(3)*3);
 }

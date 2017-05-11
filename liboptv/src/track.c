@@ -113,7 +113,7 @@ void register_closest_neighbs(target *targets, int num_targets, int cam,
 {
     int cand, all_cands[MAX_CANDS];
 
-    cand = candsearch_in_pix (targets, num_targets, cent_x, cent_y, dl, dr,
+    candsearch_in_pix (targets, num_targets, cent_x, cent_y, dl, dr,
                               du, dd, all_cands, cpar);
 
     for (cand = 0; cand < MAX_CANDS; cand++) {
@@ -805,7 +805,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
             if ( quali >= 2) {
                 in_volume = 0;                 //inside volume
 
-                dl = point_position(v2, cpar->num_cams, cpar->mm, cal, X[4]);
+                point_position(v2, cpar->num_cams, cpar->mm, cal, X[4]);
 
                 /* volume check */
                 if ( vpar->X_lay[0] < X[4][0] && X[4][0] < vpar->X_lay[1] &&
@@ -834,9 +834,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                         }
                     }
                 }
-                in_volume = 0;
             }
-            quali = 0;
 
             /* end of creating new particle position */
             /* *************************************************************** */
@@ -873,7 +871,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                     vec_copy(X[3], X[2]);
                     in_volume = 0;
 
-                    dl = point_position(v2, fb->num_cams, cpar->mm, cal, X[3]);
+                    point_position(v2, fb->num_cams, cpar->mm, cal, X[3]);
 
                     /* in volume check */
                     if ( vpar->X_lay[0] < X[3][0] && X[3][0] < vpar->X_lay[1] &&
@@ -900,7 +898,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                             num_added++;
                         }
                     }
-                    in_volume = 0;
                 }                 // if quali >= 2
             }
         }
@@ -1111,7 +1108,6 @@ double trackback_c (tracking_run *run_info, int step)
                                 add_particle(fb->buf[2], X[3], philf);
                             }
                         }
-                        in_volume = 0;
                     }
                 }
             }             /* end of if old wasn't found try to create new particle position from rest */

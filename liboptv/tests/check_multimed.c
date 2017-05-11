@@ -22,8 +22,7 @@ int file_exists(char *filename);
 
 START_TEST(test_init_mmLUT)
 {
-    double xmax, xmin, ymax, ymin, zmax, zmin;
-    int i; 
+    int i;
     
     Calibration *cal;
     
@@ -47,7 +46,7 @@ START_TEST(test_init_mmLUT)
     cpar = read_control_par(filename);
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
 
-    mmlut test_mmlut[4], correct_mmlut[4]; 
+    mmlut correct_mmlut[4];
      
     vec_set(correct_mmlut[0].origin, 0.0, 0.0, -250.00001105);
 
@@ -98,18 +97,9 @@ START_TEST(test_back_trans_Point)
         {{1.0, 0.2, -0.3}, 
         {0.2, 1.0, 0.0},
         {-0.3, 0.0, 1.0}}};
-        
-    Exterior correct_Ex_t = {
-        0.0, 0.0, 99.0,
-        -0.0, 0.0, 0.0, 
-        {{-0.0, -0.0, -0.0}, 
-        {-0.0, 0.0, -0.0},
-        {0.0, -0.0, -0.0}}};
     
-    Interior test_I = {0.0, 0.0, 100.0};
+    
     Glass test_G = {0.0001, 0.00001, 1.0};
-    ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
-    Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
     
     mm_np test_mm = {
     	1, 
@@ -119,8 +109,7 @@ START_TEST(test_back_trans_Point)
     	1.33};
     
     Exterior Ex_t; 
-    double X_t, Y_t, Z_t;
-    double cross_p[3], cross_c[3]; 
+    double cross_p[3], cross_c[3];
 
      trans_Cam_Point(test_Ex, test_mm, test_G, pos, &Ex_t, pos_t, \
      cross_p, cross_c);
@@ -141,7 +130,6 @@ START_TEST(test_volumedimension)
 {
 
     double xmax, xmin, ymax, ymin, zmax, zmin;
-    int i; 
     
     Calibration *tmp, *cal[2];
         
@@ -240,8 +228,7 @@ END_TEST
  
 START_TEST(test_multimed_nlay)
 {
-    double xmax, xmin, ymax, ymin, zmax, zmin;
-    int i, i_cam; 
+    int i;
         
     Calibration *cal;
 
@@ -307,10 +294,7 @@ START_TEST(test_trans_Cam_Point)
         {0.2, 1.0, 0.0},
         {-0.3, 0.0, 1.0}}};
     
-    Interior test_I = {0.0, 0.0, 100.0};
     Glass test_G = {0.0, 0.0, 50.0};
-    ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
-    Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
     
     mm_np test_mm = {
     	1, 

@@ -188,8 +188,6 @@ int targ_rec (unsigned char *img, target_par *targ_par, int xmin,
                     pix[n_targets].pnr = n_targets;
                     n_targets++;
                     
-                    xn = x;  
-                    yn = y;
               }
           } /*  end of if-loop  */
     }

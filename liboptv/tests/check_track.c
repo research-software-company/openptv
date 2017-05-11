@@ -43,7 +43,6 @@ int copy_res_dir(char *src, char *dest) {
 
     dirp = opendir(src);
     while (dirp) {
-        errno = 0;
         if ((dp = readdir(dirp)) != NULL) {
             if (dp->d_name[0] == '.') continue;
 
@@ -65,6 +64,7 @@ int copy_res_dir(char *src, char *dest) {
             return 1;
         }
     }
+    return 0;
 }
 
 int empty_res_dir() {
@@ -72,11 +72,9 @@ int empty_res_dir() {
     struct dirent *dp;
     int errno;
     char file_name[256];
-    ssize_t result;
 
     dirp = opendir("res/");
     while (dirp) {
-        errno = 0;
         if ((dp = readdir(dirp)) != NULL) {
             if (dp->d_name[0] == '.') continue;
             strncpy(file_name, "res/", 255);
@@ -87,6 +85,7 @@ int empty_res_dir() {
             return 1;
         }
     }
+    return 0;
 }
 
 START_TEST(test_predict)
@@ -391,7 +390,7 @@ START_TEST(test_sort_candidates_by_freq)
     copy_foundpix_array(dest, src, 2, 2);
 
     /* test simple sort of a small foundpix array */
-    num_parts = sort_candidates_by_freq(dest, num_cams);
+    sort_candidates_by_freq(dest, num_cams);
     
     ck_assert_msg( dest[0].ftnr == 2 ,
                   "Was expecting dest[0].ftnr == 2 but found %d \n", dest[0].ftnr);
