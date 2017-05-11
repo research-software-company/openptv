@@ -11,15 +11,15 @@ START_TEST(test_read_write_compare_targ_rec_par)
     filename_read[]  = "testing_fodder/parameters/targ_rec_all_different_fields.par",
     filename_write[] = "testing_fodder/parameters/targ_out_read.par";
 
-    target_par targ_correct= { 
-        .gvthres = {1, 2, 3, 4}, 
+    target_par targ_correct= {
+        .gvthres = {1, 2, 3, 4},
         .discont = 5,
         .nnmin = 6, .nnmax = 7,
         .nxmin = 8, .nxmax = 9,
-        .nymin = 10, .nymax = 11, 
-        .sumg_min = 12, 
+        .nymin = 10, .nymax = 11,
+        .sumg_min = 12,
         .cr_sz = 13 };
-    
+
     target_par *targ_read = read_target_par(filename_read);
     fail_unless(compare_target_par(&targ_correct, targ_read));
 
@@ -69,7 +69,6 @@ START_TEST(test_read_compare_sequence_par)
     seqp = read_sequence_par(test_file_path, num_cams);
 
     for (cam = 0; cam < num_cams; cam++) {
-        printf("%s", seqp->img_base_name[cam]);
         sprintf(fname, "dumbbell/cam%d_Scene77_", cam + 1);
         fail_unless(strncmp(fname, seqp->img_base_name[cam],
             SEQ_FNAME_MAX_LEN - 1) == 0);
@@ -87,12 +86,12 @@ END_TEST
 START_TEST(test_read_track_par)
 {
     track_par tpar_correct = {
-        0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1. 
+        0.4, 120, 2.0, -2.0, 2.0, -2.0, 2.0, -2.0, 0., 0., 0., 0., 1.
     };
-    
+
     track_par *tpar;
     tpar = read_track_par("testing_fodder/parameters/track.par");
-    
+
     fail_unless(compare_track_par(tpar, &tpar_correct));
 }
 END_TEST
@@ -102,10 +101,10 @@ START_TEST(test_read_volume_par)
     volume_par vpar_correct = {
         {-250., 250.}, {-100., -100.}, {100., 100.}, 0.01, 0.3, 0.3, 0.01, 1, 33
     };
-    
+
     volume_par *vpar;
     vpar = read_volume_par("testing_fodder/parameters/criteria.par");
-    
+
     fail_unless(compare_volume_par(vpar, &vpar_correct));
 }
 END_TEST
@@ -116,23 +115,23 @@ START_TEST(test_read_control_par)
     char img_format[] = "dumbbell/cam%d_Scene77_4085";
     char cal_format[] = "cal/cam%d.tif";
     control_par cpar_correct, *cpar;
-    
+
     cpar_correct.num_cams = 4;
     cpar_correct.img_base_name = (char **) malloc(4*sizeof(char *));
     cpar_correct.cal_img_base_name = (char **) malloc(4*sizeof(char *));
     cpar_correct.mm = (mm_np *) malloc(sizeof(mm_np));
-    
-    
+
+
     for (cam = 0; cam < 4; cam++) {
-        cpar_correct.img_base_name[cam] = 
+        cpar_correct.img_base_name[cam] =
             (char *) malloc((strlen(img_format) + 1) * sizeof(char));
         sprintf(cpar_correct.img_base_name[cam], img_format, cam + 1);
-        
-        cpar_correct.cal_img_base_name[cam] = 
+
+        cpar_correct.cal_img_base_name[cam] =
             (char *) malloc((strlen(cal_format) + 1) * sizeof(char));
         sprintf(cpar_correct.cal_img_base_name[cam], cal_format, cam + 1);
     }
-    
+
     cpar_correct.hp_flag = 1;
     cpar_correct.allCam_flag = 0;
     cpar_correct.tiff_flag = 1;
@@ -146,7 +145,7 @@ START_TEST(test_read_control_par)
     cpar_correct.mm->n3 = 1.33;
     cpar_correct.mm->d[0] = 5;
     cpar_correct.mm->nlay = 1;
-  
+
     cpar = read_control_par("testing_fodder/parameters/ptv.par");
     fail_unless(compare_control_par(cpar, &cpar_correct));
 }
@@ -158,7 +157,7 @@ Suite* fb_suite(void) {
     TCase *tc = tcase_create ("Read compare sequence parameters");
     tcase_add_test(tc, test_read_compare_sequence_par);
     suite_add_tcase (s, tc);
-    
+
     tc = tcase_create ("Read tracking parameters");
     tcase_add_test(tc, test_read_track_par);
     suite_add_tcase (s, tc);
@@ -191,4 +190,3 @@ int main(void) {
     srunner_free (sr);
     return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
-

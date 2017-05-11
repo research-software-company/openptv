@@ -53,7 +53,7 @@ int copy_res_dir(char *src, char *dest) {
             strncpy(file_name, dest, 255);
             strncat(file_name, dp->d_name, 255);
             out_f = fopen(file_name, "w");
-            
+
             while (!feof(in_f)) {
                 result = fread(buf, 1, sizeof(buf), in_f);
                 fwrite(buf, 1, result, out_f);
@@ -65,6 +65,7 @@ int copy_res_dir(char *src, char *dest) {
             return 1;
         }
     }
+    return 0;
 }
 
 int empty_res_dir() {
@@ -72,7 +73,6 @@ int empty_res_dir() {
     struct dirent *dp;
     int errno;
     char file_name[256];
-    ssize_t result;
 
     dirp = opendir("res/");
     while (dirp) {
@@ -87,6 +87,7 @@ int empty_res_dir() {
             return 1;
         }
     }
+    return 0;
 }
 
 START_TEST(test_predict)
@@ -236,11 +237,6 @@ START_TEST(test_candsearch_in_pix)
     counter = candsearch_in_pix (test_pix, num_targets, cent_x, cent_y, \
                                  dl, dr, du, dd, p, test_cpar);
 
-    printf("counter %d \n",counter);
-    printf("candidates: \n");
-    for (int i=0;i<counter;i++){
-        printf("%f,%f\n",test_pix[p[i]].x,test_pix[p[i]].y);
-    }
     fail_unless(counter == 2);
 
 
@@ -250,11 +246,6 @@ START_TEST(test_candsearch_in_pix)
 
     counter = candsearch_in_pix (test_pix, num_targets, cent_x, cent_y, \
                                  dl, dr, du, dd, p, test_cpar);
-    printf("counter %d \n",counter);
-    printf("candidates:\n");
-    for (int i=0;i<counter;i++){
-        printf("%f,%f\n",test_pix[p[i]].x,test_pix[p[i]].y);
-    }
 
     fail_unless(counter == 4);
 
@@ -274,11 +265,6 @@ START_TEST(test_sort)
 
     ck_assert_msg( ix_array[len_array-1] != 1,
              "Was expecting 1 but found %f \n", ix_array[len_array-1]);
-
-    printf("Sorted array:\n");
-    for (int i=0;i<len_array;i++){
-        printf("test_array[%d]=%f\n",ix_array[i],test_array[i]);
-    }
 
 }
 END_TEST
@@ -309,12 +295,6 @@ START_TEST(test_copy_foundpix_array)
     ck_assert_msg( dest[1].ftnr == 2 ,
              "Was expecting dest[1].ftnr == 2 but found %d \n", dest[1].ftnr);
 
-    printf(" destination foundpix array\n");
-    for (int i=0; i<arr_len; i++){
-        printf("ftnr = %d freq=%d whichcam = %d %d\n", dest[i].ftnr, dest[i].freq, \
-        dest[i].whichcam[0],dest[i].whichcam[1]);
-    }
-
 
 }
 END_TEST
@@ -326,7 +306,7 @@ START_TEST(test_searchquader)
     double xr[4], xl[4], yd[4], yu[4];
     Calibration *calib[3];
     control_par *cpar;
-    
+
     chdir("testing_fodder/track");
 
     fail_if((cpar = read_control_par("parameters/ptv.par"))== 0);
@@ -341,18 +321,13 @@ START_TEST(test_searchquader)
 
     searchquader(point, xr, xl, yd, yu, tpar, cpar, calib);
 
-    //printf("searchquader returned:\n");
-    //for (int i=0; i<cpar->num_cams;i++){
-    //     printf("%f %f %f %f\n",xr[i],xl[i],yd[i],yu[i]);
-    // }
-    
     ck_assert_msg( fabs(xr[0] - 0.560048)<EPS ,
              "Was expecting 0.560048 but found %f \n", xr[0]);
     ck_assert_msg( fabs(yu[1] - 0.437303)<EPS ,
                       "Was expecting 0.437303 but found %f \n", yu[1]);
-    
+
     /* let's test just one camera, if there are no problems with the borders */
-    
+
     cpar->num_cams = 1;
     track_par tpar1[] = {
         {0.4, 120, 0.0, -0.0, 0.0, -0.0, 0.0, -0.0, 0., 0., 0., 0., 1.}
@@ -360,7 +335,7 @@ START_TEST(test_searchquader)
     searchquader(point, xr, xl, yd, yu, tpar1, cpar, calib);
     ck_assert_msg( fabs(xr[0] - 0.0)<EPS ,
                   "Was expecting 0.0 but found %f \n", xr[0]);
-    
+
     /* test infinitely large values of tpar that should return about half the image size */
     track_par tpar2[] = {
         {0.4, 120, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 0., 0., 0., 0., 1.}
@@ -384,7 +359,7 @@ START_TEST(test_sort_candidates_by_freq)
     foundpix *dest;
     int num_cams = 2;
     int num_parts;
-    
+
     /* sortwhatfound freaks out if array is not reset before */
     dest = (foundpix *) calloc (num_cams*MAX_CANDS, sizeof (foundpix));
     reset_foundpix_array(dest, num_cams*MAX_CANDS, num_cams);
@@ -392,7 +367,7 @@ START_TEST(test_sort_candidates_by_freq)
 
     /* test simple sort of a small foundpix array */
     num_parts = sort_candidates_by_freq(dest, num_cams);
-    
+
     ck_assert_msg( dest[0].ftnr == 2 ,
                   "Was expecting dest[0].ftnr == 2 but found %d \n", dest[0].ftnr);
     ck_assert_msg( dest[0].freq == 2 ,
@@ -413,37 +388,37 @@ START_TEST(test_trackcorr_no_add)
     chdir("testing_fodder/track");
     copy_res_dir("res_orig/", "res/");
     copy_res_dir("img_orig/", "img/");
-    
+
     printf("----------------------------\n");
     printf("Test tracking multiple files 2 cameras, 1 particle \n");
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
-    
-    run = tr_new_legacy("parameters/sequence.par", 
-        "parameters/track.par", "parameters/criteria.par", 
+
+    run = tr_new_legacy("parameters/sequence.par",
+        "parameters/track.par", "parameters/criteria.par",
         "parameters/ptv.par", calib);
     run->tpar->add = 0;
     track_forward_start(run);
     trackcorr_c_loop(run, run->seq_par->first);
-    
+
     for (step = run->seq_par->first + 1; step < run->seq_par->last; step++) {
         trackcorr_c_loop(run, step);
     }
     trackcorr_c_finish(run, run->seq_par->last);
     empty_res_dir();
-    
+
     int range = run->seq_par->last - run->seq_par->first;
     double npart, nlinks;
-    
+
     /* average of all steps */
     npart = (double)run->npart / range;
     nlinks = (double)run->nlinks / range;
-    
+
     ck_assert_msg(fabs(npart - 208.0/210.0)<EPS,
                   "Was expecting npart == 208/210 but found %f \n", npart);
     ck_assert_msg(fabs(nlinks - 198.0/210.0)<EPS,
                   "Was expecting nlinks == 198/210 but found %f \n", nlinks);
-    
+
 }
 END_TEST
 
@@ -457,36 +432,36 @@ START_TEST(test_trackcorr_with_add)
     chdir("testing_fodder/track");
     copy_res_dir("res_orig/", "res/");
     copy_res_dir("img_orig/", "img/");
-    
+
     printf("----------------------------\n");
     printf("Test tracking multiple files 2 cameras, 1 particle \n");
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
-    
-    run = tr_new_legacy("parameters/sequence.par", 
-        "parameters/track.par", "parameters/criteria.par", 
+
+    run = tr_new_legacy("parameters/sequence.par",
+        "parameters/track.par", "parameters/criteria.par",
         "parameters/ptv.par", calib);
     track_forward_start(run);
     trackcorr_c_loop(run, run->seq_par->first);
-    
+
     for (step = run->seq_par->first + 1; step < run->seq_par->last; step++) {
         trackcorr_c_loop(run, step);
     }
     trackcorr_c_finish(run, run->seq_par->last);
     empty_res_dir();
-    
+
     int range = run->seq_par->last - run->seq_par->first;
     double npart, nlinks;
-    
+
     /* average of all steps */
     npart = (double)run->npart / range;
     nlinks = (double)run->nlinks / range;
-    
+
     ck_assert_msg(fabs(npart - 1930.0/210.0)<EPS,
                   "Was expecting npart == 208/210 but found %f \n", npart);
     ck_assert_msg(fabs(nlinks - 328.0/210.0)<EPS,
                   "Was expecting nlinks == 328/210 but found %f \n", nlinks);
-    
+
 }
 END_TEST
 
@@ -495,31 +470,30 @@ START_TEST(test_cavity)
     tracking_run *ret;
     Calibration *calib[4];
     control_par *cpar;
-    
-    
+
+
     printf("----------------------------\n");
     printf("Test cavity case \n");
-    
+
     chdir("testing_fodder/test_cavity");
     copy_res_dir("res_orig/", "res/");
     copy_res_dir("img_orig/", "img/");
-    
+
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
-    printf("In test_cavity num cams = %d\n",cpar->num_cams);
-    ret = tr_new_legacy("parameters/sequence.par", 
-        "parameters/track.par", "parameters/criteria.par", 
+    ret = tr_new_legacy("parameters/sequence.par",
+        "parameters/track.par", "parameters/criteria.par",
         "parameters/ptv.par", calib);
     track_forward_start(ret);
-    
+
     trackcorr_c_loop (ret, 10002);
     empty_res_dir();
-    
+
     ck_assert_msg(ret->npart == 672,
                   "Was expecting npart == 672 but found %d \n", ret->npart);
     ck_assert_msg(ret->nlinks == 127,
                   "Was expecting nlinks == 127 but found %d \n", ret->nlinks);
-    
+
     trackcorr_c_finish(ret, 10002);
 }
 END_TEST
@@ -531,14 +505,14 @@ START_TEST(test_trackback)
     int step;
     Calibration *calib[3];
     control_par *cpar;
-    
+
     chdir("testing_fodder/track");
     copy_res_dir("res_orig/", "res/");
     copy_res_dir("img_orig/", "img/");
-    
+
     printf("----------------------------\n");
     printf("trackback test \n");
-    
+
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
     run = tr_new_legacy("parameters/sequence.par",
@@ -546,7 +520,7 @@ START_TEST(test_trackback)
         "parameters/ptv.par", calib);
     track_forward_start(run);
     trackcorr_c_loop(run, run->seq_par->first);
-    
+
     for (step = run->seq_par->first + 1; step < run->seq_par->last; step++) {
         trackcorr_c_loop(run, step);
     }
@@ -556,10 +530,10 @@ START_TEST(test_trackback)
     run->lmax = norm((run->tpar->dvxmin - run->tpar->dvxmax), \
                      (run->tpar->dvymin - run->tpar->dvymax), \
                      (run->tpar->dvzmin - run->tpar->dvzmax));
-    
+
     nlinks = trackback_c(run, run->seq_par->last);
     empty_res_dir();
-    
+
     ck_assert_msg(fabs(nlinks - 1.043062)<EPS,
                   "Was expecting nlinks to be 1.043062 but found %f\n", nlinks);
 }
@@ -567,7 +541,7 @@ END_TEST
 
 START_TEST(test_new_particle)
 {
-    /* this test also has the side-effect of testing instantiation of a 
+    /* this test also has the side-effect of testing instantiation of a
        tracking_run struct without the legacy stuff. */
 
     Calibration *calib[3];
@@ -576,21 +550,21 @@ START_TEST(test_new_particle)
     track_par *tpar;
     volume_par *vpar;
     tracking_run *run;
-    
+
     char ori_tmpl[] = "cal/sym_cam%d.tif.ori";
     char added_name[] = "cal/cam1.tif.addpar";
     char ori_name[256];
     int cam, status;
 
     fail_unless((status = chdir("testing_fodder/")) == 0);
-    
-    /* Set up all scene parameters to track one specially-contrived 
+
+    /* Set up all scene parameters to track one specially-contrived
        trajectory. */
     for (cam = 0; cam < 3; cam++) {
         sprintf(ori_name, ori_tmpl, cam + 1);
         calib[cam] = read_calibration(ori_name, added_name, NULL);
     }
-    
+
     fail_unless((status = chdir("track/")) == 0);
     copy_res_dir("res_orig/", "res/");
     copy_res_dir("img_orig/", "img/");
@@ -599,16 +573,16 @@ START_TEST(test_new_particle)
     cpar = read_control_par("parameters/control_newpart.par");
     tpar = read_track_par("parameters/track.par");
     vpar = read_volume_par("parameters/criteria.par");
-    
-    run = tr_new(spar, tpar, vpar, cpar, 4, MAX_TARGETS, 
+
+    run = tr_new(spar, tpar, vpar, cpar, 4, MAX_TARGETS,
         "res/particles", "res/linkage", "res/whatever", calib, 0.1);
     track_forward_start(run);
     trackcorr_c_loop(run, 1);
     trackcorr_c_loop(run, 2);
-    
+
     fb_prev(run->fb); /* because each loop step moves the FB forward */
     fail_unless(run->fb->buf[1]->path_info[0].next == 1);
-    
+
     tpar->add = 0;
     track_forward_start(run);
     trackcorr_c_loop(run, 1);
@@ -616,7 +590,7 @@ START_TEST(test_new_particle)
     fb_prev(run->fb); /* because each loop step moves the FB forward */
 
     empty_res_dir();
-    
+
     fail_unless(run->fb->buf[1]->path_info[0].next == 0);
 }
 END_TEST
@@ -654,11 +628,11 @@ Suite* fb_suite(void) {
     tc = tcase_create ("searchquader");
     tcase_add_test(tc, test_searchquader);
     suite_add_tcase (s, tc);
-    
+
     tc = tcase_create ("sort_candidates_by_freq");
     tcase_add_test(tc, test_sort_candidates_by_freq);
     suite_add_tcase (s, tc);
-    
+
     tc = tcase_create ("Test cavity case");
     tcase_add_test(tc, test_cavity);
     suite_add_tcase (s, tc);
@@ -670,11 +644,11 @@ Suite* fb_suite(void) {
     tc = tcase_create ("Tracking forward with adding particles");
     tcase_add_test(tc, test_trackcorr_with_add);
     suite_add_tcase (s, tc);
-    
+
     tc = tcase_create ("Trackback");
     tcase_add_test(tc, test_trackback);
     suite_add_tcase (s, tc);
-    
+
     tc = tcase_create ("Tracking a constructed frame");
     tcase_add_test(tc, test_new_particle);
     suite_add_tcase (s, tc);
