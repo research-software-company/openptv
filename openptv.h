@@ -7,8 +7,15 @@
 //
 
 #ifndef openptv_h
+
+#include "optv/parameters.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <math.h>
+
 #define openptv_h
 
-#include <stdio.h>
 
 #endif /* openptv_h */
