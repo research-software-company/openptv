@@ -7,6 +7,7 @@
 //
 
 #include "openptv.h"
+void read_all_calibration(Calibration *calib[], int num_cams);
 
 /* 
     Compile it using: 
@@ -36,13 +37,13 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-  if (argc > 1)
-    {
-      for (count = 1; count < argc; count++)
-	    {
-	        printf("User input: argv[%d] = %s \n", count, argv[count]);
-	    }
-    }
+//  if (argc > 1)
+//    {
+//      for (count = 1; count < argc; count++)
+//	    {
+//	        printf("User input: argv[%d] = %s \n", count, argv[count]);
+//	    }
+//    }
     
     // 2. init_proc - irrelevant?
     // 3. start_proc - irrelevant?
@@ -84,6 +85,36 @@ int main(int argc, char *argv[])
 
     // 5. sequence (init, set images, loop)
     // 6. tracking (init, loop, finish)
-        
+    
+    tracking_run *run;
+    Calibration *calib[4];
+    int step;
+    
+    read_all_calibration(calib, cpar->num_cams);
+    
+    run = tr_new_legacy("parameters/sequence.par",
+                        "parameters/track.par", "parameters/criteria.par",
+                        "parameters/ptv.par", calib);
+    track_forward_start(run);
+    trackcorr_c_loop(run, run->seq_par->first);
+    for (step = run->seq_par->first + 1; step < run->seq_par->last; step++) {
+        trackcorr_c_loop(run, step);
+    }
+    trackcorr_c_finish(run, run->seq_par->last);
+    
     return 0;
 }
+
+void read_all_calibration(Calibration *calib[], int num_cams) {
+    char ori_tmpl[] = "cal/cam%d.tif.ori";
+    char added_tmpl[] = "cal/cam%d.tif.addpar";
+    char ori_name[256],added_name[256];
+    int cam;
+    
+    for (cam = 0; cam < num_cams; cam++) {
+        sprintf(ori_name, ori_tmpl, cam + 1);
+        sprintf(added_name, added_tmpl, cam + 1);
+        calib[cam] = read_calibration(ori_name, added_name, NULL);
+    }
+}
+

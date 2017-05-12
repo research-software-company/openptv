@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <math.h>
+#include "optv/track.h"
 
 #define openptv_h
 
