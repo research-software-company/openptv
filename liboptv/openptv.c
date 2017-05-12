@@ -17,6 +17,9 @@
 int main(int argc, char *argv[])
 {
     control_par *cpar;
+    track_par *tpar;
+    volume_par *vpar;
+
     int count;
     DIR *dirp;
     struct dirent *dp;
@@ -40,8 +43,11 @@ int main(int argc, char *argv[])
 	    }
     }
     
-    // 2. init_proc
+    // 2. init_proc - irrelevant?
+    // 3. start_proc - irrelevant?
+    // 4. read parameters
 
+    // change directory to the user-supplied working folder
     chdir(argv[1]);
     // dirp = opendir(argv[1]);
     
@@ -61,9 +67,10 @@ int main(int argc, char *argv[])
     printf(" water/liquid index of refraction = %3.2f \n", cpar->mm->n3);
     printf(" glass thickness = %3.2f \n",cpar->mm->d[0]);
     
-        
-    // 3. start_proc
-    // 4. read parameters
+    
+    vpar = read_volume_par("parameters/criteria.par");
+    tpar = read_track_par("parameters/track.par");
+
     // 5. sequence (init, set images, loop)
     // 6. tracking (init, loop, finish)
         
