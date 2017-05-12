@@ -55,7 +55,6 @@ END_TEST
 START_TEST(test_read_calblock)
 {
     int num_points, correct_num_points = 5;
-    vec3d *fix;
     char calblock_file[] = "testing_fodder/cal/calblock.txt";
     
     ck_assert_msg (file_exists(calblock_file) == 1, 
