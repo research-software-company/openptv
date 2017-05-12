@@ -36,7 +36,6 @@ int copy_res_dir(char *src, char *dest) {
     DIR *dirp;
     struct dirent *dp;
     FILE *in_f, *out_f;
-    int errno;
     char file_name[256];
     char buf[8192];
     ssize_t result;
@@ -70,7 +69,6 @@ int copy_res_dir(char *src, char *dest) {
 int empty_res_dir() {
     DIR *dirp;
     struct dirent *dp;
-    int errno;
     char file_name[256];
 
     dirp = opendir("res/");
@@ -384,7 +382,6 @@ START_TEST(test_sort_candidates_by_freq)
                      };
     foundpix *dest;
     int num_cams = 2;
-    int num_parts;
     
     /* sortwhatfound freaks out if array is not reset before */
     dest = (foundpix *) calloc (num_cams*MAX_CANDS, sizeof (foundpix));

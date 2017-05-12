@@ -65,16 +65,14 @@ int main(int argc, char *argv[])
     
     // 4. tracking (init, loop, finish)
     track_forward_start(run);
-    trackcorr_c_loop(run, run->seq_par->first);
+    //trackcorr_c_loop(run, run->seq_par->first);
     
     int step;
-    for (step = run->seq_par->first + 1; step < run->seq_par->last; step++) {
+    for (step = run->seq_par->first; step < run->seq_par->last; step++) {
         trackcorr_c_loop(run, step);
     }
     trackcorr_c_finish(run, run->seq_par->last);
     trackback_c(run, run->seq_par->last);
-
-    
     return 0;
 }
 
