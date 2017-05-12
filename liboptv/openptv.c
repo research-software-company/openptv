@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
     
     control_par *cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
+    free_control_par(cpar);
     
     tracking_run *run = tr_new_legacy("parameters/sequence.par",
                                       "parameters/track.par", "parameters/criteria.par",
@@ -61,12 +62,22 @@ int main(int argc, char *argv[])
     
 
     // 3. sequence (init, set images, loop)
+    unsigned char *img_hp = (unsigned char *) malloc(run->cpar->imx*run->cpar->imy* \
+                                                     sizeof(unsigned char));
+    for (step = run->seq_par->first; step < run->seq_par->last; step++) {
+        // a. read image
+        
+        // b. highpass
+        if (run->cpar->hp_flag)
+        {
+            prepare_image(img, img_hp, 1, 0, 0, &cpar);
+        }
+
+    
     // to be completed
     
     // 4. tracking (init, loop, finish)
     track_forward_start(run);
-    //trackcorr_c_loop(run, run->seq_par->first);
-    
     int step;
     for (step = run->seq_par->first; step < run->seq_par->last; step++) {
         trackcorr_c_loop(run, step);

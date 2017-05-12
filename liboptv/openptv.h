@@ -8,13 +8,15 @@
 
 #ifndef openptv_h
 
-#include "optv/parameters.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <math.h>
+
+#include "optv/parameters.h"
 #include "optv/track.h"
+#include "optv/image_processing.h"
 
 #define openptv_h
 
