@@ -37,74 +37,51 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-//  if (argc > 1)
-//    {
-//      for (count = 1; count < argc; count++)
-//	    {
-//	        printf("User input: argv[%d] = %s \n", count, argv[count]);
-//	    }
-//    }
-    
-    // 2. init_proc - irrelevant?
-    // 3. start_proc - irrelevant?
-    // 4. read parameters
-
     // change directory to the user-supplied working folder
     chdir(argv[1]);
-    // dirp = opendir(argv[1]);
+    
+    // 2. read parameters and calibrations
+    Calibration *calib[4];
     
     control_par *cpar = read_control_par("parameters/ptv.par");
-//    printf(" ------------------ \n");
-//    printf("Control parameters \n");
-//    printf(" ------------------ \n");
-//    printf(" highpass flag = %d \n", cpar->hp_flag);
-//    printf(" use all cameras flag = %d \n", cpar->allCam_flag);
-//    printf(" TIFF flag = %d \n", cpar->tiff_flag);
-//    printf(" image is  %d x %d \n", cpar->imx, cpar->imy);
-//    printf(" pixel size  %4.3f x %4.3f \n", cpar->pix_x, cpar->pix_y);
-//    printf(" chfield flag = %d \n", cpar->chfield);
-//    printf(" Multimedia parameters: \n");
-//    printf(" gas/air index of refraction = %3.2f \n", cpar->mm->n1);
-//    printf(" glass/perspex index of refraction = %3.2f \n", cpar->mm->n2[0]);
-//    printf(" water/liquid index of refraction = %3.2f \n", cpar->mm->n3);
-//    printf(" glass thickness = %3.2f \n",cpar->mm->d[0]);
+    read_all_calibration(calib, cpar->num_cams);
     
-    
-    volume_par *vpar = read_volume_par("parameters/criteria.par");
-    track_par *tpar = read_track_par("parameters/track.par");
-    target_par *targ_read = read_target_par("parameters/targ_rec.par");
-    sequence_par *seqp = read_sequence_par("parameters/sequence.par", cpar->num_cams);
+    tracking_run *run = tr_new_legacy("parameters/sequence.par",
+                                      "parameters/track.par", "parameters/criteria.par",
+                                      "parameters/ptv.par", calib);
     
     if (argc == 4)
     {
-        seqp->first = atoi(argv[2]);
-        seqp->last = atoi(argv[3]);
+        run->seq_par->first = atoi(argv[2]);
+        run->seq_par->last = atoi(argv[3]);
     }
-    printf("from frame %d to frame %d \n", seqp->first, seqp->last);
+    printf("from frame %d to frame %d \n", run->seq_par->first, run->seq_par->last);
+    
+    target_par *targ_read = read_target_par("parameters/targ_rec.par");
     
 
-    // 5. sequence (init, set images, loop)
-    // 6. tracking (init, loop, finish)
+    // 3. sequence (init, set images, loop)
+    // to be completed
     
-    tracking_run *run;
-    Calibration *calib[4];
-    int step;
-    
-    read_all_calibration(calib, cpar->num_cams);
-    
-    run = tr_new_legacy("parameters/sequence.par",
-                        "parameters/track.par", "parameters/criteria.par",
-                        "parameters/ptv.par", calib);
+    // 4. tracking (init, loop, finish)
     track_forward_start(run);
     trackcorr_c_loop(run, run->seq_par->first);
+    
+    int step;
     for (step = run->seq_par->first + 1; step < run->seq_par->last; step++) {
         trackcorr_c_loop(run, step);
     }
     trackcorr_c_finish(run, run->seq_par->last);
+    trackback_c(run, run->seq_par->last);
+
     
     return 0;
 }
 
+/* read_all_calibration function helps to read the num_cams calibrations from
+   the ORI and ADDPAR files in the folder. 
+   the name convention is cal/cam1.tif.ori and so on. 
+*/
 void read_all_calibration(Calibration *calib[], int num_cams) {
     char ori_tmpl[] = "cal/cam%d.tif.ori";
     char added_tmpl[] = "cal/cam%d.tif.addpar";
