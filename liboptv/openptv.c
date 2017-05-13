@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     target pix[1024];
     coord_2d **corrected;
     int match_counts[4];
-    frame *frm;
+    frame frm;
     int max_targets = 1024;
     
     
@@ -104,16 +104,16 @@ int main(int argc, char *argv[])
     
     // d. prepare the frame buffer, read targets and find correspondences
     for (step = run->seq_par->first; step < run->seq_par->last+1; step++){
-            //frame_init(frm, run->cpar->num_cams, max_targets);
+            frame_init(&frm, run->cpar->num_cams, max_targets);
         for (i = 1; i<run->cpar->num_cams+1; i++) {
             sprintf(file_name, "img/cam%d.", i, step);
             ntargets = read_targets(pix, file_name, step);
             // printf(" read %d targets from %s \n", ntargets, file_name);
-            //frm->num_targets[i] = ntargets;
-            //frm->targets[i] = pix;
-           }
-        // corrected = correct_frame(frm, calib, run->cpar, 0.0001);
-        // correspondences(frm, corrected, run->vpar, run->cpar, calib, match_counts);
+            frm.num_targets[i] = ntargets;
+            frm.targets[i] = pix;
+        }
+        corrected = correct_frame(&frm, calib, run->cpar, 0.0001);
+        correspondences(&frm, corrected, run->vpar, run->cpar, calib, match_counts);
     }
     
     // to be completed
