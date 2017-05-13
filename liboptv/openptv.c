@@ -8,6 +8,7 @@
 
 #include "openptv.h"
 void read_all_calibration(Calibration *calib[], int num_cams);
+void imread(unsigned char *img, char *filename);
 
 /* 
     Compile it using: 
@@ -17,12 +18,12 @@ void read_all_calibration(Calibration *calib[], int num_cams);
 */
 int main(int argc, char *argv[])
 {
-    int count;
+    int i, count;
     DIR *dirp;
     struct dirent *dp;
     char file_name[256];
     int step;
-    unsigned char *img;
+    unsigned char *img, *img_hp;
     
     // 1. process inputs: directory, first frame, last frame
   
@@ -62,17 +63,23 @@ int main(int argc, char *argv[])
     
 
     // 3. sequence (init, set images, loop)
-    unsigned char *img_hp = (unsigned char *) malloc(run->cpar->imx*run->cpar->imy* \
+    img = (unsigned char *) malloc(run->cpar->imx*run->cpar->imy* \
                                                      sizeof(unsigned char));
-    for (step = run->seq_par->first; step < run->seq_par->last; step++) {
-        // a. read image
-        
-        // b. highpass
-        if (run->cpar->hp_flag)
-        {
-            prepare_image(img, img_hp, 1, 0, 0, run->cpar);
-        }
-     }
+    img_hp = (unsigned char *) malloc(run->cpar->imx*run->cpar->imy* \
+                                                     sizeof(unsigned char));
+    
+    for (i = 1; i<run->cpar->num_cams+1; i++) {
+        for (step = run->seq_par->first; step < run->seq_par->last; step++) {
+            // a. read image
+            sprintf(file_name, "img/cam%d.%d", i, step);
+            imread(img, file_name);
+            // b. highpass
+            if (run->cpar->hp_flag)
+            {
+                prepare_image(img, img_hp, 1, 0, 0, run->cpar);
+            }
+       }
+    }
 
     
     // to be completed
@@ -104,4 +111,38 @@ void read_all_calibration(Calibration *calib[], int num_cams) {
         calib[cam] = read_calibration(ori_name, added_name, NULL);
     }
 }
+
+/* imread - reads greyscale TIFF file using libtiff library subroutines
+   Arguments: 
+   unsigned char *img - output of the image array
+   char *filename - name of the TIFF file to read
+*/
+
+void imread(unsigned char *img, char *filename)
+{
+    TIFF* tif = TIFFOpen(filename, "r");
+    if (tif) {
+        uint32 imagelength;
+        tsize_t scanline;
+        tdata_t buf;
+        uint32 row;
+        uint32 col;
+        
+        TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &imagelength);
+        scanline = TIFFScanlineSize(tif);
+        // buf = _TIFFmalloc(scanline);
+        for (row = 0; row < imagelength; row++)
+        {
+            TIFFReadScanline(tif, &img[row*scanline], row, 1);
+//            for (col = 0; col < scanline; col++)
+//            {
+//                printf("%u", img[row*scanline+col]);
+//            }
+//            printf("\n");
+        }
+        // _TIFFfree(buf);
+        TIFFClose(tif);
+    }
+}
+
 
