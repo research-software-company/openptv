@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
     int step;
     unsigned char *img, *img_hp;
     target pix[1024];
+    char *file_base = "img/cam";
+    
     
     // 1. process inputs: directory, first frame, last frame
   
@@ -72,7 +74,7 @@ int main(int argc, char *argv[])
                                                      sizeof(unsigned char));
     // for each camera and for each time step the images are processed
     for (i = 1; i<run->cpar->num_cams+1; i++) {
-        for (step = run->seq_par->first; step < run->seq_par->last; step++) {
+        for (step = run->seq_par->first; step < run->seq_par->last+1; step++) {
             // a. read image
             sprintf(file_name, "img/cam%d.%d", i, step);
             imread(img, file_name);
@@ -85,10 +87,11 @@ int main(int argc, char *argv[])
             }
             // c. segmentation
             // detection
-            // ntargets = peak_fit(img_hp, targ_read, 0, run->cpar->imx, 0, run->cpar->imy, run->cpar, 1, pix);
+            //ntargets = peak_fit(img_hp, targ_read, 0, run->cpar->imx, 0, run->cpar->imy, run->cpar, 1, pix);
             ntargets = targ_rec(img_hp, targ_read, 0, run->cpar->imx, 0, run->cpar->imy, run->cpar, 1, pix);
-
             printf("%d targets in %s file\n",ntargets,file_name);
+            sprintf(file_name, "img/cam%d.", i, step);
+            write_targets(pix, ntargets, file_name, step);
        }
     }
 
