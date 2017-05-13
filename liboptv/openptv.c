@@ -17,12 +17,12 @@ void read_all_calibration(Calibration *calib[], int num_cams);
 */
 int main(int argc, char *argv[])
 {
-    
-
     int count;
     DIR *dirp;
     struct dirent *dp;
     char file_name[256];
+    int step;
+    unsigned char *img;
     
     // 1. process inputs: directory, first frame, last frame
   
@@ -70,15 +70,16 @@ int main(int argc, char *argv[])
         // b. highpass
         if (run->cpar->hp_flag)
         {
-            prepare_image(img, img_hp, 1, 0, 0, &cpar);
+            prepare_image(img, img_hp, 1, 0, 0, run->cpar);
         }
+     }
 
     
     // to be completed
     
     // 4. tracking (init, loop, finish)
     track_forward_start(run);
-    int step;
+
     for (step = run->seq_par->first; step < run->seq_par->last; step++) {
         trackcorr_c_loop(run, step);
     }
