@@ -25,7 +25,6 @@ int main(int argc, char *argv[])
     int step;
     unsigned char *img, *img_hp;
     target pix[1024];
-    char *file_base = "img/cam";
     
     
     // 1. process inputs: directory, first frame, last frame
