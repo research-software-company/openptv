@@ -18,12 +18,13 @@ void imread(unsigned char *img, char *filename);
 */
 int main(int argc, char *argv[])
 {
-    int i, count;
+    int i, count, ntargets;
     DIR *dirp;
     struct dirent *dp;
     char file_name[256];
     int step;
     unsigned char *img, *img_hp;
+    target pix[1024];
     
     // 1. process inputs: directory, first frame, last frame
   
@@ -63,11 +64,13 @@ int main(int argc, char *argv[])
     
 
     // 3. sequence (init, set images, loop)
+    
+    // allocate memory for images and highpass(prepared) images
     img = (unsigned char *) malloc(run->cpar->imx*run->cpar->imy* \
                                                      sizeof(unsigned char));
     img_hp = (unsigned char *) malloc(run->cpar->imx*run->cpar->imy* \
                                                      sizeof(unsigned char));
-    
+    // for each camera and for each time step the images are processed
     for (i = 1; i<run->cpar->num_cams+1; i++) {
         for (step = run->seq_par->first; step < run->seq_par->last; step++) {
             // a. read image
@@ -77,7 +80,15 @@ int main(int argc, char *argv[])
             if (run->cpar->hp_flag)
             {
                 prepare_image(img, img_hp, 1, 0, 0, run->cpar);
+            } else {
+                memcpy(img_hp, img, run->cpar->imx*run->cpar->imy);
             }
+            // c. segmentation
+            // detection
+            // ntargets = peak_fit(img_hp, targ_read, 0, run->cpar->imx, 0, run->cpar->imy, run->cpar, 1, pix);
+            ntargets = targ_rec(img_hp, targ_read, 0, run->cpar->imx, 0, run->cpar->imy, run->cpar, 1, pix);
+
+            printf("%d targets in %s file\n",ntargets,file_name);
        }
     }
 
