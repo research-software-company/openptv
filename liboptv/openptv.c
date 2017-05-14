@@ -6,6 +6,8 @@
 //
 //
 
+#define MAXTARGETS 2048
+
 #include "openptv.h"
 void read_all_calibration(Calibration *calib[], int num_cams);
 void imread(unsigned char *img, char *filename);
@@ -26,11 +28,10 @@ int main(int argc, char *argv[])
     char file_name[256];
     int step;
     unsigned char *img, *img_hp;
-    target pix[1024];
+    target pix[MAXTARGETS], targ_t[MAXTARGETS];
     coord_2d **corrected;
     int match_counts[4];
     frame frm;
-    int max_targets = 1024;
     
     
     // 1. process inputs: directory, first frame, last frame
@@ -104,13 +105,13 @@ int main(int argc, char *argv[])
     
     // d. prepare the frame buffer, read targets and find correspondences
     for (step = run->seq_par->first; step < run->seq_par->last+1; step++){
-            frame_init(&frm, run->cpar->num_cams, max_targets);
+            frame_init(&frm, run->cpar->num_cams, MAXTARGETS);
         for (i = 1; i<run->cpar->num_cams+1; i++) {
             sprintf(file_name, "img/cam%d.", i, step);
-            ntargets = read_targets(pix, file_name, step);
+            ntargets = read_targets(targ_t, file_name, step);
             // printf(" read %d targets from %s \n", ntargets, file_name);
             frm.num_targets[i] = ntargets;
-            frm.targets[i] = pix;
+            frm.targets[i] = targ_t;
         }
         corrected = correct_frame(&frm, calib, run->cpar, 0.0001);
         correspondences(&frm, corrected, run->vpar, run->cpar, calib, match_counts);
@@ -126,6 +127,9 @@ int main(int argc, char *argv[])
     }
     trackcorr_c_finish(run, run->seq_par->last);
     trackback_c(run, run->seq_par->last);
+    
+    free(img);
+    free(img_hp);
     return 0;
 }
 
