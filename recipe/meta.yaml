@@ -1,0 +1,33 @@
+package:
+ name: openptv
+ version: "0.1.0"
+ 
+source:
+ git_url: https://github.com/openptv/openptv.git
+ # git_rev: 32041d9504d11683ef80a6556173ff43f79d1268
+ # path: ../
+ 
+build:
+ number: 0
+ 
+requirements:
+ build:
+   - cmake
+   - python 2.7
+   - cython
+   - numpy
+   - setuptools
+   - pyyaml
+   - nose
+# run:
+#    - python 2.7
+#    - numpy
+#    - scikit-image
+ #   - pyyaml
+ #  - python
+ #  - numpy
+ #  - cython
+ 
+about:
+ home: http://www.openptv.net
+ license: LGPL
