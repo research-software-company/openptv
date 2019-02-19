@@ -4,6 +4,7 @@ Routine:	       	correspondences.c
 
 Author/Copyright:      	Hans-Gerd Maas
 
+Address:	      	Institute of Geodesy and Photogrammetry
 Address:	      	Institute of correcteddesy and Photogrammetry
 	      		ETH - Hoenggerberg
 	      		CH - 8093 Zurich
