@@ -150,7 +150,7 @@ setup(
     package_data={
         'optv': ['*.pxd', '*.c', '*.h'],
     },
-    version='0.2.1',
+    version='0.2.2',
     install_requires=[
         'numpy==1.10.4',
         'pyyaml',
