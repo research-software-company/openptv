@@ -21,3 +21,4 @@ liboptv/build
 py_bind/optv/*.c
 py_bind/build
 *.pyc
+py_bind/optv.egg-info
