@@ -4,7 +4,7 @@ Implementation of bindings for correspondences and related data structures.
 
 Created on Fri Oct 28 13:46:39 2016
 
-@author: yosef
+@author: Yosef Meller, Alex Liberzon, TAU
 """
 
 from libc.stdlib cimport malloc, calloc, free
@@ -180,7 +180,7 @@ def correspondences(list img_pts, list flat_coords, list cals,
     sorted_corresp = [None]*(num_cams - 1)
     last_count = 0
     
-    for clique_type in xrange(num_cams - 1): 
+    for clique_type in range(num_cams - 1): 
         num_points = match_counts[4 - num_cams + clique_type] # for 1-4 cameras
         clique_targs = np.full((num_cams, num_points, 2), PT_UNUSED, 
             dtype=np.float64)
