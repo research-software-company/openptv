@@ -72,12 +72,12 @@ class Test_Orientation(unittest.TestCase):
                     or matched_target_array[i].pnr() != target_array[i].pnr():
                 self.fail()
 
-        # # pass ref_pts and img_pts with non-equal lengths
-        # with self.assertRaises(ValueError):
-        #     match_detection_to_ref(cal=self.calibration,
-        #                            ref_pts=xyz_input,
-        #                            img_pts=TargetArray(coords_count - 1),
-        #                            cparam=self.control)
+        # pass ref_pts and img_pts with non-equal lengths
+        with self.assertRaises(ValueError):
+            match_detection_to_ref(cal=self.calibration,
+                                   ref_pts=xyz_input,
+                                   img_pts=TargetArray(coords_count - 1),
+                                   cparam=self.control)
 
     def test_point_positions(self):
         """Point positions"""
@@ -159,7 +159,7 @@ class Test_Orientation(unittest.TestCase):
         ori_name = r'testing_fodder/single_cam/calibration/cam_1.tif.ori'
         add_name = r'testing_fodder/single_cam/calibration/cam_1.tif.addpar'
         calibs = []
-
+        
 
         # read calibration for each camera from files
         new_cal = Calibration()
@@ -181,7 +181,7 @@ class Test_Orientation(unittest.TestCase):
         new_plain_targ = image_coordinates(
             points, calibs[0], mult_params)
         targs_plain.append(new_plain_targ)
-
+            
         jigged_points = points - np.r_[0, jigg_amp, 0]
 
         new_jigged_targs = image_coordinates(

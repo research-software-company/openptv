@@ -54,8 +54,8 @@ class TestCorresp(unittest.TestCase):
         for c in range(4):
             cal = Calibration()
             cal.from_file(
-                r"testing_fodder/calibration/sym_cam%d.tif.ori" % (c + 1),
-                r"testing_fodder/calibration/cam1.tif.addpar")
+                "testing_fodder/calibration/sym_cam%d.tif.ori" % (c + 1),
+                "testing_fodder/calibration/cam1.tif.addpar")
             cals.append(cal)
         
             # Generate test targets.
@@ -80,29 +80,30 @@ class TestCorresp(unittest.TestCase):
             mc = MatchedCoords(targs, cpar, cal)
             corrected.append(mc)
         
-        sorted_pos, sorted_corresp, num_targs = correspondences(
+        _, _, num_targs = correspondences(
             img_pts, corrected, cals, vpar, cpar)
+
         self.failUnlessEqual(num_targs, 16)
 
     def test_single_cam_corresp(self):
         """Single camera correspondence"""
         cpar = ControlParams(1)
-        cpar.read_control_par(r"testing_fodder/single_cam/parameters/ptv.par")
+        cpar.read_control_par("testing_fodder/single_cam/parameters/ptv.par")
         vpar = VolumeParams()
-        vpar.read_volume_par(r"testing_fodder/single_cam/parameters/criteria.par")
+        vpar.read_volume_par("testing_fodder/single_cam/parameters/criteria.par")
         
         # Cameras are at so high angles that opposing cameras don't see each 
         # other in the normal air-glass-water setting.
-        cpar.get_multimedia_params().set_layers([1.0001], [1.])
-        cpar.get_multimedia_params().set_n3(1.0001)
+        cpar.get_multimedia_params().set_layers([1.], [1.])
+        cpar.get_multimedia_params().set_n3(1.)
         
         cals = []
         img_pts = []
         corrected = []
         cal = Calibration()
         cal.from_file(
-            r"testing_fodder/single_cam/calibration/cam_1.tif.ori",
-            r"testing_fodder/single_cam/calibration/cam_1.tif.addpar")
+            "testing_fodder/single_cam/calibration/cam_1.tif.ori",
+            "testing_fodder/single_cam/calibration/cam_1.tif.addpar")
         cals.append(cal)
         
         # Generate test targets.
