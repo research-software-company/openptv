@@ -1026,7 +1026,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
     }
     /* end of creation of links with decision check */
 
-
     printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d\n",
             step, fb->buf[1]->num_parts, fb->buf[2]->num_parts, count1,
             fb->buf[1]->num_parts - count1, num_added);
