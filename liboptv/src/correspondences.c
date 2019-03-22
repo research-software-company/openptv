@@ -12,6 +12,10 @@ Creation Date:	       	1988/89
 
 Description:	       	establishment of correspondences for 2/3/4 cameras
 
+Modified for OpenPTV: Yosef Meller and Alex Liberzon
+
+Date:                   2013-2018
+
 ****************************************************************************/
 
 #include <stdio.h>
