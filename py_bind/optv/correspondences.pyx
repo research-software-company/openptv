@@ -146,18 +146,17 @@ def correspondences(list img_pts, list flat_coords, list cals,
         previous 3).
     """
 
-    cdef: 
+    cdef:
         int num_cams = len(cals)
 
     # Special case of a single camera, follow the single_cam_correspondence docstring    
     if num_cams == 1:
         sorted_pos, sorted_corresp, num_targs = single_cam_correspondence(img_pts, flat_coords, cals)
         return sorted_pos, sorted_corresp, num_targs
-        
-        calibration **calib = <calibration **> malloc(
-            num_cams * sizeof(calibration *))
-        coord_2d **corrected = <coord_2d **> malloc(
-            num_cams * sizeof(coord_2d *))
+
+    cdef:        
+        calibration **calib = <calibration **> malloc(num_cams * sizeof(calibration *))
+        coord_2d **corrected = <coord_2d **> malloc(num_cams * sizeof(coord_2d *))
         frame frm
         
         np.ndarray[ndim=2, dtype=np.int_t] clique_ids
@@ -167,7 +166,7 @@ def correspondences(list img_pts, list flat_coords, list cals,
         int *match_counts = <int *> malloc(num_cams * sizeof(int))
         n_tupel *corresp_buf
     
-    # Initialize frame partially, without the extra momory used by init_frame.
+    # Initialize frame partially, without the extra memory used by init_frame.
     frm.targets = <target**> calloc(num_cams, sizeof(target*))
     frm.num_targets = <int *> calloc(num_cams, sizeof(int))
     
