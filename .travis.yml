@@ -1,26 +1,26 @@
 language: python
 
-before_install:
-  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
-  - chmod +x miniconda.sh
-  - ./miniconda.sh -b -p /home/travis/mc
-  - export PATH=/home/travis/mc/bin:$PATH
-  
-install:
-  - conda update --yes conda
-  - conda create -n testenv --yes $DEPS numpy cython pyyaml nose python=$TRAVIS_PYTHON_VERSION
-  - source activate testenv
+matrix:
+  include:
+    - sudo: required
+      services:
+        - docker
+      env: PIP=pip
+    - os: osx
+      language: generic
+      env: PIP=pip2
 
-  # for debugging...
-  - echo $PATH
-  - which python
-  - conda info
-  - conda list
+env:
+  global:
+    - CIBW_TEST_REQUIRES=nose
+    - CIBW_TEST_COMMAND="nosetests {project}/tests"
+    - TWINE_USERNAME=alexlib
+    # Note: TWINE_PASSWORD is set in Travis settings
 
 script:
-  - cd py_bind
-  - python setup.py prepare
-  - python setup.py install
-  - cd test
-  - nosetests --verbose
-
+  - sudo $PIP install https://github.com/joerick/cibuildwheel/archive/master.zip twine
+  - cibuildwheel --output-dir wheelhouse
+  - |
+    if [[ $TRAVIS_TAG ]]; then
+      twine upload wheelhouse/*.whl
+    fi
